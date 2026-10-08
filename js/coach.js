@@ -47,7 +47,7 @@
     if (target === "form") return show("form", { type: "feld", nr: "", uname: "", posOff: "", posDef: "" });
     if (target === "kader") { show("kader"); await refreshPlayers(); LZ.render(); return; }
     if (target === "trainings") return openTrainings();
-    if (target === "coaches") { show("coaches"); await loadCoaches(); return; }
+    if (target === "coaches") { show("coaches"); await loadCoaches(); if (Co().isAdmin) loadCal(); return; }
   }
   LZ.actions.addStart = () => start("form");
   LZ.actions.kaderStart = () => start("kader");
@@ -133,16 +133,16 @@
     }
     if (s === "trainings") {
       const n = T.newT;
-      return `${backGrid}<section><p class="eyebrow">Trainer-Bereich</p><h1>Trainings</h1><p class="lede">Lege jedes Training an. Dann siehst du, wer da war und wie es den Spielern geht.</p></section>${tabs()}
-      <section class="card stack"><h2>Training anlegen</h2>
+      return `${backGrid}<section><p class="eyebrow">Trainer-Bereich</p><h1>Trainings</h1><p class="lede">Termine aus dem Google-Kalender erscheinen hier automatisch. Tippe einen an für Anwesenheit und Befinden.</p></section>${tabs()}
+      <section class="card stack"><h2>Zusätzliches Training anlegen</h2>
         <div class="grid2"><div class="fld"><label for="t-date">Datum</label><input type="date" id="t-date" value="${esc(n.date)}"></div>
         <div class="fld"><label for="t-time">Uhrzeit</label><input type="time" id="t-time" value="${esc(n.time)}"></div></div>
         <div class="fld"><label for="t-note">Notiz (freiwillig)</label><input id="t-note" maxlength="80" placeholder="z. B. Kunstrasen, Schwerpunkt Pressing" value="${esc(n.note)}"></div>
         ${errP()}<button class="btn wide" data-act="tCreate" ${T.busy ? "disabled" : ""}>Training anlegen</button></section>
       <section class="stack">${T.trainings === null ? `<p class="small">Lade …</p>` : T.trainings.length ? T.trainings.map(t => `
-        <button class="trow" data-act="tOpen" data-v="${t.id}">
-          <span class="tdate">${esc(fmtDate(t.date))}${t.time ? ` · ${esc(t.time)}` : ""}</span>
-          <span class="small">${t.note ? esc(t.note) + " · " : ""}${t.present} da${t.avgLaune !== null ? ` · Laune Ø ${String(t.avgLaune).replace(".", ",")}` : ""}${t.avgRpe !== null ? ` · Belastung Ø ${String(t.avgRpe).replace(".", ",")}` : ""}</span>
+        <button class="trow ${t.date < todayIso() ? "" : "future"}" data-act="tOpen" data-v="${t.id}">
+          <span class="tdate">${esc(fmtDate(t.date))}${t.time ? ` · ${esc(t.time)}` : ""} · ${esc(t.title)}</span>
+          <span class="small">${LZ.calendar ? LZ.calendar.chip(t.kind) + " " : ""}${t.note ? esc(t.note) + " · " : ""}${t.present} da${t.avgLaune !== null ? ` · Laune Ø ${String(t.avgLaune).replace(".", ",")}` : ""}${t.avgRpe !== null ? ` · Belastung Ø ${String(t.avgRpe).replace(".", ",")}` : ""}</span>
           ${t.alerts ? `<span class="tbadge">${t.alerts} ansprechen</span>` : ""}</button>`).join("") : `<p class="small">Noch keine Trainings angelegt.</p>`}</section>`;
     }
 
@@ -152,14 +152,16 @@
       const alert = m => m.vor && (m.vor.nichtfit || (m.vor.laune || 5) <= 2);
       const sorted = d.moods.slice().sort((a, b) => (alert(b) ? 1 : 0) - (alert(a) ? 1 : 0));
       return `<button class="back" data-act="ctab" data-v="trainings">‹ Trainings</button>${tabs()}
-      <section><p class="eyebrow">Training</p><h1>${esc(fmtDate(t.date))}${t.time ? " · " + esc(t.time) : ""}</h1>${t.note ? `<p class="lede">${esc(t.note)}</p>` : ""}</section>
+      <section><p class="eyebrow">${LZ.calendar ? esc(LZ.calendar.kindLabel(t.kind)) : "Training"}${t.fromCalendar ? " · aus dem Kalender" : ""}</p><h1>${esc(t.title)}</h1>
+        <p class="lede">${esc(fmtDate(t.date))}${t.time ? " · " + esc(t.time) + (t.endTime ? "–" + esc(t.endTime) : "") : ""}${t.location ? " · " + esc(t.location) : ""}${t.note ? " · " + esc(t.note) : ""}</p></section>
       <section class="card stack"><div class="rowspread"><h2>Anwesenheit</h2><span class="bignum">${pres.size}</span></div>
         <p class="small">Tippe auf ein Trikot, um „da“ oder „nicht da“ zu setzen.</p>
         <div class="nrgrid">${LZ.C.players.map(p => { const m = moods[p.nr]; return `<button class="nr ${pres.has(p.nr) ? "" : "absent"}" data-act="tAtt" data-v="${p.nr}" aria-pressed="${pres.has(p.nr)}" aria-label="Nummer ${p.nr} ${pres.has(p.nr) ? "da" : "nicht da"}">${LZ.shirt(p.nr)}<span>${m && m.vor ? LAUNE[(m.vor.laune || 3) - 1] : "&nbsp;"}${m && m.nach ? " " + m.nach.rpe : ""}</span></button>`; }).join("")}</div></section>
       <section class="card stack"><h2>Befinden</h2>${sorted.length ? sorted.map(m => { const p = LZ.C.players.find(x => x.nr === m.nr) || {}; return `
         <div class="moodrow ${alert(m) ? "hot" : ""}"><b>Nr. ${m.nr}${p.name ? " · " + esc(p.name.split(" ")[0]) : ""}</b><span>${moodLine(m.vor, m.nach) || "–"}</span>${comments(m.vor, m.nach)}</div>`; }).join("") : `<p class="small">Noch keine Rückmeldungen. Die Spieler sehen die Abfrage am Trainingstag in „Mein Bereich“.</p>`}</section>
       ${errP()}
-      ${T.confirm === "delTraining" ? `<section class="card stack danger"><p><b>Training wirklich löschen?</b> Anwesenheit und Rückmeldungen dazu werden entfernt.</p>
+      ${t.fromCalendar ? `<p class="small">Dieser Termin kommt aus dem Google-Kalender. Ändern oder absagen bitte dort – die Lernzone übernimmt das automatisch.</p>`
+        : T.confirm === "delTraining" ? `<section class="card stack danger"><p><b>Training wirklich löschen?</b> Anwesenheit und Rückmeldungen dazu werden entfernt.</p>
         <div class="row"><button class="btn danger-btn" data-act="tDelete">Ja, löschen</button><button class="btn ghost" data-act="cCancel">Abbrechen</button></div></section>`
         : `<button class="btn ghost wide danger-text" data-act="cAskDel" data-v="delTraining">Training löschen</button>`}`;
     }
@@ -173,7 +175,8 @@
         <div class="fld"><label for="cf-name">Vorname</label><input id="cf-name" maxlength="30" value="${esc(T.cf.name)}"></div>
         ${userField("cf-user", "Benutzername", T.cf.user, "Leer lassen = Vorname.")}
         <label class="check"><input type="checkbox" id="cf-admin" ${T.cf.isAdmin ? "checked" : ""}> Admin</label>
-        ${errP()}${okP()}<button class="btn wide" data-act="coachAdd" ${T.busy ? "disabled" : ""}>Trainer hinzufügen</button></section>` : ""}`;
+        ${errP()}${okP()}<button class="btn wide" data-act="coachAdd" ${T.busy ? "disabled" : ""}>Trainer hinzufügen</button></section>
+      ${calCard()}` : ""}`;
     }
 
     if (s === "coachEdit") {
@@ -294,6 +297,39 @@
     openTrainings();
   };
 
+  /* ---------- Google-Kalender (Admin) ---------- */
+  function calCard() {
+    const c = T.cal;
+    if (!c) return `<section class="card stack"><h2>Google-Kalender</h2><p class="small">Lade …</p></section>`;
+    return `<section class="card stack"><h2>Google-Kalender</h2>
+      <p class="small">${c.url ? `Verbunden${c.synced ? ` · zuletzt gelesen ${esc(c.synced)}` : ""}${c.count ? ` · ${c.count} Termine im Zeitraum` : ""}` : "Noch kein Kalender verbunden."}</p>
+      ${c.error ? `<p class="alert">${esc(c.error)}</p>` : ""}
+      <div class="fld"><label for="cal-url">Einbettungs-Link, iframe-Code oder iCal-Adresse</label>
+        <textarea id="cal-url" rows="3" spellcheck="false" placeholder="https://calendar.google.com/calendar/embed?src=…">${esc(T.calInput ?? c.url ?? "")}</textarea></div>
+      <p class="small">Alle Termine der letzten 30 und nächsten 60 Tage werden automatisch angelegt und alle 15 Minuten abgeglichen. Die Art (Training, Spiel, Turnier, Termin) erkennt die App am Titel.</p>
+      <div class="row"><button class="btn" data-act="calSave" ${T.busy ? "disabled" : ""}>Speichern</button>${c.url ? `<button class="btn ghost" data-act="calRefresh" ${T.busy ? "disabled" : ""}>Jetzt aktualisieren</button>` : ""}</div></section>`;
+  }
+  async function loadCal() {
+    const r = await St().get("calendar.php");
+    if (r && r.ok) { T.cal = r.status; T.calInput = null; if (T.step === "coaches") LZ.render(); }
+  }
+  LZ.actions.calSave = async () => {
+    T.busy = true; LZ.render();
+    const r = await St().send("calendar.php", { action: "seturl", url: T.calInput ?? (T.cal && T.cal.url) ?? "" });
+    T.busy = false;
+    if (!r.ok) return fail(r);
+    T.cal = r.status; T.calInput = null; T.err = ""; T.msg = r.status.error ? "" : (r.status.url ? "Kalender verbunden." : "Kalender getrennt.");
+    if (LZ.calendar) LZ.calendar.reload();
+    LZ.render();
+  };
+  LZ.actions.calRefresh = async () => {
+    T.busy = true; LZ.render();
+    const r = await St().send("calendar.php", { action: "refresh" });
+    T.busy = false;
+    if (!r.ok) return fail(r);
+    T.cal = r.status; if (LZ.calendar) LZ.calendar.reload(); LZ.render();
+  };
+
   /* ---------- Trainer-Konten ---------- */
   LZ.actions.cEdit = (b, v) => { const c = T.coaches.find(x => x.id === +v); show("coachEdit", { cEdit: c, cf: { name: c.name, user: c.username || "", isAdmin: !!c.isAdmin } }); };
   LZ.actions.coachAdd = async () => {
@@ -346,6 +382,7 @@
     else if (id === "pos-off" && LZ.S.view === "coach") { T.posOff = el.value; T.msg = ""; }
     else if (id === "pos-def" && LZ.S.view === "coach") { T.posDef = el.value; T.msg = ""; }
     else if (id === "c-consent" && e.type === "change") setConsent(el.checked);
+    else if (id === "cal-url") T.calInput = el.value;
     else if (id === "t-date") T.newT.date = el.value;
     else if (id === "t-time") T.newT.time = el.value;
     else if (id === "t-note") T.newT.note = el.value;

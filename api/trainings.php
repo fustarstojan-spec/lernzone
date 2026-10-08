@@ -1,13 +1,15 @@
 <?php
 /*
  * Trainings (nur Trainer)
- * GET          → [{id, date, time, note, present, vor, nach, avgLaune, avgRpe, alerts}]  (neu → alt, max. 60)
+ * GET          → [{id, date, time, endTime, title, kind, location, note, fromCalendar, present, vor, nach, avgLaune, avgRpe, alerts}]
+ *                (alt → neu um heute herum: vergangene 30 Tage und kommende 14 Tage; Termine aus dem Google-Kalender automatisch)
  * GET ?id=5    → {training, present:[nr], moods:[{nr, vor, nach}]}
  * POST {action:"create", date, time, note}
  * POST {action:"delete", id}
  * POST {action:"attend", id, nr, present}
  */
 require __DIR__ . '/config.php';
+require __DIR__ . '/lib/calendar.php';
 require_coach();
 
 $moodsOf = function (int $id): array {
@@ -21,28 +23,34 @@ $moodsOf = function (int $id): array {
     }
     return array_values($out);
 };
+$tOut = fn(array $t) => ['id' => (int)$t['id'], 'date' => $t['date'], 'time' => $t['time'], 'endTime' => $t['end_time'] ?? '',
+    'title' => ($t['title'] ?? '') !== '' ? $t['title'] : 'Training', 'kind' => $t['kind'] ?? 'training', 'location' => $t['location'] ?? '',
+    'note' => $t['note'], 'fromCalendar' => ($t['cal_key'] ?? '') !== ''];
 $avg = function (array $vals): ?float { $vals = array_filter($vals, fn($v) => $v !== null); return $vals ? round(array_sum($vals) / count($vals), 1) : null; };
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if (isset($_GET['id'])) {
         $id = (int)$_GET['id'];
-        $st = db()->prepare('SELECT id, date, time, note FROM trainings WHERE id = ?');
+        $st = db()->prepare('SELECT * FROM trainings WHERE id = ?');
         $st->execute([$id]);
         $t = $st->fetch(PDO::FETCH_ASSOC);
         if (!$t) json_out(['ok' => false, 'error' => 'Dieses Training gibt es nicht.'], 404);
         $p = db()->prepare('SELECT nr FROM attendance WHERE training_id = ? ORDER BY nr');
         $p->execute([$id]);
-        json_out(['ok' => true, 'training' => ['id' => (int)$t['id'], 'date' => $t['date'], 'time' => $t['time'], 'note' => $t['note']],
+        json_out(['ok' => true, 'training' => $tOut($t),
                   'present' => array_map('intval', $p->fetchAll(PDO::FETCH_COLUMN)), 'moods' => $moodsOf($id)]);
     }
-    $rows = db()->query('SELECT t.id, t.date, t.time, t.note, (SELECT COUNT(*) FROM attendance a WHERE a.training_id = t.id) AS present
-                         FROM trainings t ORDER BY t.date DESC, t.time DESC LIMIT 60')->fetchAll(PDO::FETCH_ASSOC);
-    json_out(array_map(function ($t) use ($moodsOf, $avg) {
+    calendar_refresh();
+    $st = db()->prepare('SELECT t.*, (SELECT COUNT(*) FROM attendance a WHERE a.training_id = t.id) AS present
+                         FROM trainings t WHERE t.date >= ? AND t.date <= ? ORDER BY t.date DESC, t.time DESC LIMIT 120');
+    $st->execute([date('Y-m-d', strtotime('-30 days')), date('Y-m-d', strtotime('+14 days'))]);
+    $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+    json_out(array_map(function ($t) use ($moodsOf, $avg, $tOut) {
         $m = $moodsOf((int)$t['id']);
         $vor  = array_filter(array_map(fn($x) => $x['vor'], $m));
         $nach = array_filter(array_map(fn($x) => $x['nach'], $m));
         $alerts = count(array_filter($vor, fn($v) => !empty($v['nichtfit']) || ($v['laune'] ?? 5) <= 2));
-        return ['id' => (int)$t['id'], 'date' => $t['date'], 'time' => $t['time'], 'note' => $t['note'],
+        return $tOut($t) + [
                 'present' => (int)$t['present'], 'vor' => count($vor), 'nach' => count($nach),
                 'avgLaune' => $avg(array_map(fn($v) => $v['laune'] ?? null, $vor)),
                 'avgRpe' => $avg(array_map(fn($v) => $v['rpe'] ?? null, $nach)), 'alerts' => $alerts];

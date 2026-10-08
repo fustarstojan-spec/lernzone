@@ -15,10 +15,11 @@ $tid   = (int)($in['training'] ?? 0);
 $phase = (string)($in['phase'] ?? '');
 $d     = is_array($in['data'] ?? null) ? $in['data'] : [];
 
-$st = db()->prepare('SELECT date FROM trainings WHERE id = ?');
+$st = db()->prepare('SELECT date, kind FROM trainings WHERE id = ?');
 $st->execute([$tid]);
-$date = $st->fetchColumn();
-if ($date === false) json_out(['ok' => false, 'error' => 'Dieses Training gibt es nicht.'], 404);
+$tr = $st->fetch(PDO::FETCH_ASSOC);
+if (!$tr || $tr['kind'] === 'termin') json_out(['ok' => false, 'error' => 'Dieses Training gibt es nicht.'], 404);
+$date = $tr['date'];
 if (!in_array($date, [today(), date('Y-m-d', strtotime('-1 day'))], true)) json_out(['ok' => false, 'error' => 'Für dieses Training ist die Abfrage geschlossen.'], 400);
 
 if ($phase === 'vor') {

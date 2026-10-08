@@ -46,5 +46,51 @@
    "id": "ST",
    "name": "Stürmer"
   }
- ]
+ ],
+ "calendar": {
+  "_info": "Termin-Art aus dem Titel im Google-Kalender: erstes passendes Stichwort gewinnt (Groß/Kleinschreibung egal). Sonst 'termin'.",
+  "types": [
+   {
+    "kind": "termin",
+    "label": "Termin",
+    "match": [
+     "trainingslager",
+     "elternabend",
+     "sitzung",
+     "besprechung",
+     "feier"
+    ]
+   },
+   {
+    "kind": "turnier",
+    "label": "Turnier",
+    "match": [
+     "turnier",
+     "cup",
+     "hallenmasters"
+    ]
+   },
+   {
+    "kind": "training",
+    "label": "Training",
+    "match": [
+     "training",
+     "athletik",
+     "einheit"
+    ]
+   },
+   {
+    "kind": "spiel",
+    "label": "Spiel",
+    "match": [
+     "spiel",
+     "pokal",
+     "liga",
+     " vs",
+     " gegen ",
+     " - "
+    ]
+   }
+  ]
+ }
 }

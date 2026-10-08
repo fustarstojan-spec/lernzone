@@ -42,10 +42,15 @@ CREATE TABLE IF NOT EXISTS profiles (
 );
 
 CREATE TABLE IF NOT EXISTS trainings (
-  id    INTEGER PRIMARY KEY AUTOINCREMENT,
-  date  TEXT NOT NULL,                               -- 'YYYY-MM-DD'
-  time  TEXT NOT NULL DEFAULT '',                    -- 'HH:MM'
-  note  TEXT NOT NULL DEFAULT ''
+  id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  date      TEXT NOT NULL,                           -- 'YYYY-MM-DD'
+  time      TEXT NOT NULL DEFAULT '',                -- 'HH:MM' ('' = ganztägig)
+  note      TEXT NOT NULL DEFAULT '',
+  end_time  TEXT NOT NULL DEFAULT '',                -- ab 0.9.0
+  title     TEXT NOT NULL DEFAULT '',                -- Titel aus dem Kalender
+  kind      TEXT NOT NULL DEFAULT 'training',        -- 'training' | 'spiel' | 'turnier' | 'termin'
+  location  TEXT NOT NULL DEFAULT '',
+  cal_key   TEXT NOT NULL DEFAULT ''                 -- '' = von Hand angelegt, sonst Termin-Schlüssel aus dem Google-Kalender
 );
 
 CREATE TABLE IF NOT EXISTS attendance (

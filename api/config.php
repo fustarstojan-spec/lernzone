@@ -56,6 +56,13 @@ function migrate(PDO $pdo): void {
     foreach ($add as $c => $def) {
         if (!in_array($c, $cols, true)) $pdo->exec("ALTER TABLE players ADD COLUMN $c $def");
     }
+    // 0.9.0: Termine aus dem Kalender
+    $tcols = array_column($pdo->query('PRAGMA table_info(trainings)')->fetchAll(PDO::FETCH_ASSOC), 'name');
+    foreach (['end_time' => "TEXT NOT NULL DEFAULT ''", 'title' => "TEXT NOT NULL DEFAULT ''", 'kind' => "TEXT NOT NULL DEFAULT 'training'",
+              'location' => "TEXT NOT NULL DEFAULT ''", 'cal_key' => "TEXT NOT NULL DEFAULT ''"] as $c => $def) {
+        if (!in_array($c, $tcols, true)) $pdo->exec("ALTER TABLE trainings ADD COLUMN $c $def");
+    }
+    $pdo->exec('CREATE INDEX IF NOT EXISTS trainings_cal ON trainings (cal_key)');
     // Bis 0.6.0 gab es nur eine Trainer-PIN → wird zum ersten Admin-Konto „Trainer“
     $old = $pdo->query("SELECT value FROM settings WHERE name = 'coach_pin_hash'")->fetchColumn();
     if ($old !== false) {
@@ -220,12 +227,12 @@ function account_ok(string $table, string $key, int $id): void {
 
 /* ---------- Trainings, Beteiligung, Befinden ---------- */
 
-/* Trainingsbeteiligung: alle Trainings seit der Aufnahme in den Kader bis heute; last = die letzten 20 (alt → neu) */
+/* Trainingsbeteiligung: alle Trainings (nur Art „training“) seit der Aufnahme in den Kader bis heute; last = die letzten 20 (alt → neu) */
 function attendance_summary(int $nr): array {
     $since = substr((string)(account_for('player', $nr)['created_at'] ?? '2000-01-01'), 0, 10);
     $st = db()->prepare('SELECT t.id, t.date, CASE WHEN a.nr IS NULL THEN 0 ELSE 1 END AS present
                          FROM trainings t LEFT JOIN attendance a ON a.training_id = t.id AND a.nr = ?
-                         WHERE t.date <= ? AND t.date >= ? ORDER BY t.date DESC, t.time DESC');
+                         WHERE t.date <= ? AND t.date >= ? AND t.kind = \'training\' ORDER BY t.date DESC, t.time DESC');
     $st->execute([$nr, today(), $since]);
     $rows = $st->fetchAll(PDO::FETCH_ASSOC);
     $attended = count(array_filter($rows, fn($r) => (int)$r['present'] === 1));

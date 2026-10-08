@@ -24,6 +24,7 @@ Sprache: Deutsch. Antworten kurz und direkt.
 - Backend: PHP 8.1+ in `api/`, SQLite in `storage/lernzone.sqlite` (nie ins Repo), Schema `tools/schema.sql`, Migration in `api/config.php → migrate()`.
 - Anmeldung (Weg B, ab 0.8.0): Benutzername + Passwort für alle, Tabelle `accounts` (kind player/coach, ref = Trikotnummer bzw. Trainer-ID). Neue Konten bekommen einen Einmal-Code (7 Tage), danach eigenes Passwort. `js/auth.js` + `api/auth.php`, Zugänge verwalten in `api/accounts.php`.
 - Rollen: Spieler, Trainer, Admin (verwaltet Trainer, erzeugt Trainer-Codes, löscht Spieler). Weg A (ohne PHP, z. B. Claude-Vorschau) nutzt weiterhin Trikot + Demo-PIN.
+- Google-Kalender (ab 0.9.0): Admin speichert Einbettungs-Link/iCal-Adresse (Tabelle settings), `api/lib/calendar.php` liest iCal (Cache 15 Min) und legt alle Termine als Zeilen in `trainings` an (Spalten kind, title, location, end_time, cal_key). Art per Stichwort aus `data/team.json → calendar.types`. Trainingsbeteiligung zählt nur kind = training.
 - Sicherheit: Argon2id, CSRF-Token (Header `X-CSRF-Token`), SameSite=Strict, Sperre pro Konto, Trainer-Timeout 8 h, Sitzungs-Version pro Konto, Sicherheits-Header in `.htaccess`.
 
 ## Fachliches
@@ -46,7 +47,8 @@ Sprache: Deutsch. Antworten kurz und direkt.
 
 ## Stand und nächste Schritte
 
-- Aktuell: Version 0.8.0 (siehe `CHANGELOG.md`). 0.4.0–0.8.0 liegen lokal, noch nicht auf GitHub.
+- Aktuell: Version 0.9.0 (siehe `CHANGELOG.md`). 0.4.0–0.9.0 liegen lokal, noch nicht auf GitHub.
+- Mannschaftskalender ist ein öffentlicher Google-Kalender; die Adresse steht nur in der Datenbank (nicht im Repo).
 - Entschieden: Benutzernamen vergibt der Trainer (Vorschlag `vorname.n`), ganze App hinter Login, Eltern-Zugang und 2FA später.
 - Nächste Schritte Weg B:
   - Benutzerverwaltung ausbauen: Konten sperren/entsperren, Protokoll (wer hat wann was geändert), „überall abmelden“.

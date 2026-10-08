@@ -13,7 +13,8 @@ js/pitch.js           Spielfeld-Grafik (SVG)
 js/app.js             Oberfläche: Startseite, Phasen, Quiz, Zonen, Mein Bereich (enthält keine Daten)
 js/auth.js            Anmeldung (Weg B): Anmelden, eigenes Passwort festlegen, Passwort ändern, erstes Trainer-Konto
 js/me.js              Spieler mit Server: Trainingsbeteiligung, Befindens-Barometer, Profil
-js/coach.js           Trainer-Bereich: Kader, Trainings, Trainer-Konten
+js/coach.js           Trainer-Bereich: Kader, Trainings, Trainer-Konten, Kalender-Einstellung
+js/calendar.js        Termine aus dem Google-Kalender: Nächster Termin, alle Termine
 data/team.json        Teamname, Grundordnung, Trikotfarben, Positionskürzel (für Profile und Spielsituationen)
 data/zones.json       5 Spuren, 3 Drittel, Maße
 data/phases.json      Die Spielphasen 1–4 und Phase 5 „Standards“: Grundlagen, Prinzipien, Situation, Quiz
@@ -71,6 +72,16 @@ Nach der Anmeldung als Trainer: Trikot oben rechts → Trainer-Bereich.
 - **Trainings:** Training anlegen (Datum, Uhrzeit, Notiz) → Anwesenheit per Antippen der Trikots, darunter die Rückmeldungen aus dem Barometer.
 - **Trainer:** Admins legen Trainer an, vergeben Admin-Rechte, erzeugen Codes und entfernen Konten. Alle anderen ändern hier ihren Namen.
 
+## Google-Kalender
+
+Trainer-Bereich → Trainer (nur Admin) → **Google-Kalender**: Einbettungs-Link, iframe-Code oder iCal-Adresse einfügen → Speichern.
+
+- Der Server liest den Kalender höchstens alle 15 Minuten (Kopie in `storage/calendar-cache.ics`) und legt alle Termine der letzten 30 und nächsten 60 Tage an.
+- Verschobene, abgesagte und gelöschte Termine werden übernommen. Termine mit Anwesenheit oder Rückmeldungen werden nie gelöscht.
+- Art des Termins aus dem Titel: `data/team.json` → `calendar.types` (Stichwörter, erstes passendes gewinnt; sonst „Termin“).
+- Öffentlicher Kalender: Einbettungs-Link genügt. Privater Kalender: Google Kalender → Einstellungen und Freigabe → „Privatadresse im iCal-Format“ einfügen (wie ein Passwort behandeln; steht nur in der Datenbank).
+- XAMPP braucht die PHP-Erweiterung `curl` (Standard) und Internet. Fehler stehen in der Kalender-Karte.
+
 ### Datenschutz
 
 - Profil und Befinden sehen nur das Kind selbst und die Trainer – keine Funktionen zwischen den Kindern.
@@ -122,6 +133,8 @@ Voraussetzung: Webspace mit PHP 8 und PDO/SQLite (bei fast allen Hostern Standar
 | `api/profile.php` | POST (Spieler) | `{ profile }` | `{ ok, profile }` |
 | `api/mood.php` | POST (Spieler) | `{ training, phase: "vor"\|"nach", data }` | `{ ok, data }` |
 | `api/trainings.php` | GET / POST (Trainer) | `?id=` / `{ action: "create"\|"delete"\|"attend", … }` | |
+| `api/calendar.php` | GET (angemeldet) | `?days=14` | `{ next, upcoming, status }` |
+| `api/calendar.php` | POST | `{ action: "seturl", url }` (Admin) / `{ action: "refresh" }` (Trainer) | `{ ok, status }` |
 
 `user = { nr, pos, plan, posOff, posDef }`.
 `quiz = { "<modul>": { best, of, last } }`, `tasks = { "<Jahr>-W<KW>": { "<index>": true } }`.

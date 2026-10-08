@@ -73,8 +73,8 @@
   function moodCard(d) {
     if (!d.consent) return `<section class="card stack"><h2>Wie geht's dir?</h2><p class="small">Das Befindens-Barometer schaltet dein Trainer frei, sobald die Einwilligung deiner Eltern da ist.</p></section>`;
     if (!d.today.length) return `<section class="card stack"><h2>Wie geht's dir?</h2><p class="small">Heute ist kein Training eingetragen. Vor und nach jedem Training kannst du hier deinem Trainer sagen, wie es dir geht.</p></section>`;
-    return d.today.map(t => `<section class="card stack"><div class="rowspread"><h2>Wie geht's dir?</h2><span class="small">${isToday(t.date) ? "Training heute" : "Training gestern"}${t.time ? " · " + esc(t.time) : ""}</span></div>
-      ${t.note ? `<p class="small">${esc(t.note)}</p>` : ""}
+    return d.today.map(t => `<section class="card stack"><div class="rowspread"><h2>Wie geht's dir?</h2><span class="small">${isToday(t.date) ? "heute" : "gestern"}${t.time ? " · " + esc(t.time) : ""}</span></div>
+      <p class="small"><b>${esc(t.title || "Training")}</b>${t.location ? " · " + esc(t.location) : ""}${t.note ? " · " + esc(t.note) : ""}</p>
       ${isToday(t.date) ? moodBlock(t, "vor") : ""}${moodBlock(t, "nach")}
       <p class="small">Wenn dich etwas belastet, sprich mit deinem Trainer oder deinen Eltern.</p></section>`).join("");
   }

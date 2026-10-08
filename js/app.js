@@ -7,7 +7,7 @@
  *   LZ.views[name]   = () => html        eigene Ansicht, aufrufen mit LZ.go(name)
  *   LZ.actions[act]  = (button, value)   Klick auf ein Element mit data-act="act"
  *   LZ.inputs.push(event => …)           Eingaben in Formularfeldern (input/change)
- *   LZ.hooks[name]   = [fn, …]           "enter" (Ansicht geöffnet), "meTop"/"meBottom" (HTML in Mein Bereich), "ready"
+ *   LZ.hooks[name]   = [fn, …]           "enter" (Ansicht geöffnet), "homeTop" (HTML auf der Startseite), "meTop"/"meBottom" (HTML in Mein Bereich), "ready"
  *   Weg B: Store.gate() nennt die Anmeldeseite (LZ.views.login / setpw / setup aus js/auth.js), solange niemand angemeldet ist.
  */
 (function () {
@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.8.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.9.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -71,6 +71,7 @@
     return `<section><p class="eyebrow">${S.user ? `Angemeldet als Nr. ${S.user.nr}` : "Spielphasenmodell"}</p>
     <h1>${S.user ? "Weiter geht's" : "Lernen, wie wir spielen"}</h1>
     <p class="lede">Das Spiel hat vier Phasen, die sich immer wieder abwechseln. Dazu kommen die Standards, wenn das Spiel ruht. Für jede Phase gibt es Grundlagen, Lernmaterial und ein Quiz.</p></section>
+  ${(LZ.hooks.homeTop || []).map(f => f()).join("")}
   <button class="card mod0" data-act="zonen"><span class="mini"><i></i></span>
     <span><span class="eyebrow">Modul 0 · Basis</span><h2>Spielfeld &amp; Zonen</h2><span class="small">${p.quiz.zonen ? `Bester Durchgang: ${p.quiz.zonen.best}/${p.quiz.zonen.of}` : "5 Spuren, 3 Drittel – unsere gemeinsame Sprache"}</span></span>
     <span aria-hidden="true" style="font-size:1.4rem;color:var(--muted)">›</span></button>

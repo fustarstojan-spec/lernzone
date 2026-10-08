@@ -5,3 +5,4 @@ storage/*.db
 .DS_Store
 Thumbs.db
 .vscode/
+storage/calendar-cache.ics

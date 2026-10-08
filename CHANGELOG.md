@@ -2,6 +2,16 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.9.0 – 2026-10-08
+- **Google-Kalender:** Admin fügt unter Trainer-Bereich → Trainer → „Google-Kalender“ den Einbettungs-Link (oder iframe-Code / iCal-Adresse) ein
+- Alle Termine der letzten 30 und nächsten 60 Tage werden automatisch als Trainings/Spiele/Turniere/Termine angelegt und alle 15 Minuten abgeglichen (verschoben, abgesagt, gelöscht inklusive)
+- Art des Termins aus dem Titel (Stichwörter in `data/team.json` → `calendar.types`)
+- Startseite: „Nächster Termin“ mit Countdown, Ort mit Karten-Link, die nächsten 4 Termine; „Alle Termine“ nach Wochen
+- Befindens-Barometer für Training, Spiel und Turnier (nicht für sonstige Termine); Trainingsbeteiligung zählt nur Trainings
+- Trainer-Bereich: Termine aus dem Kalender mit Art und Titel; zusätzliche Trainings weiterhin von Hand
+- Ist Google nicht erreichbar, zeigt die App die zuletzt geladenen Termine
+- Neue Dateien: `api/calendar.php`, `api/lib/calendar.php`, `js/calendar.js`
+
 ## 0.8.0 – 2026-10-08
 - **Anmeldeseite:** Mit PHP ist die ganze App erst nach Anmeldung sichtbar – Benutzername + Passwort für Spieler und Trainer
 - **Erstanmeldung mit Einmal-Code:** Trainer legt Konto an → Benutzername + Code (7 Tage gültig) → Kind/Trainer legt eigenes Passwort fest

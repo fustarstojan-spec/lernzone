@@ -251,3 +251,26 @@ code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:
 .codebox{display:grid;gap:4px;text-align:center}
 .codebox .user{font-weight:700;font-size:1.15rem}
 .codebox .pinshow{font-size:2.3rem;letter-spacing:.1em;white-space:nowrap}
+
+/* ---------- Kalender (0.9.0) ---------- */
+.kchip{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap;background:var(--rule);color:var(--fg)}
+.kchip.k-training{background:var(--accent-soft);color:var(--accent)}
+.kchip.k-spiel{background:var(--opp-chip);color:var(--opp-ink)}
+.kchip.k-turnier{background:var(--set-chip);color:var(--set-ink)}
+.nextcard{display:grid;gap:6px}
+.nexttitle{font-family:var(--display);font-size:1.6rem;font-weight:700;line-height:1.05;text-transform:uppercase;text-wrap:balance}
+.nextwhen{font-size:1.02rem}
+.count{display:inline-block;margin-left:4px;font-size:.8rem;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--shirt);color:#fff;white-space:nowrap}
+.maplink{color:var(--accent);font-weight:600}
+.evlist{list-style:none;margin:6px 0 0;padding:8px 0 0;border-top:1px solid var(--rule);display:grid;gap:6px}
+.evlist li{display:grid;grid-template-columns:5.2em 3.4em 1fr auto;gap:8px;align-items:center;font-size:.92rem}
+.evlist .evday{font-weight:700}
+.evlist .evtime{color:var(--muted);font-variant-numeric:tabular-nums}
+.evtitle{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.evrow{display:grid;grid-template-columns:5em 1fr;gap:10px;padding:10px 12px;border:1px solid var(--rule);border-radius:12px;background:var(--surface)}
+.evdate{display:grid;font-variant-numeric:tabular-nums;font-size:.9rem}
+.evdate span{color:var(--muted)}
+.evbody{display:grid;gap:2px;min-width:0}
+.evbody .evtitle{font-weight:700}
+.trow.future{border-style:dashed}
+.evbody .evtitle{white-space:normal}
