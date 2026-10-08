@@ -274,3 +274,22 @@ code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:
 .evbody .evtitle{font-weight:700}
 .trow.future{border-style:dashed}
 .evbody .evtitle{white-space:normal}
+/* 0.10.0 Wochenübersicht in Mein Bereich */
+.wkhead{margin-top:10px;padding-top:10px;border-top:1px solid var(--rule);align-items:center}
+.wkhead h3{margin:0;font-size:1rem}
+.wkseg{display:inline-flex;padding:3px}
+.wkseg button{flex:none;padding:4px 10px;font-size:.85rem}
+.wklist{list-style:none;margin:4px 0 0;padding:0;display:grid}
+.wkday{display:grid;grid-template-columns:4.2em 1fr;gap:8px;padding:7px 4px;border-bottom:1px solid var(--rule);align-items:start}
+.wkday:last-child{border-bottom:0}
+.wkday .wkd{display:flex;flex-direction:column;line-height:1.15;font-size:.9rem}
+.wkday .wkd span{color:var(--muted);font-size:.8rem}
+.wkday.today{background:rgba(94,33,41,.07);border-radius:8px}
+.wkday.today .wkd b{color:#5e2129}
+.wkday.past{opacity:.45}
+.wkev{display:grid;gap:4px}
+.wkitem{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.92rem}
+.wkitem .evtime{color:var(--muted);font-variant-numeric:tabular-nums}
+.wkday .wkev,.wkitem .evtitle{min-width:0;overflow-wrap:anywhere}
+.wkday{grid-template-columns:4.2em minmax(0,1fr)}
+.wkitem .evtitle{white-space:normal}

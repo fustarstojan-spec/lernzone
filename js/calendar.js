@@ -32,11 +32,11 @@
     K.loading = true;
     const r = await St.get("calendar.php");
     K.loading = false;
-    if (r && r.ok) { K.data = r; K.at = Date.now(); if (["home", "termine"].includes(LZ.S.view)) LZ.render(); }
+    if (r && r.ok) { K.data = r; K.at = Date.now(); if (["home", "termine", "me"].includes(LZ.S.view)) LZ.render(); }
   }
   LZ.on("ready", () => load());
-  LZ.on("enter", v => { if (v === "home") load(); });
-  setInterval(() => { if (LZ.S.view === "home" && !document.hidden) { K.at = 0; load(); } }, 5 * 60000);
+  LZ.on("enter", v => { if (v === "home" || v === "me") load(); });
+  setInterval(() => { if (["home", "me"].includes(LZ.S.view) && !document.hidden) { K.at = 0; load(); } }, 5 * 60000);
 
   /* ---------- Startseite ---------- */
   LZ.on("homeTop", () => {
@@ -52,6 +52,35 @@
       ${rest.length ? `<ul class="evlist">${rest.map(e => `<li><span class="evday">${esc(dayName(e.date))}</span><span class="evtime">${esc(e.time || "ganzt.")}</span><span class="evtitle">${esc(e.title)}</span>${chip(e.kind)}</li>`).join("")}</ul>` : ""}
       <button class="linkbtn" data-act="calAll">Alle Termine</button></section>`;
   });
+
+  /* ---------- Mein Bereich: Nächster Termin + Wochenübersicht ---------- */
+  K.week = 0; // 0 = diese Woche, 1 = nächste Woche
+  const isoAdd = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return d.toLocaleDateString("sv-SE"); };
+  const mondayOf = iso => { const d = new Date(iso + "T12:00:00"); return isoAdd(iso, -((d.getDay() + 6) % 7)); };
+  LZ.actions.calWeek = el => { K.week = +el.dataset.w || 0; LZ.render(); };
+  LZ.on("meTop", () => {
+    const St = LZ.Store;
+    if (!St || St.mode !== "api" || !K.data || !K.data.status.configured) return "";
+    const n = K.data.next, t = todayIso(), mon = isoAdd(mondayOf(t), 7 * K.week);
+    const f = x => new Date(x + "T12:00:00").toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+    const days = [...Array(7)].map((_, i) => isoAdd(mon, i));
+    const rows = days.map(d => {
+      const ev = K.data.upcoming.filter(e => e.date === d), past = d < t;
+      const wd = new Date(d + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short" });
+      return `<li class="wkday${d === t ? " today" : ""}${past ? " past" : ""}"><span class="wkd"><b>${esc(wd)}</b><span>${esc(f(d))}</span></span>
+        <span class="wkev">${past ? `<span class="small">–</span>` : ev.length ? ev.map(e => `<span class="wkitem">${chip(e.kind)}<span class="evtime">${esc(e.time || "ganzt.")}</span><span class="evtitle">${esc(e.title)}</span></span>`).join("") : `<span class="small">frei</span>`}</span></li>`;
+    }).join("");
+    return `<section class="card nextcard">
+      ${n ? `<div class="rowspread"><p class="eyebrow">Nächster Termin</p>${chip(n.kind)}</div>
+      <p class="nexttitle">${esc(n.title)}</p>
+      <p class="nextwhen"><b>${esc(dayName(n.date))}</b> · ${esc(timeText(n))}${countdown(n) ? ` <span class="count">${esc(countdown(n))}</span>` : ""}</p>
+      ${n.location ? `<p class="small">${mapLink(n.location)}</p>` : ""}` : `<p class="eyebrow">Nächster Termin</p><p class="small">In den nächsten zwei Wochen steht nichts im Kalender.</p>`}
+      <div class="rowspread wkhead"><h3>Woche ${esc(f(days[0]))} – ${esc(f(days[6]))}</h3>
+        <span class="seg wkseg"><button aria-pressed="${K.week === 0}" data-act="calWeek" data-w="0">Diese</button><button aria-pressed="${K.week === 1}" data-act="calWeek" data-w="1">Nächste</button></span></div>
+      <ul class="wklist">${rows}</ul>
+      <button class="linkbtn" data-act="calAll">Alle Termine</button></section>`;
+  });
+  LZ.hooks.meTop.unshift(LZ.hooks.meTop.pop()); // ganz oben in Mein Bereich
 
   /* ---------- Alle Termine ---------- */
   LZ.actions.calAll = async () => {

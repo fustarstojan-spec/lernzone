@@ -2,6 +2,9 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.10.0 – 2026-10-08
+- **Mein Bereich:** „Nächster Termin“ mit Countdown und Ort, darunter Wochenübersicht Mo–So (diese / nächste Woche umschaltbar, heute markiert)
+
 ## 0.9.0 – 2026-10-08
 - **Google-Kalender:** Admin fügt unter Trainer-Bereich → Trainer → „Google-Kalender“ den Einbettungs-Link (oder iframe-Code / iCal-Adresse) ein
 - Alle Termine der letzten 30 und nächsten 60 Tage werden automatisch als Trainings/Spiele/Turniere/Termine angelegt und alle 15 Minuten abgeglichen (verschoben, abgesagt, gelöscht inklusive)
