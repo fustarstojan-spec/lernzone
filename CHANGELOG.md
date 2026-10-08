@@ -2,6 +2,19 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.7.0 – 2026-10-08
+- Trainer-Konten: jeder Trainer meldet sich mit Namen und eigener 6-stelliger PIN an; Admins legen Trainer an, vergeben/entziehen Admin-Rechte, entfernen Konten (mindestens ein Admin bleibt immer)
+- Die bisherige Trainer-PIN wird automatisch zum Admin-Konto „Trainer“ (Name unter „Trainer“ änderbar)
+- Trainer-Bereich mit Reitern Kader · Trainings · Trainer
+- Spielerprofil (Vorname, Nachname, Geburtstag, Schulschluss, starker Fuß, Wunschposition, Vorbild, Saisonziel, Größen) – sichtbar nur für das Kind und die Trainer
+- Einwilligung der Eltern pro Spieler: erst danach sind Profil und Befindens-Barometer freigeschaltet
+- Trainings anlegen, Anwesenheit per Antippen; jedes Kind sieht seine Trainingsbeteiligung als Punktezeile mit Prozent
+- Befindens-Barometer vor (Laune, Schlaf, Energie, „nicht fit“) und nach jedem Training (Belastung 1–10), freiwillige Nachricht an den Trainer
+- Trainer-Übersicht: Ø Laune und Belastung pro Training, Hinweise „bitte ansprechen“ (nicht fit oder zweimal schlechte Laune), roter Punkt im Kader
+- Admins können Spieler mit allen Daten löschen
+- Sicherheit: Sperre nach 5 falschen PINs jetzt pro Konto in der Datenbank (auch wenn Cookies gelöscht werden)
+- Code aufgeteilt: `js/me.js` (Spieler), `js/coach.js` (Trainer)
+
 ## 0.6.0 – 2026-10-08
 - Jeder Spieler hat eine offensivere und eine defensivere Position (Trikotnummern sagen nichts über die Position aus)
 - Trainer-Modus: Positionen beim Anlegen und unter „Kader verwalten“ festlegen; Kader zeigt die Positionen unter den Trikots

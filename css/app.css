@@ -186,3 +186,56 @@ code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:
 .posid{font-family:var(--display);font-size:2rem;font-weight:700;line-height:1;color:var(--accent)}
 .pitch .own.me circle{stroke:#ffe066;stroke-width:.9}
 .dotk.me{background:transparent;border:3px solid #e0b800}
+
+/* ---------- Trainer-Bereich & Spieler-Funktionen (0.7.0) ---------- */
+.rowspread{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.bignum{font-family:var(--display);font-size:1.8rem;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1}
+.badge{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:99px;background:var(--accent);color:var(--bg)}
+.coachlist{display:grid;gap:8px}
+.alert{background:var(--bad-soft);color:var(--fg);border-radius:12px;padding:10px 14px;font-weight:700}
+.warn{color:var(--bad)}
+.check{display:flex;gap:10px;align-items:flex-start;font-weight:600;cursor:pointer}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--shirt);flex:none}
+.fld textarea{font:inherit;padding:10px 12px;border:1.5px solid var(--rule);border-radius:12px;background:var(--surface);color:var(--fg);width:100%;box-sizing:border-box;resize:vertical}
+.fld textarea:focus,.fld input[type=date]:focus,.fld input[type=time]:focus{border-color:var(--accent);outline:none}
+.fld input[type=date],.fld input[type=time]{font-size:1.05rem;letter-spacing:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid2>*{min-width:0}
+.days{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.day-in{display:grid;gap:4px;font-weight:700;font-size:.85rem;text-align:center}
+.day-in input{font:inherit;font-size:.9rem;padding:8px 2px;border:1.5px solid var(--rule);border-radius:10px;background:var(--surface);color:var(--fg);width:100%;box-sizing:border-box;min-width:0;text-align:center}
+.profname{font-family:var(--display);font-size:1.5rem;font-weight:700;text-transform:uppercase;line-height:1.1}
+
+/* Trainingsbeteiligung: ein Punkt pro Training */
+.attline{display:flex;flex-wrap:wrap;gap:5px}
+.attline i{width:14px;height:14px;border-radius:50%;background:var(--rule);display:block}
+.attline i.on{background:var(--ok)}
+
+/* Barometer */
+.moodblock{display:grid;gap:8px;padding:12px;border-radius:12px;background:var(--bg);border:1px solid var(--rule)}
+.moodblock.done{background:var(--ok-soft);border-color:transparent}
+.qlabel{font-weight:700;margin-top:4px}
+.scale{display:grid;gap:6px}
+.scale-5{grid-template-columns:repeat(5,1fr)}
+.scale-10{grid-template-columns:repeat(5,1fr)}
+.sbtn{padding:10px 0;border-radius:10px;border:1.5px solid var(--rule);background:var(--surface);font-weight:700;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.scale-5 .sbtn{font-size:1.35rem}
+.sbtn.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.moodrow{display:grid;gap:2px;padding:10px 0;border-top:1px solid var(--rule)}
+.moodrow:first-of-type{border-top:0}
+.moodrow.hot b{color:var(--bad)}
+
+/* Kader & Trainings */
+.nr{position:relative}
+.nr.flag::after{content:"";position:absolute;top:6px;right:6px;width:10px;height:10px;border-radius:50%;background:var(--bad);box-shadow:0 0 0 2px var(--surface)}
+.nr.absent svg{opacity:.28;filter:grayscale(1)}
+.nr.absent span{opacity:.5}
+.trow{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;text-align:left;width:100%;padding:12px 14px;border:1px solid var(--rule);border-radius:12px;background:var(--surface)}
+.trow .small{grid-column:1}
+.trow .badge,.trow .tbadge{grid-column:2;grid-row:1/span 2}
+.tdate{font-weight:700}
+.tbadge{font-size:.75rem;font-weight:700;padding:3px 8px;border-radius:99px;background:var(--bad-soft);color:var(--bad);white-space:nowrap}
+.danger{border-color:var(--bad)}
+.danger-btn{background:var(--bad)}
+.danger-text{color:var(--bad)}
+.btn.danger-text{color:var(--bad);border-color:var(--bad)}

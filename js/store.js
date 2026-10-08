@@ -9,8 +9,9 @@
  *   getProgress()          → { quiz:{}, tasks:{} }   (synchron, aus dem Zwischenspeicher)
  *   saveProgress(progress) → speichert im Hintergrund
  *   canManage              → true, wenn Spieler angelegt werden können (nur Weg B / PHP)
- *   coach                  → { active, hasPin, canSetup }   Trainer-Status
- *   coachLogin(pin) / coachSetup(pin) / coachLogout()     → { ok, error }
+ *   coach                  → { active, id, name, isAdmin, hasCoaches, canSetup }   Trainer-Status
+ *   coachLogin(id, pin) / coachSetup(name, pin) / coachLogout()               → { ok, error }
+ *   get(path) / send(file, body)  → direkter Zugriff auf weitere Schnittstellen (Profil, Trainings, Barometer …)
  *   addPlayer({nr, type, pin})                             → { ok, player, error }
  *   setPin(nr, pin)                                        → { ok, error }
  *   setPositions(nr, posOff, posDef)                       → { ok, player, error }
@@ -51,7 +52,7 @@
     return {
       mode: "local",
       canManage: false,
-      coach: { active: false, hasPin: false, canSetup: false },
+      coach: { active: false, hasCoaches: false, canSetup: false },
       async loadContent() { content = await loadStatic(); return content; },
       async init() {
         user = findUser(ls.get("lz:session", null));
@@ -89,7 +90,7 @@
     const api_ = {
       mode: "api",
       canManage: true,
-      coach: { active: false, hasPin: false, canSetup: false },
+      coach: { active: false, hasCoaches: false, canSetup: false },
       async loadContent() {
         const c = await loadStatic(["team", "zones", "phases", "plans"]);
         c.players = await getJSON(api + "players.php");      // Kader aus der Datenbank
@@ -120,8 +121,16 @@
         if (!user) return;            // Gäste speichern nichts auf dem Server
         try { await post("progress.php", p); } catch (e) { console.warn("Fortschritt nicht gespeichert", e); }
       },
-      async coachLogin(pin)  { return coachCall({ action: "login", pin }); },
-      async coachSetup(pin)  { return coachCall({ action: "setup", pin }); },
+      async coachLogin(id, pin)    { return coachCall({ action: "login", id, pin }); },
+      async coachSetup(name, pin)  { return coachCall({ action: "setup", name, pin }); },
+      async get(path) {
+        try { const r = await fetch(api + path, { credentials: "same-origin" }); return await r.json(); }
+        catch (e) { return { ok: false, error: "Server nicht erreichbar." }; }
+      },
+      async send(file, body) {
+        try { const r = await postAny(file, body); if (r && r.me) api_.coach = r.me; return r; }
+        catch (e) { return { ok: false, error: "Server nicht erreichbar." }; }
+      },
       async coachLogout()    { return coachCall({ action: "logout" }); },
       async addPlayer(data) {
         try { return await postAny("players.php", data); }

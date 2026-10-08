@@ -10,7 +10,9 @@ css/app.css           Design (Vereinsfarben, Layout, Dark Mode)
 js/config.js          mode "auto" (Standard): erkennt selbst, ob PHP läuft; sonst "local" (Weg A) oder "api" (Weg B)
 js/store.js           Datenzugriff – die einzige Stelle, die Daten liest/speichert
 js/pitch.js           Spielfeld-Grafik (SVG)
-js/app.js             Oberfläche und Abläufe (enthält keine Daten)
+js/app.js             Oberfläche: Startseite, Phasen, Quiz, Zonen, Anmeldung, Mein Bereich (enthält keine Daten)
+js/me.js              Spieler mit Server: Trainingsbeteiligung, Befindens-Barometer, Profil
+js/coach.js           Trainer-Bereich: Kader, Trainings, Trainer-Konten
 data/team.json        Teamname, Grundordnung, Trikotfarben, Positionskürzel (für Profile und Spielsituationen)
 data/zones.json       5 Spuren, 3 Drittel, Maße
 data/phases.json      Die Spielphasen 1–4 und Phase 5 „Standards“: Grundlagen, Prinzipien, Situation, Quiz
@@ -37,17 +39,27 @@ Quizfrage in `data/phases.json`:
 Spielsituation (`sit`): Koordinaten in Metern auf einem 68 × 105 m-Feld, `x` von links nach rechts, `y` von oben (gegnerisches Tor) nach unten (eigenes Tor).
 `own: [[Position, x, y]]` (Kürzel aus `data/team.json`, z. B. "IV"), `opp: [[x, y]]`, `ball: [x, y]`, `arrows: [{ "f": [x,y], "t": [x,y], "k": "pass" | "run" }]`.
 
-## Spieler anlegen (nur mit PHP, z. B. XAMPP)
+## Trainer-Bereich (nur mit PHP, z. B. XAMPP)
 
-Mein Bereich → graues „+“-Trikot → Trainer-PIN → Torwart oder Feldspieler wählen, Nummer und PIN eingeben → „Spieler anlegen“.
-PIN ändern: Mein Bereich → „Trainer: Kader verwalten“ → Trikot antippen → neue PIN → „PIN speichern“.
-Jede PIN wird danach einmal angezeigt und nur verschlüsselt gespeichert.
+Mein Bereich → „Trainer-Bereich“ (oder graues „+“-Trikot) → Name wählen → eigene 6-stellige Trainer-PIN.
 
-Trainer-PIN (6 Ziffern):
-- XAMPP / localhost: beim ersten Tippen auf das „+“ direkt in der App festlegen.
-- Echter Server: `php tools/set_coach_pin.php 123456` (aus Sicherheitsgründen geht das Festlegen dort nicht über die App).
+- **Kader:** Trikot antippen → Einwilligung der Eltern, Profil, Trainingsbeteiligung, Befinden, Positionen, PIN. Graues „+“ = neuer Spieler. Roter Punkt = bitte ansprechen.
+- **Trainings:** Training anlegen (Datum, Uhrzeit, Notiz) → Anwesenheit per Antippen der Trikots, darunter die Rückmeldungen aus dem Barometer.
+- **Trainer:** Admins legen Trainer an, vergeben Admin-Rechte und entfernen Konten. Alle anderen ändern hier Namen und PIN ihres eigenen Kontos.
 
-Die Datenbank (`storage/lernzone.sqlite`) wird beim ersten Aufruf automatisch angelegt. Liegt `data/demo-pins.json` vor, wird der Demo-Kader mit PIN 1234 übernommen.
+Erstes Trainer-Konto:
+- XAMPP / localhost: beim ersten Öffnen des Trainer-Bereichs direkt in der App (wird Admin).
+- Echter Server: `php tools/set_coach_pin.php "Name" 123456` (das Anlegen über die App geht dort aus Sicherheitsgründen nicht).
+
+### Datenschutz
+
+- Profil und Befinden sehen nur das Kind selbst und die Trainer – keine Funktionen zwischen den Kindern.
+- Profil und Barometer sind erst freigeschaltet, wenn der Trainer „Einwilligung der Eltern liegt vor“ setzt.
+- Keine Gesundheitsdetails: „nicht fit“ ist nur ein Hinweis an den Trainer, kein Befund.
+- Admins können einen Spieler mit allen Daten löschen (Kader → Spieler → „Spieler löschen“).
+- Die Datenbank (`storage/lernzone.sqlite`) wird nie ins Repository übernommen.
+
+Die Datenbank wird beim ersten Aufruf automatisch angelegt bzw. ergänzt. Liegt `data/demo-pins.json` vor, wird der Demo-Kader mit PIN 1234 übernommen.
 Datenbank zurücksetzen: Apache stoppen, `storage/lernzone.sqlite` löschen, Apache starten.
 
 ## Weg A – ohne Server-Login
@@ -80,17 +92,26 @@ PINs werden mit `password_hash()` gespeichert, nach 5 Fehlversuchen ist die Anme
 | `api/logout.php` | POST | – | `{ ok }` |
 | `api/progress.php` | GET | – | `{ quiz, tasks }` |
 | `api/progress.php` | POST | `{ quiz, tasks }` | `{ ok }` |
-| `api/players.php` | GET | – | `[{ nr, pos, plan }]` |
+| `api/players.php` | GET | – | `[{ nr, pos, plan, posOff, posDef }]` (Trainer: + name, consent, flag) |
+| `api/players.php` | GET (Trainer) | `?nr=8` | `{ player, profile, attendance, moods, flag }` |
+| `api/players.php` | POST (Trainer) | `{ action: "setconsent", nr, consent }` | `{ ok, player }` |
+| `api/players.php` | POST (Admin) | `{ action: "delete", nr }` | `{ ok }` |
 | `api/players.php` | POST (Trainer) | `{ nr, type: "tw"\|"feld", pin }` | `{ ok, player }` |
 | `api/players.php` | POST (Trainer) | `{ action: "setpin", nr, pin }` | `{ ok, nr }` |
 | `api/players.php` | POST (Trainer) | `{ action: "setpos", nr, posOff, posDef }` | `{ ok, player }` |
-| `api/coach.php` | POST | `{ action: "login"\|"setup"\|"logout", pin }` | `{ ok, coach }` |
+| `api/coach.php` | POST | `{ action: "login", id, pin }` / `{ action: "setup", name, pin }` / `{ action: "logout" }` | `{ ok, coach }` |
+| `api/coaches.php` | GET | – | `[{ id, name }]` |
+| `api/coaches.php` | POST | `{ action: "add"\|"update"\|"delete", … }` | `{ ok, coach }` |
+| `api/my.php` | GET (Spieler) | – | `{ consent, profile, attendance, today }` |
+| `api/profile.php` | POST (Spieler) | `{ profile }` | `{ ok, profile }` |
+| `api/mood.php` | POST (Spieler) | `{ training, phase: "vor"\|"nach", data }` | `{ ok, data }` |
+| `api/trainings.php` | GET / POST (Trainer) | `?id=` / `{ action: "create"\|"delete"\|"attend", … }` | |
 
 `user = { nr, pos, plan, posOff, posDef }`.
 `quiz = { "<modul>": { best, of, last } }`, `tasks = { "<Jahr>-W<KW>": { "<index>": true } }`.
 
 ### Nächste Ausbaustufen
 
-- Trainer-Ansicht (`api/coach.php`): Fortschritt aller Spieler, eigener Trainer-Login.
+- Lernfortschritt aller Spieler in der Trainer-Ansicht.
 - Individuelle Pläne pro Spieler statt Vorlagen: Tabelle `plans` und `api/plan.php`.
 - Datenschutz: Einwilligung der Eltern einholen und mit dem Verein abstimmen, bevor Fortschrittsdaten auf einem Server gespeichert werden.
