@@ -1,0 +1,97 @@
+[
+ {
+  "nr": 1,
+  "pos": "Tor",
+  "plan": "tw"
+ },
+ {
+  "nr": 2,
+  "pos": "Rechtsverteidiger",
+  "plan": "feld"
+ },
+ {
+  "nr": 3,
+  "pos": "Linksverteidiger",
+  "plan": "feld"
+ },
+ {
+  "nr": 4,
+  "pos": "Innenverteidiger",
+  "plan": "feld"
+ },
+ {
+  "nr": 5,
+  "pos": "Innenverteidiger",
+  "plan": "feld"
+ },
+ {
+  "nr": 6,
+  "pos": "Sechser",
+  "plan": "feld"
+ },
+ {
+  "nr": 7,
+  "pos": "Rechtsaußen",
+  "plan": "feld"
+ },
+ {
+  "nr": 8,
+  "pos": "Achter",
+  "plan": "feld"
+ },
+ {
+  "nr": 9,
+  "pos": "Stürmer",
+  "plan": "feld"
+ },
+ {
+  "nr": 10,
+  "pos": "Zehner",
+  "plan": "feld"
+ },
+ {
+  "nr": 11,
+  "pos": "Linksaußen",
+  "plan": "feld"
+ },
+ {
+  "nr": 12,
+  "pos": "Feldspieler",
+  "plan": "feld"
+ },
+ {
+  "nr": 13,
+  "pos": "Feldspieler",
+  "plan": "feld"
+ },
+ {
+  "nr": 14,
+  "pos": "Feldspieler",
+  "plan": "feld"
+ },
+ {
+  "nr": 15,
+  "pos": "Feldspieler",
+  "plan": "feld"
+ },
+ {
+  "nr": 16,
+  "pos": "Feldspieler",
+  "plan": "feld"
+ },
+ {
+  "nr": 17,
+  "pos": "Feldspieler",
+  "plan": "feld"
+ },
+ {
+  "nr": 18,
+  "pos": "Feldspieler",
+  "plan": "feld"
+ },
+ {
+  "nr": 22,
+  "pos": "Tor",
+  "plan": "tw"
+ }
+]

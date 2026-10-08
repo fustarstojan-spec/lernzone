@@ -1,0 +1,70 @@
+{
+ "feld": {
+  "week": [
+   [
+    "Mo",
+    "Ballgefühl: 100 Kontakte mit Innenseite und Sohle, links und rechts (15 Min)"
+   ],
+   [
+    "Mi",
+    "Kunstrasen-Training: Technik und Koordination – voll konzentriert"
+   ],
+   [
+    "Do",
+    "Passwand: 50 Pässe mit links, Ballannahme in offener Stellung (10 Min)"
+   ],
+   [
+    "Sa",
+    "Spieltag – danach in der Lernzone ein Quiz zur Phase der Woche"
+   ],
+   [
+    "So",
+    "Lernzone: Zonen-Trainer „Finden“ einmal durchspielen"
+   ]
+  ],
+  "goals": [
+   {
+    "t": "Ich spiele bis zu den Herbstferien in jedem Training mindestens 20 Pässe bewusst mit links.",
+    "when": "bis Herbstferien"
+   },
+   {
+    "t": "Ich mache vor jeder Ballannahme einen Schulterblick.",
+    "when": "jedes Training"
+   }
+  ]
+ },
+ "tw": {
+  "week": [
+   [
+    "Mo",
+    "Fangtechnik an der Wand: 3 × 20 Bälle, hoch und flach (15 Min)"
+   ],
+   [
+    "Mi",
+    "Kunstrasen-Training: Torwartblock und Spielaufbau mit dem Fuß"
+   ],
+   [
+    "Do",
+    "Abwurf und Abstoß auf Ziel: 20 Versuche, Treffer zählen"
+   ],
+   [
+    "Sa",
+    "Spieltag – danach Quiz „Eigener Ballbesitz“ (Spielaufbau)"
+   ],
+   [
+    "So",
+    "Lernzone: Zonen-Trainer „Benennen“ einmal durchspielen"
+   ]
+  ],
+  "goals": [
+   {
+    "t": "Ich coache meine Abwehrkette in jedem Spiel laut mit festen Kommandos (vor, raus, Zeit).",
+    "when": "jedes Spiel"
+   },
+   {
+    "t": "Ich spiele im Spielaufbau 8 von 10 Abstößen flach zu einem Mitspieler.",
+    "when": "bis Winterpause"
+   }
+  ]
+ }
+}

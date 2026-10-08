@@ -1,0 +1,924 @@
+[
+ {
+  "id": "bb",
+  "nr": 1,
+  "title": "Eigener Ballbesitz",
+  "ball": "own",
+  "ziel": "Tore erzielen – mit dem Ball das Spiel bestimmen und Chancen herausspielen.",
+  "intro": "Wir haben den Ball. Jetzt wollen wir das Feld groß machen, uns gegenseitig anbieten und den Ball sicher nach vorne bringen.",
+  "unter": [
+   [
+    "Spielaufbau",
+    "hinteres Drittel – sicher von hinten herausspielen"
+   ],
+   [
+    "Spielentwicklung",
+    "mittleres Drittel – Lücken finden, nach vorne spielen"
+   ],
+   [
+    "Torchance",
+    "vorderes Drittel – Abschluss vorbereiten und abschließen"
+   ]
+  ],
+  "merk": "Breit, tief, anspielbar – und vor dem Ball schon wissen, was ich damit mache.",
+  "prin": [
+   [
+    "Breite und Tiefe",
+    "Die Außenspuren sind besetzt, einer gibt Tiefe. Ein großes Feld heißt mehr Platz für uns."
+   ],
+   [
+    "Anspielbar sein",
+    "Raus aus dem Deckungsschatten. Wir bilden Dreiecke, damit der Ballführende immer zwei Möglichkeiten hat."
+   ],
+   [
+    "Offene Stellung",
+    "Den Körper so drehen, dass ich Ball und Spielfeld nach vorne gleichzeitig sehe."
+   ],
+   [
+    "Schulterblick",
+    "Vor der Ballannahme umschauen: Wo ist Platz, wo ist der Gegner?"
+   ],
+   [
+    "Nach vorne denken",
+    "Wenn das Zentrum offen ist, spielen wir durch die Mitte. Sonst über die Halbspur oder außen."
+   ]
+  ],
+  "sit": {
+   "own": [
+    [
+     1,
+     34,
+     100
+    ],
+    [
+     4,
+     47,
+     92
+    ],
+    [
+     5,
+     21,
+     92
+    ],
+    [
+     6,
+     34,
+     81
+    ],
+    [
+     2,
+     62,
+     72
+    ],
+    [
+     3,
+     6,
+     72
+    ],
+    [
+     8,
+     46,
+     62
+    ],
+    [
+     10,
+     23,
+     58
+    ],
+    [
+     7,
+     63,
+     42
+    ],
+    [
+     11,
+     5,
+     42
+    ],
+    [
+     9,
+     34,
+     38
+    ]
+   ],
+   "opp": [
+    [
+     40,
+     84
+    ],
+    [
+     28,
+     84
+    ],
+    [
+     34,
+     70
+    ],
+    [
+     50,
+     67
+    ],
+    [
+     18,
+     67
+    ],
+    [
+     34,
+     56
+    ]
+   ],
+   "ball": [
+    34,
+    100
+   ],
+   "arrows": [
+    {
+     "f": [
+      34,
+      100
+     ],
+     "t": [
+      47,
+      92
+     ],
+     "k": "pass"
+    },
+    {
+     "f": [
+      62,
+      72
+     ],
+     "t": [
+      62,
+      62
+     ],
+     "k": "run"
+    },
+    {
+     "f": [
+      34,
+      81
+     ],
+     "t": [
+      38,
+      77
+     ],
+     "k": "run"
+    }
+   ],
+   "cap": "Spielaufbau vom Torwart: Die Innenverteidiger gehen breit bis an die Strafraumecken, die 6 bietet sich zwischen den Gegnern an, die Außenverteidiger schieben hoch."
+  },
+  "quiz": [
+   {
+    "q": "Unser Torwart hat den Ball im Spielaufbau. Wo stehen die Innenverteidiger am besten?",
+    "options": [
+     "Breit, etwa an den Strafraumecken",
+     "Eng nebeneinander vor dem Tor",
+     "Beide an der Mittellinie",
+     "Direkt neben dem Torwart"
+    ],
+    "correct": 0,
+    "why": "Breit stehen macht das Feld groß und öffnet Passwege. Ein Gegner kann nicht beide gleichzeitig anlaufen."
+   },
+   {
+    "q": "Was bedeutet „offene Stellung“ bei der Ballannahme?",
+    "options": [
+     "Körper so drehen, dass ich Ball und Spielfeld nach vorne sehe",
+     "Mit dem Rücken zum gegnerischen Tor stehen",
+     "Die Arme ausbreiten",
+     "Den Ball immer mit der Sohle stoppen"
+    ],
+    "correct": 0,
+    "why": "In offener Stellung siehst du Ball und Spielfeld gleichzeitig und kannst sofort nach vorne spielen."
+   },
+   {
+    "q": "Warum machst du vor der Ballannahme einen Schulterblick?",
+    "options": [
+     "Damit ich weiß, wo Gegner, Mitspieler und Platz sind, bevor der Ball kommt",
+     "Um zum Trainer zu schauen",
+     "Damit der Schiri mich sieht",
+     "Das ist nur bei Ecken wichtig"
+    ],
+    "correct": 0,
+    "why": "Wer vorher schaut, weiß schon bei der Annahme, wohin es weitergeht. Das spart Zeit."
+   },
+   {
+    "q": "Ein Mitspieler hat den Ball, du stehst genau hinter einem Gegner. Was tust du?",
+    "options": [
+     "Raus aus dem Deckungsschatten, damit eine Passlinie entsteht",
+     "Stehen bleiben und laut rufen",
+     "Zum Ball laufen, bis du direkt neben ihm stehst",
+     "Ins Aus laufen"
+    ],
+    "correct": 0,
+    "why": "Hinter dem Gegner kann dich niemand anspielen. Ein paar Schritte zur Seite öffnen die Passlinie."
+   },
+   {
+    "q": "Wofür sorgen die Spieler in den Außenspuren im eigenen Ballbesitz?",
+    "options": [
+     "Für Breite – das Feld wird groß",
+     "Für Tiefe hinter der Abwehr",
+     "Sie sichern das eigene Tor",
+     "Sie sollen nur verteidigen"
+    ],
+    "correct": 0,
+    "why": "Wer breit steht, zieht den Gegner auseinander. Dadurch entstehen Lücken in den Halbspuren und im Zentrum."
+   }
+  ]
+ },
+ {
+  "id": "ud",
+  "nr": 2,
+  "title": "Umschalten nach Ballverlust",
+  "ball": "opp",
+  "ziel": "Den Ball sofort zurückerobern – oder den Gegenangriff verhindern.",
+  "intro": "Wir haben den Ball gerade verloren. Die ersten Sekunden entscheiden: Der Gegner ist noch nicht sortiert, und wir sind nah am Ball.",
+  "unter": [
+   [
+    "Gegenpressing",
+    "die ersten Sekunden – Ball zurückholen, solange wir nah dran sind"
+   ],
+   [
+    "Rückzug",
+    "klappt es nicht – schnell hinter den Ball und neu ordnen"
+   ]
+  ],
+  "merk": "Nicht ärgern, umschalten! Der Nächste geht drauf, die anderen machen eng.",
+  "prin": [
+   [
+    "Sofort reagieren",
+    "Keine Zeit mit Ärgern verlieren. Der Ballverlust ist der Startschuss."
+   ],
+   [
+    "Der Nächste geht drauf",
+    "Der Spieler, der am nächsten am Ball ist, attackiert – egal welche Position er spielt."
+   ],
+   [
+    "Eng machen",
+    "Zwei, drei Mitspieler schließen die kurzen Passwege um den Ball."
+   ],
+   [
+    "Zentrum zu",
+    "Der direkte Weg zu unserem Tor wird zuerst geschlossen."
+   ],
+   [
+    "Rechtzeitig zurück",
+    "Kommt der Gegner aus dem Druck heraus, laufen alle schnell hinter den Ball."
+   ]
+  ],
+  "sit": {
+   "own": [
+    [
+     8,
+     46,
+     35
+    ],
+    [
+     7,
+     60,
+     24
+    ],
+    [
+     9,
+     36,
+     22
+    ],
+    [
+     6,
+     36,
+     46
+    ],
+    [
+     10,
+     26,
+     34
+    ],
+    [
+     11,
+     8,
+     30
+    ],
+    [
+     2,
+     60,
+     50
+    ],
+    [
+     4,
+     44,
+     62
+    ],
+    [
+     5,
+     28,
+     62
+    ],
+    [
+     3,
+     10,
+     52
+    ],
+    [
+     1,
+     34,
+     98
+    ]
+   ],
+   "opp": [
+    [
+     50,
+     31
+    ],
+    [
+     56,
+     40
+    ],
+    [
+     40,
+     40
+    ],
+    [
+     30,
+     50
+    ],
+    [
+     62,
+     58
+    ],
+    [
+     44,
+     52
+    ]
+   ],
+   "ball": [
+    51,
+    30
+   ],
+   "arrows": [
+    {
+     "f": [
+      46,
+      35
+     ],
+     "t": [
+      49.5,
+      32
+     ],
+     "k": "run"
+    },
+    {
+     "f": [
+      60,
+      24
+     ],
+     "t": [
+      55,
+      28
+     ],
+     "k": "run"
+    },
+    {
+     "f": [
+      36,
+      22
+     ],
+     "t": [
+      42,
+      28
+     ],
+     "k": "run"
+    },
+    {
+     "f": [
+      36,
+      46
+     ],
+     "t": [
+      40,
+      41
+     ],
+     "k": "run"
+    }
+   ],
+   "cap": "Ballverlust in der rechten Halbspur: Die 8 attackiert sofort, die 7 und die 9 machen eng, die 6 schließt den Weg ins Zentrum."
+  },
+  "quiz": [
+   {
+    "q": "Wir verlieren den Ball. Was ist der erste Gedanke?",
+    "options": [
+     "Sofort umschalten und den Ball zurückerobern wollen",
+     "Kurz ärgern, dann zurücklaufen",
+     "Auf den Pfiff warten",
+     "Schauen, wer schuld war"
+    ],
+    "correct": 0,
+    "why": "Die ersten Sekunden nach dem Ballverlust sind die beste Chance, den Ball zurückzuholen."
+   },
+   {
+    "q": "Wer attackiert direkt nach dem Ballverlust den Ballführenden?",
+    "options": [
+     "Der Spieler, der am nächsten dran ist",
+     "Immer der Stürmer",
+     "Immer der Spieler, der den Ball verloren hat",
+     "Der Torwart"
+    ],
+    "correct": 0,
+    "why": "Der Nächste geht drauf – egal welche Position. Zeit ist jetzt das Wichtigste."
+   },
+   {
+    "q": "Was machen die Mitspieler um den Ball herum beim Gegenpressing?",
+    "options": [
+     "Passwege zustellen und den Raum eng machen",
+     "Weit weg in die Breite laufen",
+     "Stehen bleiben und zuschauen",
+     "Alle gleichzeitig auf den Ball gehen"
+    ],
+    "correct": 0,
+    "why": "Wenn alle auf den Ball gehen, ist hinten alles offen. Die anderen nehmen die kurzen Pässe weg."
+   },
+   {
+    "q": "Das Gegenpressing klappt nicht, der Gegner spielt sich frei. Was jetzt?",
+    "options": [
+     "Schnell hinter den Ball zurück und neu ordnen",
+     "Weiter alleine hinterherjagen",
+     "Foulen",
+     "Vorne stehen bleiben für den Konter"
+    ],
+    "correct": 0,
+    "why": "Dann wechseln wir in die Ordnung gegen den Ball: zurück hinter den Ball, kompakt werden."
+   },
+   {
+    "q": "Welchen Raum schließen wir nach Ballverlust zuerst?",
+    "options": [
+     "Das Zentrum – den direkten Weg zu unserem Tor",
+     "Die Außenspur",
+     "Den Raum hinter dem gegnerischen Tor",
+     "Keinen bestimmten"
+    ],
+    "correct": 0,
+    "why": "Durch das Zentrum ist der Weg zum Tor am kürzesten. Von außen ist es für den Gegner schwerer."
+   }
+  ]
+ },
+ {
+  "id": "gb",
+  "nr": 3,
+  "title": "Gegnerischer Ballbesitz",
+  "ball": "opp",
+  "ziel": "Tore verhindern und den Ball erobern.",
+  "intro": "Der Gegner hat den Ball. Wir stehen kompakt, verschieben gemeinsam zum Ball und lenken den Gegner dorthin, wo wir den Ball gewinnen wollen.",
+  "unter": [
+   [
+    "Hohes Pressing",
+    "vorderes Drittel – Gegner schon im Aufbau stören"
+   ],
+   [
+    "Mittelfeldpressing",
+    "mittleres Drittel – kompakt stehen, Ball gewinnen"
+   ],
+   [
+    "Tor verteidigen",
+    "hinteres Drittel – Strafraum und Tor schützen"
+   ]
+  ],
+  "merk": "Kompakt, ballorientiert, Zentrum zu – einer drückt, alle sichern.",
+  "prin": [
+   [
+    "Kompakt stehen",
+    "Kurze Abstände zwischen den Spielern und zwischen den Ketten. Keine Lücken."
+   ],
+   [
+    "Ballorientiert verschieben",
+    "Die ganze Mannschaft schiebt zur Ballseite. Die ballferne Außenspur darf frei bleiben."
+   ],
+   [
+    "Nach außen lenken",
+    "Wir schließen das Zentrum. Die Seitenlinie hilft uns wie ein zusätzlicher Verteidiger."
+   ],
+   [
+    "Druck und Sicherung",
+    "Einer attackiert den Ballführenden, die Nächsten sichern dahinter ab."
+   ],
+   [
+    "Tor schützen",
+    "Im eigenen Strafraum bleiben wir zwischen Gegner und Tor und blocken Schüsse."
+   ]
+  ],
+  "sit": {
+   "own": [
+    [
+     2,
+     58,
+     52
+    ],
+    [
+     7,
+     57,
+     40
+    ],
+    [
+     8,
+     48,
+     46
+    ],
+    [
+     6,
+     40,
+     53
+    ],
+    [
+     10,
+     33,
+     44
+    ],
+    [
+     11,
+     24,
+     42
+    ],
+    [
+     9,
+     38,
+     32
+    ],
+    [
+     4,
+     46,
+     63
+    ],
+    [
+     5,
+     35,
+     65
+    ],
+    [
+     3,
+     25,
+     62
+    ],
+    [
+     1,
+     34,
+     98
+    ]
+   ],
+   "opp": [
+    [
+     63,
+     49
+    ],
+    [
+     55,
+     58
+    ],
+    [
+     44,
+     36
+    ],
+    [
+     30,
+     30
+    ],
+    [
+     60,
+     30
+    ],
+    [
+     20,
+     55
+    ]
+   ],
+   "ball": [
+    63.5,
+    47.5
+   ],
+   "arrows": [
+    {
+     "f": [
+      58,
+      52
+     ],
+     "t": [
+      61.5,
+      49.5
+     ],
+     "k": "run"
+    },
+    {
+     "f": [
+      24,
+      42
+     ],
+     "t": [
+      29,
+      43
+     ],
+     "k": "run"
+    },
+    {
+     "f": [
+      25,
+      62
+     ],
+     "t": [
+      30,
+      62
+     ],
+     "k": "run"
+    }
+   ],
+   "cap": "Ball auf der rechten Außenbahn: Die 2 attackiert, alle schieben zur Ballseite. Die ballferne Seite wird kleiner, der Pass ins Zentrum ist zu."
+  },
+  "quiz": [
+   {
+    "q": "Was heißt „kompakt stehen“?",
+    "options": [
+     "Kurze Abstände zwischen den Spielern und zwischen den Ketten",
+     "Alle stehen im eigenen Strafraum",
+     "Jeder deckt einen Gegner über das ganze Feld",
+     "Möglichst breit über das ganze Feld verteilt"
+    ],
+    "correct": 0,
+    "why": "Kompakt heißt: wenig Platz zwischen uns. Dann findet der Gegner keine Lücke für Pässe."
+   },
+   {
+    "q": "Der Gegner hat den Ball in unserer rechten Außenspur. Wie verschieben wir?",
+    "options": [
+     "Alle schieben zur Ballseite, die ballferne Seite bleibt etwas frei",
+     "Wir bleiben, wo wir sind",
+     "Alle laufen zur ballfernen Seite",
+     "Nur der nächste Spieler bewegt sich"
+    ],
+    "correct": 0,
+    "why": "Wir verschieben als Block zum Ball. Ein langer Seitenwechsel dauert, da haben wir Zeit nachzuschieben."
+   },
+   {
+    "q": "Wohin wollen wir den Gegner im Pressing lenken?",
+    "options": [
+     "Nach außen, weg vom Zentrum",
+     "Ins Zentrum",
+     "Immer zurück zu seinem Torwart",
+     "Egal wohin"
+    ],
+    "correct": 0,
+    "why": "Außen hat der Gegner weniger Möglichkeiten. Die Seitenlinie ist wie ein zusätzlicher Verteidiger."
+   },
+   {
+    "q": "Einer attackiert den Ballführenden. Was machen die Nächsten?",
+    "options": [
+     "Absichern – hinter dem Attackierenden stehen und Passwege schließen",
+     "Auch auf den Ball gehen",
+     "Nach vorne laufen für den Konter",
+     "Den eigenen Gegenspieler vergessen"
+    ],
+    "correct": 0,
+    "why": "Wird der Attackierende ausgespielt, steht der Sichernde schon bereit."
+   },
+   {
+    "q": "Im eigenen Strafraum: Was ist das Wichtigste?",
+    "options": [
+     "Das Tor schützen – zwischen Gegner und Tor bleiben, Schüsse blocken",
+     "Ins Dribbling gehen",
+     "Den Ball schön herausspielen, egal wie",
+     "Die Abseitsfalle stellen"
+    ],
+    "correct": 0,
+    "why": "Im Strafraum geht Torschutz vor allem anderen. Erst sichern, dann klären oder aufbauen."
+   }
+  ]
+ },
+ {
+  "id": "uo",
+  "nr": 4,
+  "title": "Umschalten nach Ballgewinn",
+  "ball": "own",
+  "ziel": "Die Unordnung des Gegners nutzen – schnell und direkt zum Tor.",
+  "intro": "Wir haben den Ball gerade erobert. Der Gegner ist noch in seiner Angriffsordnung und hinten offen. Jetzt zählt Tempo.",
+  "unter": [
+   [
+    "Konter",
+    "Pass oder Lauf in die Tiefe – schnell zum Tor"
+   ],
+   [
+    "Ball sichern",
+    "kein Weg nach vorne – Ball halten und ruhig aufbauen"
+   ]
+  ],
+  "merk": "Erster Blick nach vorne! Geht es nicht schnell, sichern wir den Ball.",
+  "prin": [
+   [
+    "Erster Blick nach vorne",
+    "Nach dem Ballgewinn schaue ich zuerst: Geht der Pass in die Tiefe?"
+   ],
+   [
+    "Tiefe suchen",
+    "Die vordersten Spieler laufen sofort in den Raum hinter der Abwehr."
+   ],
+   [
+    "Breite schaffen",
+    "Die Außenspieler sprinten mit und ziehen den Konter breit."
+   ],
+   [
+    "Tempo und wenige Kontakte",
+    "Ein, zwei Kontakte. Jede Sekunde hilft dem Gegner beim Zurücklaufen."
+   ],
+   [
+    "Ball sichern",
+    "Ist kein Konter möglich, halten wir den Ball und bauen ruhig auf."
+   ]
+  ],
+  "sit": {
+   "own": [
+    [
+     6,
+     34,
+     60
+    ],
+    [
+     9,
+     36,
+     40
+    ],
+    [
+     7,
+     60,
+     44
+    ],
+    [
+     11,
+     8,
+     44
+    ],
+    [
+     8,
+     48,
+     52
+    ],
+    [
+     10,
+     24,
+     50
+    ],
+    [
+     2,
+     62,
+     64
+    ],
+    [
+     3,
+     6,
+     64
+    ],
+    [
+     4,
+     44,
+     74
+    ],
+    [
+     5,
+     26,
+     74
+    ],
+    [
+     1,
+     34,
+     98
+    ]
+   ],
+   "opp": [
+    [
+     37,
+     62
+    ],
+    [
+     46,
+     66
+    ],
+    [
+     22,
+     64
+    ],
+    [
+     30,
+     34
+    ],
+    [
+     44,
+     30
+    ],
+    [
+     14,
+     40
+    ]
+   ],
+   "ball": [
+    34,
+    58
+   ],
+   "arrows": [
+    {
+     "f": [
+      34,
+      58
+     ],
+     "t": [
+      42,
+      30
+     ],
+     "k": "pass"
+    },
+    {
+     "f": [
+      36,
+      40
+     ],
+     "t": [
+      42,
+      28
+     ],
+     "k": "run"
+    },
+    {
+     "f": [
+      60,
+      44
+     ],
+     "t": [
+      58,
+      26
+     ],
+     "k": "run"
+    },
+    {
+     "f": [
+      8,
+      44
+     ],
+     "t": [
+      12,
+      26
+     ],
+     "k": "run"
+    }
+   ],
+   "cap": "Ballgewinn durch die 6: Der erste Blick geht nach vorne, die 9 startet in die Tiefe, die Außen sprinten mit und geben Breite."
+  },
+  "quiz": [
+   {
+    "q": "Wir haben den Ball gewonnen. Wohin geht der erste Blick?",
+    "options": [
+     "Nach vorne – ist ein Pass in die Tiefe möglich?",
+     "Zum Trainer",
+     "Zum Torwart",
+     "Auf den Ball am Boden"
+    ],
+    "correct": 0,
+    "why": "Direkt nach dem Ballgewinn ist der Gegner offen. Wer zuerst nach vorne schaut, nutzt das."
+   },
+   {
+    "q": "Warum ist ein schneller Angriff nach Ballgewinn so gefährlich?",
+    "options": [
+     "Der Gegner ist noch ungeordnet, weil er gerade selbst angegriffen hat",
+     "Weil der Schiri dann nichts pfeift",
+     "Weil wir dann ausruhen können",
+     "Er ist nicht gefährlicher"
+    ],
+    "correct": 0,
+    "why": "Der Gegner steht noch in seiner Angriffsordnung, also hinten mit wenigen Spielern."
+   },
+   {
+    "q": "Was machen die Außenspieler beim Konter?",
+    "options": [
+     "In die Tiefe sprinten und Breite geben",
+     "Stehen bleiben",
+     "Zurück zur Abwehr laufen",
+     "Zum Ball kommen"
+    ],
+    "correct": 0,
+    "why": "So hat der Ballführende Anspielstationen, und die Abwehr muss sich auseinanderziehen."
+   },
+   {
+    "q": "Nach dem Ballgewinn sind alle Passwege nach vorne zu. Was tust du?",
+    "options": [
+     "Ball sichern und halten – dann ruhig aufbauen",
+     "Trotzdem lang nach vorne schlagen",
+     "Den Ball ins Aus schießen",
+     "Gegen drei Gegner ins Dribbling gehen"
+    ],
+    "correct": 0,
+    "why": "Ein erzwungener Pass bringt den Ball sofort zurück. Dann lieber sichern und neu aufbauen."
+   },
+   {
+    "q": "Wie viele Ballkontakte sind beim Konter ideal?",
+    "options": [
+     "Möglichst wenige – das Tempo hochhalten",
+     "So viele wie möglich",
+     "Immer genau drei",
+     "Das ist egal"
+    ],
+    "correct": 0,
+    "why": "Jeder zusätzliche Kontakt gibt dem Gegner Zeit, zurückzulaufen."
+   }
+  ]
+ }
+]

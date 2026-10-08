@@ -1,0 +1,12 @@
+{
+ "name": "SV Heimstetten U14",
+ "system": "1-4-3-3",
+ "colors": {
+  "shirt": "#5e2129",
+  "goalkeeper": "#2E78FF"
+ },
+ "goalkeepers": [
+  1,
+  22
+ ]
+}

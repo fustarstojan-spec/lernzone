@@ -1,0 +1,37 @@
+{
+ "lanes": [
+  "linke Außenspur",
+  "linke Halbspur",
+  "Zentrumsspur",
+  "rechte Halbspur",
+  "rechte Außenspur"
+ ],
+ "thirds": [
+  {
+   "n": "vorderes Drittel",
+   "d": "vorderen Drittel"
+  },
+  {
+   "n": "mittleres Drittel",
+   "d": "mittleren Drittel"
+  },
+  {
+   "n": "hinteres Drittel",
+   "d": "hinteren Drittel"
+  }
+ ],
+ "laneX": [
+  0,
+  13.84,
+  24.84,
+  43.16,
+  54.16,
+  68
+ ],
+ "thirdY": [
+  0,
+  35,
+  70,
+  105
+ ]
+}
