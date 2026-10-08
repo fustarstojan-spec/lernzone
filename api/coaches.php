@@ -1,19 +1,18 @@
 <?php
 /*
  * Trainer-Konten
- * GET                                   → [{id, name, isAdmin?}]  Namen für die Anmeldung (isAdmin nur für Trainer)
- * POST {action:"add", name, pin, isAdmin}          → neuer Trainer (nur Admin)
- * POST {action:"update", id, name?, pin?, isAdmin?} → ändern (Admin; eigener Name/PIN auch ohne Admin)
+ * GET                                    → [{id, name, isAdmin, username}]  (nur Trainer)
+ * POST {action:"add", name, username?, isAdmin}     → neuer Trainer (nur Admin) → {coach, username, code}
+ * POST {action:"update", id, name?, isAdmin?}       → ändern (Admin; eigener Name auch ohne Admin)
  * POST {action:"delete", id}                       → entfernen (nur Admin, nicht sich selbst, nicht den letzten Admin)
  */
 require __DIR__ . '/config.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $me   = current_coach();
+    require_coach();
     $rows = db()->query('SELECT id, name, is_admin FROM coaches WHERE active = 1 ORDER BY is_admin DESC, name')->fetchAll(PDO::FETCH_ASSOC);
-    json_out(array_map(fn($r) => $me
-        ? ['id' => (int)$r['id'], 'name' => $r['name'], 'isAdmin' => (bool)$r['is_admin']]
-        : ['id' => (int)$r['id'], 'name' => $r['name']], $rows));
+    json_out(array_map(fn($r) => ['id' => (int)$r['id'], 'name' => $r['name'], 'isAdmin' => (bool)$r['is_admin'],
+                                  'username' => account_for('coach', (int)$r['id'])['username'] ?? ''], $rows));
 }
 
 require_method('POST');
@@ -32,12 +31,16 @@ $coach  = function (int $id) {
 if ($action === 'add') {
     if (!$me['isAdmin']) json_out(['ok' => false, 'error' => 'Nur für Admins.'], 403);
     $name = clean_text($in['name'] ?? '', 30);
-    $pin  = (string)($in['pin'] ?? '');
-    if ($name === '')                     json_out(['ok' => false, 'error' => 'Bitte einen Namen eingeben.'], 400);
-    if (!preg_match('/^\d{6}$/', $pin))   json_out(['ok' => false, 'error' => 'Die Trainer-PIN muss 6 Ziffern haben.'], 400);
-    db()->prepare('INSERT INTO coaches (name, pin_hash, is_admin) VALUES (?, ?, ?)')
-        ->execute([$name, password_hash($pin, PASSWORD_DEFAULT), !empty($in['isAdmin']) ? 1 : 0]);
-    json_out(['ok' => true, 'coach' => $coach((int)db()->lastInsertId())]);
+    if ($name === '') json_out(['ok' => false, 'error' => 'Bitte einen Namen eingeben.'], 400);
+    $u = clean_username((string)($in['username'] ?? ''));
+    if ($u === '') $u = unique_username(db(), username_ok(clean_username($name)) ? clean_username($name) : 'trainer');
+    if (!username_ok($u))   json_out(['ok' => false, 'error' => 'Benutzername: 3–30 Zeichen, nur a–z, 0–9, Punkt, Bindestrich.'], 400);
+    if (username_taken($u)) json_out(['ok' => false, 'error' => 'Dieser Benutzername ist schon vergeben.'], 409);
+    db()->prepare("INSERT INTO coaches (name, pin_hash, is_admin) VALUES (?, '', ?)")->execute([$name, !empty($in['isAdmin']) ? 1 : 0]);
+    $cid = (int)db()->lastInsertId();
+    db()->prepare("INSERT INTO accounts (username, kind, ref, must_set_pw) VALUES (?, 'coach', ?, 1)")->execute([$u, $cid]);
+    $code = issue_code((int)account_for('coach', $cid)['id']);
+    json_out(['ok' => true, 'coach' => $coach($cid), 'username' => $u, 'code' => $code, 'expires' => date('d.m.Y', time() + CODE_DAYS * 86400)]);
 }
 
 $id     = (int)($in['id'] ?? 0);
@@ -51,11 +54,6 @@ if ($action === 'update') {
         $name = clean_text($in['name'], 30);
         if ($name === '') json_out(['ok' => false, 'error' => 'Der Name darf nicht leer sein.'], 400);
         db()->prepare('UPDATE coaches SET name = ? WHERE id = ?')->execute([$name, $id]);
-    }
-    if (isset($in['pin']) && $in['pin'] !== '') {
-        if (!preg_match('/^\d{6}$/', (string)$in['pin'])) json_out(['ok' => false, 'error' => 'Die Trainer-PIN muss 6 Ziffern haben.'], 400);
-        db()->prepare('UPDATE coaches SET pin_hash = ?, fail_count = 0, locked_until = 0 WHERE id = ?')
-            ->execute([password_hash((string)$in['pin'], PASSWORD_DEFAULT), $id]);
     }
     if (array_key_exists('isAdmin', $in)) {
         if (!$me['isAdmin']) json_out(['ok' => false, 'error' => 'Nur Admins vergeben Admin-Rechte.'], 403);
@@ -71,6 +69,7 @@ if ($action === 'delete') {
     if ($id === $me['id'])                      json_out(['ok' => false, 'error' => 'Du kannst dich nicht selbst entfernen.'], 400);
     if ($target['isAdmin'] && $admins() <= 1)   json_out(['ok' => false, 'error' => 'Es muss mindestens einen Admin geben.'], 400);
     db()->prepare('DELETE FROM coaches WHERE id = ?')->execute([$id]);
+    db()->prepare("DELETE FROM accounts WHERE kind = 'coach' AND ref = ?")->execute([$id]);
     json_out(['ok' => true]);
 }
 

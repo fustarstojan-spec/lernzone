@@ -1,7 +1,6 @@
 <?php
-// POST → {ok}
+// POST → {ok}  (gleich wie api/auth.php {action:"logout"})
 require __DIR__ . '/config.php';
 require_method('POST');
-$_SESSION = [];
-session_destroy();
-json_out(['ok' => true]);
+logout_session();
+json_out(['ok' => true, 'csrf' => csrf_token()]);

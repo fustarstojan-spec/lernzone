@@ -2,6 +2,17 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.8.0 – 2026-10-08
+- **Anmeldeseite:** Mit PHP ist die ganze App erst nach Anmeldung sichtbar – Benutzername + Passwort für Spieler und Trainer
+- **Erstanmeldung mit Einmal-Code:** Trainer legt Konto an → Benutzername + Code (7 Tage gültig) → Kind/Trainer legt eigenes Passwort fest
+- Passwort vergessen: Trainer erzeugt einen neuen Einmal-Code (altes Passwort ungültig, alle Geräte abgemeldet)
+- Passwort ändern für alle (andere Geräte werden abgemeldet); Passwort-Regeln: mind. 8 Zeichen, nicht der Benutzername, keine Allerwelts-Passwörter
+- Bisherige Konten laufen weiter: Spieler `spielerNN` + alte PIN, Trainer = Vorname + alte Trainer-PIN – beim ersten Login muss ein eigenes Passwort festgelegt werden
+- Sicherheit: Argon2id, CSRF-Token für jede Änderung, Sitzungs-Cookie `SameSite=Strict`, Trainer nach 8 h ohne Aktivität abgemeldet, Sperre nach 5 Fehlversuchen pro Konto, gleiche Antwort für unbekannte Benutzernamen, Sicherheits-Header (CSP, X-Frame-Options …), Demo-PINs und Projektdateien nicht über das Web abrufbar
+- Kader und Daten nur noch für Angemeldete; alte PIN-Anmeldung abgeschaltet
+- Trainingsbeteiligung zählt erst ab Aufnahme in den Kader
+- Neue Dateien: `js/auth.js`, `api/auth.php`, `api/accounts.php`, `tools/create_coach.php`
+
 ## 0.7.0 – 2026-10-08
 - Trainer-Konten: jeder Trainer meldet sich mit Namen und eigener 6-stelliger PIN an; Admins legen Trainer an, vergeben/entziehen Admin-Rechte, entfernen Konten (mindestens ein Admin bleibt immer)
 - Die bisherige Trainer-PIN wird automatisch zum Admin-Konto „Trainer“ (Name unter „Trainer“ änderbar)

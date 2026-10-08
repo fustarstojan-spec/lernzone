@@ -4,17 +4,13 @@
  * Die App spricht NUR mit diesem Objekt. Beide Varianten haben dieselben Methoden:
  *   init()                 → { user }       Sitzung wiederherstellen
  *   loadContent()          → { team, zones, phases, plans, players }
- *   login(nr, pin)         → { ok, user, error }
+ *   login(nr, pin)         → { ok, user, error }        (nur Weg A; Weg B: signIn, siehe unten)
  *   logout()
  *   getProgress()          → { quiz:{}, tasks:{} }   (synchron, aus dem Zwischenspeicher)
  *   saveProgress(progress) → speichert im Hintergrund
  *   canManage              → true, wenn Spieler angelegt werden können (nur Weg B / PHP)
  *   coach                  → { active, id, name, isAdmin, hasCoaches, canSetup }   Trainer-Status
- *   coachLogin(id, pin) / coachSetup(name, pin) / coachLogout()               → { ok, error }
- *   get(path) / send(file, body)  → direkter Zugriff auf weitere Schnittstellen (Profil, Trainings, Barometer …)
- *   addPlayer({nr, type, pin})                             → { ok, player, error }
- *   setPin(nr, pin)                                        → { ok, error }
- *   setPositions(nr, posOff, posDef)                       → { ok, player, error }
+ *   get(path) / send(file, body)  → direkter Zugriff auf weitere Schnittstellen (nur Weg B)
  *
  * user = { nr, pos, plan, posOff, posDef }   (posOff/posDef = Positionskürzel aus data/team.json)
  * progress = { quiz: { <modulId>: {best, of, last} }, tasks: { "<Jahr>-W<KW>": { <index>: true|false } } }
@@ -73,85 +69,121 @@
     };
   }
 
-  /* ---------- Weg B: PHP-Schnittstelle ---------- */
+  /* ---------- Weg B: PHP-Schnittstelle mit Anmeldung ---------- *
+   * Zusätzlich zu den gemeinsamen Methoden:
+   *   gate()                    → "login" | "setpw" | "setup" | null   (welche Anmeldeseite gezeigt werden muss)
+   *   account                   → { username } des angemeldeten Kontos
+   *   pending                   → { username } nach Einmal-Code, bis das eigene Passwort festgelegt ist
+   *   signIn(username, password)          → { ok, state: "ok" | "setpw", user, error }
+   *   setPassword(pw, pw2)                → { ok, user, error }
+   *   changePassword(old, pw, pw2)        → { ok, error }
+   *   setupFirst(name, username, pw, pw2) → { ok, error }   erstes Trainer-Konto (nur localhost)
+   *   refreshPlayers()          → Kader neu laden (nur angemeldet)
+   * Jede POST-Anfrage schickt das CSRF-Token aus api/me.php mit.                                   */
   function ApiStore() {
     const api = cfg.apiBase;
-    let user = null, progress = emptyProgress();
-    const post = (file, body) => getJSON(api + file, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {})
-    });
-    // wie post, liefert aber auch bei Fehlerstatus (400/401/403/409) die JSON-Antwort mit Fehlermeldung
+    let user = null, progress = emptyProgress(), content = null, csrf = "";
+
     const postAny = async (file, body) => {
       const r = await fetch(api + file, { method: "POST", credentials: "same-origin",
-        headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
-      return r.json();
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf }, body: JSON.stringify(body || {}) });
+      const d = await r.json();
+      if (d && d.csrf) csrf = d.csrf;
+      return d;
+    };
+    const safe = async (file, body) => {
+      try { return await postAny(file, body); } catch (e) { return { ok: false, error: "Server nicht erreichbar. Versuch es gleich nochmal." }; }
     };
 
     const api_ = {
       mode: "api",
       canManage: true,
       coach: { active: false, hasCoaches: false, canSetup: false },
+      account: null,
+      pending: null,
+      get currentUser() { return user; },
+      gate() {
+        if (user || api_.coach.active) return null;
+        if (api_.pending) return "setpw";
+        if (!api_.coach.hasCoaches && api_.coach.canSetup) return "setup";
+        return "login";
+      },
       async loadContent() {
-        const c = await loadStatic(["team", "zones", "phases", "plans"]);
-        c.players = await getJSON(api + "players.php");      // Kader aus der Datenbank
-        return c;
+        content = await loadStatic(["team", "zones", "phases", "plans"]);
+        content.players = [];                                    // Kader kommt nach der Anmeldung aus der Datenbank
+        return content;
+      },
+      async refreshPlayers() {
+        if (!content || api_.gate()) return;
+        const list = await api_.get("players.php");
+        if (Array.isArray(list)) content.players.splice(0, content.players.length, ...list);
       },
       async init() {
         const me = await getJSON(api + "me.php");
+        csrf = me.csrf || "";
         user = me.user || null;
-        if (me.coach) api_.coach = me.coach;
+        api_.coach = me.coach || api_.coach;
+        api_.account = me.account || null;
+        api_.pending = me.pending || null;
+        await api_.refreshPlayers();
         progress = user ? normalize(await getJSON(api + "progress.php")) : emptyProgress();
         return { user };
       },
-      async login(nr, pin) {
-        try {
-          const r = await postAny("login.php", { nr, pin });
-          if (!r.ok) return { ok: false, error: r.error || "Anmeldung fehlgeschlagen." };
-          user = r.user;
-          progress = normalize(await getJSON(api + "progress.php"));
-          return { ok: true, user };
-        } catch (e) {
-          return { ok: false, error: "Server nicht erreichbar. Versuch es gleich nochmal." };
-        }
+      async afterLogin(r) {
+        user = r.user || null;
+        if (r.coach) api_.coach = r.coach;
+        api_.account = r.account || null;
+        api_.pending = null;
+        await api_.refreshPlayers();
+        progress = user ? normalize(await getJSON(api + "progress.php")) : emptyProgress();
       },
-      async logout() { try { await post("logout.php"); } catch (e) {} user = null; progress = emptyProgress(); api_.coach.active = false; },
+      async signIn(username, password) {
+        const r = await safe("auth.php", { action: "login", username, password });
+        if (!r.ok) return r;
+        if (r.state === "setpw") { api_.pending = { username: r.username }; return r; }
+        await api_.afterLogin(r);
+        return { ok: true, state: "ok", user };
+      },
+      async setPassword(password, password2) {
+        const r = await safe("auth.php", { action: "setpw", password, password2 });
+        if (!r.ok) { if (r.status === 401 || /noch einmal an/.test(r.error || "")) api_.pending = null; return r; }
+        await api_.afterLogin(r);
+        return { ok: true, user };
+      },
+      async changePassword(old, password, password2) {
+        const r = await safe("auth.php", { action: "change", old, password, password2 });
+        return r.ok ? { ok: true } : r;
+      },
+      async setupFirst(name, username, password, password2) {
+        const r = await safe("auth.php", { action: "setup", name, username, password, password2 });
+        if (r.ok) await api_.afterLogin(r);
+        return r;
+      },
+      cancelPending() { api_.pending = null; return safe("auth.php", { action: "logout" }); },
+      async login() { return { ok: false, error: "Bitte mit Benutzername und Passwort anmelden." }; },
+      async logout() {
+        await safe("auth.php", { action: "logout" });
+        user = null; progress = emptyProgress(); api_.account = null; api_.pending = null;
+        api_.coach = Object.assign({}, api_.coach, { active: false, id: null, name: null, isAdmin: false });
+        if (content) content.players.splice(0);
+      },
+      async coachLogout() { return api_.logout(); },
       getProgress() { return progress; },
       async saveProgress(p) {
         progress = p;
-        if (!user) return;            // Gäste speichern nichts auf dem Server
-        try { await post("progress.php", p); } catch (e) { console.warn("Fortschritt nicht gespeichert", e); }
+        if (!user) return;            // Trainer ohne Spielerkonto speichern keinen Lernfortschritt
+        await safe("progress.php", p);
       },
-      async coachLogin(id, pin)    { return coachCall({ action: "login", id, pin }); },
-      async coachSetup(name, pin)  { return coachCall({ action: "setup", name, pin }); },
       async get(path) {
         try { const r = await fetch(api + path, { credentials: "same-origin" }); return await r.json(); }
         catch (e) { return { ok: false, error: "Server nicht erreichbar." }; }
       },
       async send(file, body) {
-        try { const r = await postAny(file, body); if (r && r.me) api_.coach = r.me; return r; }
-        catch (e) { return { ok: false, error: "Server nicht erreichbar." }; }
-      },
-      async coachLogout()    { return coachCall({ action: "logout" }); },
-      async addPlayer(data) {
-        try { return await postAny("players.php", data); }
-        catch (e) { return { ok: false, error: "Server nicht erreichbar." }; }
-      },
-      async setPin(nr, pin) {
-        try { return await postAny("players.php", { action: "setpin", nr, pin }); }
-        catch (e) { return { ok: false, error: "Server nicht erreichbar." }; }
-      },
-      async setPositions(nr, posOff, posDef) {
-        try { return await postAny("players.php", { action: "setpos", nr, posOff, posDef }); }
-        catch (e) { return { ok: false, error: "Server nicht erreichbar." }; }
+        const r = await safe(file, body);
+        if (r && r.me) api_.coach = r.me;
+        return r;
       }
     };
-    async function coachCall(body) {
-      try {
-        const r = await postAny("coach.php", body);
-        if (r.coach) api_.coach = r.coach;
-        return r;
-      } catch (e) { return { ok: false, error: "Server nicht erreichbar." }; }
-    }
     return api_;
   }
 

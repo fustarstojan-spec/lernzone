@@ -7,7 +7,8 @@
  *   LZ.views[name]   = () => html        eigene Ansicht, aufrufen mit LZ.go(name)
  *   LZ.actions[act]  = (button, value)   Klick auf ein Element mit data-act="act"
  *   LZ.inputs.push(event => …)           Eingaben in Formularfeldern (input/change)
- *   LZ.hooks[name]   = [fn, …]           "enter" (Ansicht geöffnet), "meTop" (HTML in Mein Bereich)
+ *   LZ.hooks[name]   = [fn, …]           "enter" (Ansicht geöffnet), "meTop"/"meBottom" (HTML in Mein Bereich), "ready"
+ *   Weg B: Store.gate() nennt die Anmeldeseite (LZ.views.login / setpw / setup aus js/auth.js), solange niemand angemeldet ist.
  */
 (function () {
   let Store = null;
@@ -17,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.7.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.8.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -172,13 +173,11 @@
   <div class="stack">${area}</div>`;
   }
 
-  /* ---------- Anmeldung ---------- */
+  /* ---------- Anmeldung Weg A (nur ohne Server: Trikot + PIN); Weg B siehe js/auth.js ---------- */
   function loginView() {
     if (S.loginNr === null) return `<button class="back" data-act="home">‹ Übersicht</button>
   <section><p class="eyebrow">Mein Bereich</p><h1>Wähle deine Nummer</h1><p class="lede">Danach gibst du deine 4-stellige PIN ein. Die bekommst du von deinem Trainer.</p></section>
-  <div class="nrgrid">${C.players.map(p => `<button class="nr" data-act="pickNr" data-v="${p.nr}" aria-label="Nummer ${p.nr}">${shirt(p.nr)}<span>${p.plan === "tw" ? "Tor" : "&nbsp;"}</span></button>`).join("")}
-  ${Store.canManage ? `<button class="nr add" data-act="addStart" aria-label="Neuen Spieler anlegen">${shirt("+", "add")}<span>Neu</span></button>` : ""}</div>
-  ${Store.canManage ? `<p style="text-align:center"><button class="linkbtn" data-act="kaderStart">${Store.coach.active ? `Trainer-Bereich (${esc(Store.coach.name || "")})` : "Trainer-Bereich"}</button></p>` : ""}`;
+  <div class="nrgrid">${C.players.map(p => `<button class="nr" data-act="pickNr" data-v="${p.nr}" aria-label="Nummer ${p.nr}">${shirt(p.nr)}<span>${p.plan === "tw" ? "Tor" : "&nbsp;"}</span></button>`).join("")}</div>`;
     return `<button class="back" data-act="unpick">‹ Andere Nummer</button>
   <section style="display:grid;justify-items:center;gap:8px;text-align:center"><div style="width:72px">${shirt(S.loginNr)}</div><h1>PIN eingeben</h1></section>
   ${dots(S.pin.length, 4)}
@@ -188,7 +187,7 @@
 
   /* ---------- Mein Bereich ---------- */
   function meView() {
-    if (!S.user) return loginView();
+    if (!S.user) return Store.mode === "api" ? "" : loginView();
     const pl = S.user, plan = C.plans[pl.plan], p = prog(), wk = weekKey(), done = p.tasks[wk] || {};
     const nDone = plan.week.filter((_, i) => done[i]).length;
     const mods = [["zonen", "Spielfeld & Zonen"], ...C.phases.map(x => [x.id, x.title])];
@@ -200,13 +199,17 @@
   ${plan.week.map(([d, t], i) => `<label class="task ${done[i] ? "done" : ""}"><input type="checkbox" class="taskbox" id="task-${i}" data-i="${i}" ${done[i] ? "checked" : ""}><span class="day">${esc(d)}</span><span class="txt">${esc(t)}</span></label>`).join("")}</section>
   <section class="stack"><h2>Meine Ziele</h2>${plan.goals.map(g => `<div class="goal"><b>${esc(g.t)}</b><span class="small">Zeitraum: ${esc(g.when)}</span></div>`).join("")}</section>
   <section class="card stack"><h2>Lernfortschritt</h2>${mods.map(([id, t]) => { const q = p.quiz[id]; const pc = q ? Math.round(q.best / q.of * 100) : 0; return `<div class="prow"><b>${esc(t)}</b><span>${q ? `${q.best}/${q.of}` : "–"}</span><span class="meter"><b style="width:${pc}%"></b></span></div>`; }).join("")}</section>
+  ${(LZ.hooks.meBottom || []).map(f => f(pl)).join("")}
   <button class="btn ghost" data-act="logout">Abmelden</button>
   <p class="draft">${Store.mode === "local" ? "Entwurf: Plan und Ziele sind Beispiele. Häkchen und Fortschritt werden nur auf diesem Gerät gespeichert." : "Dein Fortschritt wird in deinem Konto gespeichert."}</p>`;
   }
 
   /* ---------- Render & Events ---------- */
   function render() {
-    document.getElementById("shirtBtn").innerHTML = shirt(S.user ? S.user.nr : "?");
+    const gate = Store.gate ? Store.gate() : null;          // Weg B: erst anmelden
+    document.getElementById("shirtBtn").innerHTML = gate ? "" : shirt(S.user ? S.user.nr : Store.coach.active ? "T" : "?");
+    document.getElementById("shirtBtn").hidden = !!gate;
+    if (gate && LZ.views[gate]) { app.innerHTML = LZ.views[gate](); return; }
     app.innerHTML = LZ.views[S.view] ? LZ.views[S.view]()
       : S.view === "phase" ? phaseView() : S.view === "zonen" ? zonenView() : S.view === "me" ? meView() : home();
   }
@@ -232,7 +235,10 @@
     const b = e.target.closest("[data-act]"); if (!b || !C) return;
     const a = b.dataset.act, v = b.dataset.v;
     if (a === "home") go("home");
-    else if (a === "me") go("me");
+    else if (a === "me") {
+      if (Store.mode === "api" && !S.user && Store.coach.active && LZ.actions.kaderStart) LZ.actions.kaderStart();
+      else go("me");
+    }
     else if (a === "zonen") go("zonen");
     else if (a === "phase") go("phase", v);
     else if (a === "tab") { S.tab = v; if (v === "quiz" && Q && Q.i >= Q.qs.length) Q = null; render(); }

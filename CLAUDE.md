@@ -22,7 +22,9 @@ Sprache: Deutsch. Antworten kurz und direkt.
   - `js/pitch.js` – Spielfeld-SVG (68 × 105 m, Angriff nach oben, 5 Spuren × 3 Drittel).
 - Inhalte in `data/*.json` (Phasen, Quiz, Pläne, Positionen, Kader ohne PINs). Quizfrage: `{ q, options, correct, why }`.
 - Backend: PHP 8.1+ in `api/`, SQLite in `storage/lernzone.sqlite` (nie ins Repo), Schema `tools/schema.sql`, Migration in `api/config.php → migrate()`.
-- Rollen: Spieler (Trikotnummer + 4-stellige PIN), Trainer (Name + 6-stellige PIN), Admin (verwaltet Trainer, löscht Spieler).
+- Anmeldung (Weg B, ab 0.8.0): Benutzername + Passwort für alle, Tabelle `accounts` (kind player/coach, ref = Trikotnummer bzw. Trainer-ID). Neue Konten bekommen einen Einmal-Code (7 Tage), danach eigenes Passwort. `js/auth.js` + `api/auth.php`, Zugänge verwalten in `api/accounts.php`.
+- Rollen: Spieler, Trainer, Admin (verwaltet Trainer, erzeugt Trainer-Codes, löscht Spieler). Weg A (ohne PHP, z. B. Claude-Vorschau) nutzt weiterhin Trikot + Demo-PIN.
+- Sicherheit: Argon2id, CSRF-Token (Header `X-CSRF-Token`), SameSite=Strict, Sperre pro Konto, Trainer-Timeout 8 h, Sitzungs-Version pro Konto, Sicherheits-Header in `.htaccess`.
 
 ## Fachliches
 
@@ -44,11 +46,10 @@ Sprache: Deutsch. Antworten kurz und direkt.
 
 ## Stand und nächste Schritte
 
-- Aktuell: Version 0.7.0 (siehe `CHANGELOG.md`). 0.4.0–0.7.0 liegen lokal, noch nicht auf GitHub.
-- Nächster großer Schritt: **Weg B mit echter Benutzerverwaltung**
-  - Anmeldeseite als Eingang, Login mit Benutzername + Passwort, Erstanmeldung mit Einmal-Code und eigenem Passwort.
-  - Eine Tabelle `users` (Rollen Spieler/Trainer/Admin), Admin-Benutzerverwaltung mit Protokoll.
-  - Härtung: Argon2id, CSRF-Schutz, Session-Timeouts, Sicherheits-Header, DB außerhalb des Web-Ordners, Backups, optional 2FA für Admins.
+- Aktuell: Version 0.8.0 (siehe `CHANGELOG.md`). 0.4.0–0.8.0 liegen lokal, noch nicht auf GitHub.
+- Entschieden: Benutzernamen vergibt der Trainer (Vorschlag `vorname.n`), ganze App hinter Login, Eltern-Zugang und 2FA später.
+- Nächste Schritte Weg B:
+  - Benutzerverwaltung ausbauen: Konten sperren/entsperren, Protokoll (wer hat wann was geändert), „überall abmelden“.
+  - Härtung für den echten Server: DB außerhalb des Web-Ordners, Backups, HSTS, optional 2FA für Admins.
   - Hosting in Deutschland mit HTTPS (ideal Vereins-Subdomain), AVV, Datenschutzerklärung/Impressum mit dem Verein klären.
-  - Offene Entscheidungen: Schema für Benutzernamen, ganze App hinter Login?, Eltern-Zugang?, 2FA sofort?
 - Weitere Ideen: Einwilligungsformular für Eltern, Abwesenheit melden, Lernfortschritt aller Spieler in der Trainer-Ansicht, individuelle Pläne pro Spieler.

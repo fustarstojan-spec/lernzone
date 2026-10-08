@@ -12,6 +12,9 @@ const DB_PASS = null;
 
 const MAX_LOGIN_TRIES = 5;      // Fehlversuche pro Konto (und pro Sitzung) …
 const LOCK_SECONDS    = 300;    // … danach 5 Minuten Sperre
+const COACH_IDLE      = 8 * 3600;   // Trainer nach 8 Stunden ohne Aktivität abmelden
+const CODE_DAYS       = 7;          // Einmal-Codes sind 7 Tage gültig
+const PENDING_SECONDS = 900;        // 15 Minuten Zeit, um nach dem Einmal-Code das eigene Passwort festzulegen
 
 date_default_timezone_set('Europe/Berlin');
 
@@ -20,11 +23,15 @@ session_set_cookie_params([
     'path'     => '/',
     'secure'   => !empty($_SERVER['HTTPS']),
     'httponly' => true,
-    'samesite' => 'Lax',
+    'samesite' => 'Strict',
 ]);
+session_name('lernzone');
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Referrer-Policy: same-origin');
 
 /* ---------- Datenbank ---------- */
 
@@ -35,6 +42,7 @@ function db(): PDO {
         $pdo->exec(file_get_contents(__DIR__ . '/../tools/schema.sql'));   // legt fehlende Tabellen an
         migrate($pdo);
         seed_demo_players($pdo);
+        ensure_accounts($pdo);
     }
     return $pdo;
 }
@@ -212,12 +220,13 @@ function account_ok(string $table, string $key, int $id): void {
 
 /* ---------- Trainings, Beteiligung, Befinden ---------- */
 
-/* Trainingsbeteiligung: alle Trainings bis heute; last = die letzten 20 (alt → neu) */
+/* Trainingsbeteiligung: alle Trainings seit der Aufnahme in den Kader bis heute; last = die letzten 20 (alt → neu) */
 function attendance_summary(int $nr): array {
+    $since = substr((string)(account_for('player', $nr)['created_at'] ?? '2000-01-01'), 0, 10);
     $st = db()->prepare('SELECT t.id, t.date, CASE WHEN a.nr IS NULL THEN 0 ELSE 1 END AS present
                          FROM trainings t LEFT JOIN attendance a ON a.training_id = t.id AND a.nr = ?
-                         WHERE t.date <= ? ORDER BY t.date DESC, t.time DESC');
-    $st->execute([$nr, today()]);
+                         WHERE t.date <= ? AND t.date >= ? ORDER BY t.date DESC, t.time DESC');
+    $st->execute([$nr, today(), $since]);
     $rows = $st->fetchAll(PDO::FETCH_ASSOC);
     $attended = count(array_filter($rows, fn($r) => (int)$r['present'] === 1));
     $last = array_reverse(array_slice($rows, 0, 20));
@@ -255,3 +264,134 @@ function profile_of(int $nr): array {
     $d = $st->fetchColumn();
     return $d ? (json_decode((string)$d, true) ?: []) : [];
 }
+
+/* ---------- Zugänge (Benutzername + Passwort) ---------- */
+
+function hash_pw(string $pw): string {
+    return password_hash($pw, defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT);
+}
+
+/* Benutzername: 3–30 Zeichen, Kleinbuchstaben, Ziffern, Punkt, Bindestrich, Unterstrich */
+function clean_username(string $u): string {
+    $u = mb_strtolower(trim($u));
+    $u = strtr($u, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss', ' ' => '.']);
+    return preg_replace('/[^a-z0-9._-]/', '', $u) ?? '';
+}
+function username_ok(string $u): bool { return (bool)preg_match('/^[a-z0-9][a-z0-9._-]{2,29}$/', $u); }
+
+function username_taken(string $u, int $exceptId = 0): bool {
+    $st = db()->prepare('SELECT COUNT(*) FROM accounts WHERE username = ? AND id != ?');
+    $st->execute([$u, $exceptId]);
+    return (int)$st->fetchColumn() > 0;
+}
+function unique_username(PDO $pdo, string $base): string {
+    $base = username_ok($base) ? $base : 'user';
+    $u = $base; $i = 2;
+    $st = $pdo->prepare('SELECT COUNT(*) FROM accounts WHERE username = ?');
+    while (true) { $st->execute([$u]); if ((int)$st->fetchColumn() === 0) return $u; $u = $base . $i++; }
+}
+
+/* Passwort-Regeln: mindestens 8 Zeichen, nicht der Benutzername, keine Allerwelts-Passwörter */
+function pw_problem(string $pw, string $username): ?string {
+    if (mb_strlen($pw) < 8)   return 'Das Passwort muss mindestens 8 Zeichen haben.';
+    if (mb_strlen($pw) > 200) return 'Das Passwort ist zu lang.';
+    $l = mb_strtolower($pw);
+    $weak = ['12345678', '123456789', '1234567890', 'passwort', 'password', 'qwertz123', 'qwertzui', 'fussball', 'fußball',
+             'heimstetten', 'lernzone', '11111111', '00000000', 'abcdefgh'];
+    if (in_array($l, $weak, true) || $l === mb_strtolower($username) || preg_match('/^(.)\1+$/u', $pw)) return 'Dieses Passwort ist zu leicht zu erraten.';
+    return null;
+}
+
+/* Einmal-Code wie „K7MP-3QX9“ (ohne verwechselbare Zeichen) */
+function gen_code(): string {
+    $a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; $c = '';
+    for ($i = 0; $i < 8; $i++) $c .= $a[random_int(0, strlen($a) - 1)];
+    return substr($c, 0, 4) . '-' . substr($c, 4);
+}
+function norm_code(string $c): string { return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $c) ?? ''); }
+
+/* Neuen Einmal-Code setzen: altes Passwort ungültig, alle Sitzungen beendet */
+function issue_code(int $accountId): string {
+    $code = gen_code();
+    db()->prepare('UPDATE accounts SET code_hash = ?, code_expires = ?, pw_hash = \'\', must_set_pw = 1, sess_ver = sess_ver + 1,
+                   fail_count = 0, locked_until = 0 WHERE id = ?')
+        ->execute([hash_pw(norm_code($code)), time() + CODE_DAYS * 86400, $accountId]);
+    return $code;
+}
+
+function account_for(string $kind, int $ref): ?array {
+    $st = db()->prepare('SELECT * FROM accounts WHERE kind = ? AND ref = ?');
+    $st->execute([$kind, $ref]);
+    return $st->fetch(PDO::FETCH_ASSOC) ?: null;
+}
+
+/* Bis 0.7.0 gab es nur PINs: jedes Konto ohne Zugang bekommt einen.
+   Benutzername spielerNN bzw. Vorname des Trainers; die alte PIN gilt einmalig, danach muss ein Passwort festgelegt werden. */
+function ensure_accounts(PDO $pdo): void {
+    // created_at weit zurück, damit bisherige Trainings in der Trainingsbeteiligung mitzählen
+    $ins = $pdo->prepare("INSERT INTO accounts (username, kind, ref, pw_hash, must_set_pw, created_at) VALUES (?, ?, ?, ?, 1, '2000-01-01 00:00:00')");
+    $rows = $pdo->query("SELECT p.nr, p.pin_hash FROM players p LEFT JOIN accounts a ON a.kind = 'player' AND a.ref = p.nr
+                         WHERE a.id IS NULL AND p.pin_hash != ''")->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($rows as $r) $ins->execute([unique_username($pdo, 'spieler' . $r['nr']), 'player', $r['nr'], $r['pin_hash']]);
+    $rows = $pdo->query("SELECT c.id, c.name, c.pin_hash FROM coaches c LEFT JOIN accounts a ON a.kind = 'coach' AND a.ref = c.id
+                         WHERE a.id IS NULL AND c.pin_hash != ''")->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($rows as $r) {
+        $base = clean_username((string)$r['name']);
+        $ins->execute([unique_username($pdo, username_ok($base) ? $base : 'trainer'), 'coach', $r['id'], $r['pin_hash']]);
+    }
+}
+
+/* ---------- Sitzung ---------- */
+
+function csrf_token(): string {
+    if (empty($_SESSION['csrf'])) $_SESSION['csrf'] = bin2hex(random_bytes(32));
+    return $_SESSION['csrf'];
+}
+
+function logout_session(): void {
+    $csrf = $_SESSION['csrf'] ?? null;
+    session_regenerate_id(true);
+    $_SESSION = [];
+    if ($csrf) $_SESSION['csrf'] = $csrf;
+}
+
+function start_session_for(array $acc): void {
+    session_regenerate_id(true);
+    $_SESSION = ['csrf' => bin2hex(random_bytes(32)), 'acc' => (int)$acc['id'], 'ver' => (int)$acc['sess_ver'], 'last' => time()];
+    if ($acc['kind'] === 'player') $_SESSION['nr'] = (int)$acc['ref'];
+    else $_SESSION['coach'] = (int)$acc['ref'];
+    db()->prepare('UPDATE accounts SET last_login = ? WHERE id = ?')->execute([date('Y-m-d H:i'), $acc['id']]);
+}
+
+function current_account(): ?array {
+    if (empty($_SESSION['acc'])) return null;
+    $st = db()->prepare('SELECT * FROM accounts WHERE id = ?');
+    $st->execute([(int)$_SESSION['acc']]);
+    return $st->fetch(PDO::FETCH_ASSOC) ?: null;
+}
+
+/* Bei jedem Aufruf: alte PIN-Sitzungen beenden, gesperrte/zurückgesetzte Konten abmelden, Trainer nach 8 h Leerlauf abmelden */
+function validate_session(): void {
+    if ((!empty($_SESSION['nr']) || !empty($_SESSION['coach'])) && empty($_SESSION['acc'])) { logout_session(); return; }
+    if (empty($_SESSION['acc'])) return;
+    $a = current_account();
+    if (!$a || !(int)$a['active'] || (int)$a['sess_ver'] !== (int)($_SESSION['ver'] ?? -1)) { logout_session(); return; }
+    if ($a['kind'] === 'coach' && time() - (int)($_SESSION['last'] ?? 0) > COACH_IDLE) { logout_session(); return; }
+    $_SESSION['last'] = time();
+}
+
+/* Schutz gegen gefälschte Anfragen von fremden Seiten: jede POST-Anfrage braucht das Token aus api/me.php */
+function check_csrf(): void {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+    $t = (string)($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+    if (empty($_SESSION['csrf']) || !hash_equals($_SESSION['csrf'], $t)) {
+        json_out(['ok' => false, 'error' => 'Deine Sitzung ist abgelaufen. Bitte lade die Seite neu.'], 403);
+    }
+}
+
+function require_login(): void {
+    if (empty($_SESSION['acc'])) json_out(['ok' => false, 'error' => 'Bitte melde dich an.'], 401);
+}
+
+validate_session();
+check_csrf();

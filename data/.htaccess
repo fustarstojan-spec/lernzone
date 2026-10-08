@@ -1,0 +1,4 @@
+# Demo-PINs (nur Entwicklung) nie über das Web ausliefern
+<Files "demo-pins.json">
+  Require all denied
+</Files>

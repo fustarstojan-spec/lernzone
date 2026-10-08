@@ -239,3 +239,15 @@ code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:
 .danger-btn{background:var(--bad)}
 .danger-text{color:var(--bad)}
 .btn.danger-text{color:var(--bad);border-color:var(--bad)}
+
+/* ---------- Anmeldung (0.8.0) ---------- */
+.authhead{display:grid;justify-items:center;gap:6px;text-align:center;padding-top:12px}
+.authshirt{width:72px}
+.authform{max-width:420px;width:100%;margin:0 auto;box-sizing:border-box}
+.authform .fld input{font-size:1.1rem;letter-spacing:0}
+.authnote{max-width:420px;margin:0 auto;text-align:center}
+.small-check{font-weight:400;font-size:.9rem;color:var(--muted)}
+.rules{margin:0;padding-left:18px;font-size:.85rem;color:var(--muted);display:grid;gap:2px}
+.codebox{display:grid;gap:4px;text-align:center}
+.codebox .user{font-weight:700;font-size:1.15rem}
+.codebox .pinshow{font-size:2.3rem;letter-spacing:.1em;white-space:nowrap}

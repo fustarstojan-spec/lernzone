@@ -62,3 +62,22 @@ CREATE TABLE IF NOT EXISTS moods (
   created_at   TEXT    NOT NULL,
   PRIMARY KEY (training_id, nr, phase)
 );
+
+-- Zugänge (ab 0.8.0): Anmeldung mit Benutzername + Passwort für Spieler und Trainer
+CREATE TABLE IF NOT EXISTS accounts (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  username      TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+  kind          TEXT    NOT NULL,                    -- 'player' oder 'coach'
+  ref           INTEGER NOT NULL,                    -- players.nr bzw. coaches.id
+  pw_hash       TEXT    NOT NULL DEFAULT '',         -- eigenes Passwort (Argon2id/bcrypt)
+  code_hash     TEXT    NOT NULL DEFAULT '',         -- Einmal-Code vom Trainer (Hash)
+  code_expires  INTEGER NOT NULL DEFAULT 0,          -- Unix-Zeit
+  must_set_pw   INTEGER NOT NULL DEFAULT 1,          -- 1 = beim nächsten Login eigenes Passwort festlegen
+  active        INTEGER NOT NULL DEFAULT 1,
+  sess_ver      INTEGER NOT NULL DEFAULT 0,          -- erhöht = alle Sitzungen dieses Kontos ungültig
+  fail_count    INTEGER NOT NULL DEFAULT 0,
+  locked_until  INTEGER NOT NULL DEFAULT 0,
+  last_login    TEXT    NOT NULL DEFAULT '',
+  created_at    TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS accounts_ref ON accounts (kind, ref);

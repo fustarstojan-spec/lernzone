@@ -1,3 +1,20 @@
 # Alle Textdateien als UTF-8 ausliefern (Umlaute)
 AddDefaultCharset UTF-8
 AddCharset UTF-8 .html .css .js .json .md
+
+# Projektdateien nicht ausliefern
+<FilesMatch "^(CLAUDE|README|CHANGELOG)\.md$|^\.git">
+  Require all denied
+</FilesMatch>
+RedirectMatch 404 /\.git
+
+# Sicherheits-Header
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "same-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+  # Nur auf dem echten Server mit HTTPS einschalten:
+  # Header always set Strict-Transport-Security "max-age=31536000"
+</IfModule>
