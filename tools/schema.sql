@@ -119,6 +119,25 @@ CREATE TABLE IF NOT EXISTS iep (
   updated_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_by   INTEGER
 );
+-- Ab 0.17.0: jeder gespeicherte Stand ist eine eigene Version (nichts wird überschrieben); der neueste gilt
+CREATE TABLE IF NOT EXISTS iep_versions (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  nr           INTEGER NOT NULL,
+  data         TEXT    NOT NULL DEFAULT '{}',
+  created_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_by   INTEGER
+);
+CREATE INDEX IF NOT EXISTS iep_versions_nr ON iep_versions (nr, id);
+-- Trainer-Bewertung nach dem Training (ab 0.17.0): Schulnoten 1–6, jeder Trainer einzeln, nur für Trainer sichtbar
+CREATE TABLE IF NOT EXISTS grades (
+  training_id  INTEGER NOT NULL,
+  nr           INTEGER NOT NULL,
+  coach_id     INTEGER NOT NULL,
+  area         TEXT    NOT NULL,                     -- verhalten | umsetzung | einstellung | soziales
+  value        INTEGER NOT NULL,                     -- 1 = sehr gut … 6 = ungenügend
+  created_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (training_id, nr, coach_id, area)
+);
 -- Selbsteinschätzung nach Spielen: 1–5 pro Zielbereich
 CREATE TABLE IF NOT EXISTS iep_ratings (
   nr           INTEGER NOT NULL,

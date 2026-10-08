@@ -68,6 +68,11 @@ function migrate(PDO $pdo): void {
         $pdo->exec("ALTER TABLE trainings ADD COLUMN att_done INTEGER NOT NULL DEFAULT 0");
         $pdo->exec('UPDATE trainings SET att_done = 1 WHERE id IN (SELECT DISTINCT training_id FROM attendance)');
     }
+    // 0.17.0: IEP-Stände als Versionen – bisherige Einträge einmalig übernehmen
+    if (!$pdo->query("SELECT 1 FROM settings WHERE name = 'iep_versions_done'")->fetchColumn()) {
+        $pdo->exec('INSERT INTO iep_versions (nr, data, created_at, created_by) SELECT nr, data, updated_at, updated_by FROM iep ORDER BY nr');
+        $pdo->exec("INSERT INTO settings (name, value) VALUES ('iep_versions_done', '1')");
+    }
     // Automatisch „da“ erst für Trainings ab dem Tag dieser Umstellung (ältere ohne Eintrag zählen nicht)
     $pdo->exec("INSERT OR IGNORE INTO settings (name, value) VALUES ('auto_att_from', '" . date('Y-m-d') . "')");
     // Bis 0.6.0 gab es nur eine Trainer-PIN → wird zum ersten Admin-Konto „Trainer“

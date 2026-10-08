@@ -3,8 +3,10 @@
  * Individueller Entwicklungsplan (IEP) und Selbsteinschätzung
  * Spieler:  GET          → {ok, iep:{goals, plan, season}|null, rate:{game:{id, date, time, title}, values:{area: 1–5}, open}|null, consent}
  *           POST {action:"rate", id, area, value}   (Einwilligung nötig; bis 3 Tage nach dem Spiel)
- * Trainer:  GET ?nr=7    → {ok, iep:{goals, plan, season, coach}|null, ratings:[{id, date, title, values}]}
- *           POST {action:"save", nr, data}
+ * Trainer:  GET ?nr=7    → {ok, iep:{…neuester Stand…}|null, versions:[{id, season, date, by}], ratings:[{id, date, title, values}]}
+ *           GET ?version=12 → {ok, iep:{…dieser Stand…}}
+ *           POST {action:"save", nr, data}   → legt einen NEUEN Stand an (ältere bleiben erhalten)
+ *           POST {action:"delete", id}       → einen Stand löschen (der neueste übrige gilt dann wieder)
  * Bereiche: ind (Individuelles Ziel) · tech (Technik) · phys (Physis) · off (Offensiv) · def (Defensiv)
  */
 require __DIR__ . '/config.php';
@@ -12,8 +14,8 @@ require_login();
 const IEP_AREAS = ['ind', 'tech', 'phys', 'off', 'def'];
 const IEP_RATE_DAYS = 3;
 
-function iep_of(int $nr): ?array {
-    $st = db()->prepare('SELECT data FROM iep WHERE nr = ?'); $st->execute([$nr]);
+function iep_of(int $nr): ?array {                         // neuester Stand
+    $st = db()->prepare('SELECT data FROM iep_versions WHERE nr = ? ORDER BY id DESC LIMIT 1'); $st->execute([$nr]);
     $d = $st->fetchColumn();
     return $d === false ? null : (json_decode($d, true) ?: null);
 }
@@ -47,6 +49,12 @@ $coach = current_coach();
 $user  = current_user();
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    if ($coach && isset($_GET['version'])) {
+        $st = db()->prepare('SELECT data FROM iep_versions WHERE id = ?'); $st->execute([(int)$_GET['version']]);
+        $d = $st->fetchColumn();
+        if ($d === false) json_out(['ok' => false, 'error' => 'Diesen Stand gibt es nicht.'], 404);
+        json_out(['ok' => true, 'iep' => json_decode($d, true)]);
+    }
     if ($coach && isset($_GET['nr'])) {
         $nr = (int)$_GET['nr'];
         $st = db()->prepare("SELECT r.training_id, t.date, t.title, r.area, r.value FROM iep_ratings r JOIN trainings t ON t.id = r.training_id
@@ -58,7 +66,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $rat[$k] ??= ['id' => $k, 'date' => $r['date'], 'title' => $r['title'] ?: 'Spiel', 'values' => []];
             $rat[$k]['values'][$r['area']] = (int)$r['value'];
         }
-        json_out(['ok' => true, 'iep' => iep_of($nr), 'ratings' => array_values(array_map(fn($x) => $x + ['values' => (object)$x['values']], $rat))]);
+        $v = db()->prepare('SELECT v.id, v.data, v.created_at, c.name FROM iep_versions v LEFT JOIN coaches c ON c.id = v.created_by WHERE v.nr = ? ORDER BY v.id DESC');
+        $v->execute([$nr]);
+        $versions = array_map(fn($r) => ['id' => (int)$r['id'], 'season' => (json_decode($r['data'], true)['season'] ?? '') ?: '', 'date' => substr($r['created_at'], 0, 10), 'by' => $r['name'] ?? ''],
+                              $v->fetchAll(PDO::FETCH_ASSOC));
+        json_out(['ok' => true, 'iep' => iep_of($nr), 'versions' => $versions, 'ratings' => array_values(array_map(fn($x) => $x + ['values' => (object)$x['values']], $rat))]);
     }
     if (!$user) json_out(['ok' => false, 'error' => 'Nur für Spieler.'], 403);
     $i = iep_of($user['nr']);
@@ -85,8 +97,11 @@ switch ($in['action'] ?? '') {
         $nr = int_in($in['nr'] ?? null, 1, 99);
         if ($nr === null) json_out(['ok' => false, 'error' => 'Ungültige Nummer.'], 400);
         $data = json_encode(iep_clean(is_array($in['data'] ?? null) ? $in['data'] : []), JSON_UNESCAPED_UNICODE);
-        db()->prepare('INSERT INTO iep (nr, data, updated_by) VALUES (?, ?, ?)
-                       ON CONFLICT(nr) DO UPDATE SET data = excluded.data, updated_at = CURRENT_TIMESTAMP, updated_by = excluded.updated_by')->execute([$nr, $data, $me['id']]);
+        db()->prepare('INSERT INTO iep_versions (nr, data, created_by) VALUES (?, ?, ?)')->execute([$nr, $data, $me['id']]);
         json_out(['ok' => true, 'iep' => iep_of($nr)]);
+    case 'delete':
+        require_coach();
+        db()->prepare('DELETE FROM iep_versions WHERE id = ?')->execute([(int)($in['id'] ?? 0)]);
+        json_out(['ok' => true]);
 }
 json_out(['ok' => false, 'error' => 'Unbekannte Aktion'], 400);

@@ -384,3 +384,13 @@ code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:
 .iepcoach dl{margin:0;display:grid;gap:2px;font-size:.92rem}
 .iepcoach dt{font-weight:700;color:var(--muted);font-size:.8rem;margin-top:6px}
 .iepcoach dd{margin:0}
+/* 0.17.0 Bewertung nach dem Training, IEP-Stände */
+.gradegrid{display:grid;grid-template-columns:34px repeat(4,minmax(0,1fr));gap:6px 6px;align-items:center;font-size:.85rem}
+.gradegrid>b{text-align:center;color:var(--muted)}
+.gnr svg{width:30px;height:30px;display:block}
+.gcell{display:flex;flex-direction:column;align-items:center;gap:1px}
+.gcell select{width:100%;min-width:0;padding:5px 2px;text-align:center;font-weight:700;border-radius:8px}
+.g-good{background:#e6f2ea;color:#1f6a3a}
+.g-mid{background:#fbf3df;color:#7a5a12}
+.g-low{background:#f6e1e3;color:#8a2a35}
+.vlist{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}

@@ -89,7 +89,7 @@
     if (s === "iepEdit") {
       const e = T.iepE, ta = (id, label, val, rows) => `<div class="fld"><label for="${id}">${label}</label><textarea id="${id}" rows="${rows || 3}">${esc(val || "")}</textarea></div>`;
       return `<button class="back" data-act="cPlayer" data-v="${T.editNr}">‹ Nr. ${T.editNr}</button>${tabs()}
-      <section><p class="eyebrow">Nr. ${T.editNr}</p><h1>Entwicklungsplan</h1><p class="lede">Ein Ziel pro Zeile. Die Ziele und der Zeitplan sind für den Spieler sichtbar.</p></section>
+      <section><p class="eyebrow">Nr. ${T.editNr}</p><h1>Entwicklungsplan</h1><p class="lede">Neuer Stand – der bisherige bleibt erhalten. Ein Ziel pro Zeile; Ziele und Zeitplan sieht der Spieler.</p></section>
       <section class="card stack"><h2>Ziele (Spieler sieht sie)</h2>
         <div class="fld"><label for="iep-season">Saison / Stand</label><input id="iep-season" maxlength="40" value="${esc(e.season || "")}" placeholder="z. B. U14 26/27"></div>
         ${IEP_AREAS.map(([k, l]) => ta("iep-g-" + k, l, (e.goals[k] || []).join("\n"), 4)).join("")}</section>
@@ -97,7 +97,7 @@
         ${[["short", "Kurzfristig (1–4 Wochen)"], ["mid", "Mittelfristig (1–3 Monate)"], ["long", "Langfristig (Saison)"]].map(([k, l]) => ta("iep-p-" + k, l, e.plan[k], 2)).join("")}</section>
       <section class="card stack"><h2>Nur für Trainer</h2>
         ${IEP_COACH.map(([k, l]) => ta("iep-c-" + k, l, k === "clusters" ? (e.coach.clusters || []).join("\n") : e.coach[k], 2)).join("")}</section>
-      ${errP()}<button class="btn wide" data-act="iepSave" ${T.busy ? "disabled" : ""}>Speichern</button>`;
+      ${errP()}<button class="btn wide" data-act="iepSave" ${T.busy ? "disabled" : ""}>Als neuen Stand speichern</button>`;
     }
     if (s === "player") {
       const d = T.detail; if (!d) return `${tabs()}<p class="small">Lade …</p>`;
@@ -115,6 +115,7 @@
         <label class="check"><input type="checkbox" id="c-consent" ${p.consent ? "checked" : ""}> Liegt vor – Profil und Befindens-Barometer sind freigeschaltet</label></section>
       <section class="card stack"><h2>Profil</h2>${rows.length ? `<dl class="sub">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : `<p class="small">${p.consent ? "Der Spieler hat noch nichts eingetragen." : "Wird nach der Einwilligung freigeschaltet."}</p>`}</section>
       <section class="card stack"><h2>Trainingsbeteiligung</h2>${attLine(d.attendance)}</section>
+      ${gradeSummary(d)}
       ${iepSection(d)}
       <section class="card stack"><h2>Befinden</h2>${d.moods.length ? d.moods.map(m => `<div class="moodrow"><span class="small">${esc(fmtDate(m.date))}</span><span>${moodLine(m.vor, m.nach) || "–"}</span>${comments(m.vor, m.nach)}</div>`).join("") : `<p class="small">Noch keine Einträge.</p>`}</section>
       <section class="card stack"><h2>Positionen</h2>
@@ -180,6 +181,7 @@
           <div class="row"><button class="btn danger-btn" data-act="tCancel">Ja, fällt aus</button><button class="btn ghost" data-act="cCancel">Abbrechen</button></div></div>` : ""}
         <div class="nrgrid">${LZ.C.players.map(p => { const m = moods[p.nr]; return `<button class="nr ${pres.has(p.nr) ? "" : "absent"}" data-act="tAtt" data-v="${p.nr}" aria-pressed="${pres.has(p.nr)}" aria-label="Nummer ${p.nr} ${pres.has(p.nr) ? "da" : "nicht da"}">${LZ.shirt(p.nr)}<span>${abs[p.nr] && !pres.has(p.nr) ? `<em class="abstag">abgesagt</em>` : `${m && m.vor ? LAUNE[(m.vor.laune || 3) - 1] : "&nbsp;"}${m && m.nach ? " " + m.nach.rpe : ""}`}</span></button>`; }).join("")}</div>
         ${(d.absences || []).length ? `<div class="abslist"><b>Abgesagt (${d.absences.length})</b>${d.absences.map(a => `<span>Nr. ${a.nr} · ${esc(a.label)}</span>`).join("")}</div>` : ""}</section>`}
+      ${t.kind === "training" && t.state !== 2 ? gradeSection(d, pres) : ""}
       <section class="card stack"><h2>Befinden</h2>${sorted.length ? sorted.map(m => { const p = LZ.C.players.find(x => x.nr === m.nr) || {}; return `
         <div class="moodrow ${alert(m) ? "hot" : ""}"><b>Nr. ${m.nr}${p.name ? " · " + esc(p.name.split(" ")[0]) : ""}</b><span>${moodLine(m.vor, m.nach) || "–"}</span>${comments(m.vor, m.nach)}</div>`; }).join("") : `<p class="small">Noch keine Rückmeldungen. Die Spieler sehen die Abfrage am Trainingstag in „Mein Bereich“.</p>`}</section>
       ${errP()}
@@ -225,9 +227,11 @@
   /* ---------- Kader / Spieler ---------- */
   async function openPlayer(nr) {
     show("player", { editNr: nr, detail: null });
-    const [r, ie] = await Promise.all([St().get("players.php?nr=" + nr), St().get("iep.php?nr=" + nr)]);
+    const [r, ie, gr] = await Promise.all([St().get("players.php?nr=" + nr), St().get("iep.php?nr=" + nr), St().get("grades.php?nr=" + nr)]);
     if (!r.ok) return fail(r);
-    r.iep = ie && ie.ok ? ie : { iep: null, ratings: [] };
+    r.iep = ie && ie.ok ? ie : { iep: null, ratings: [], versions: [] };
+    r.grades = gr && gr.ok ? gr : null;
+    T.iepOld = null;
     T.detail = r; T.posOff = r.player.posOff; T.posDef = r.player.posDef; T.uname = r.username || ""; LZ.render();
   }
   LZ.actions.cPlayer = (b, v) => openPlayer(+v);
@@ -236,21 +240,46 @@
   const IEP_AREAS = [["ind", "Individuelles Ziel"], ["tech", "Technik"], ["phys", "Physis"], ["off", "Offensiv"], ["def", "Defensiv"]];
   const IEP_COACH = [["strengths", "Stärken"], ["field", "Hauptentwicklungsfeld"], ["psych", "Psychologische Einschätzung"], ["talkDate", "Gespräch am"], ["status", "Status"],
     ["feedback", "Trainer-Feedback"], ["learn", "Konkretes Lernziel"], ["mental", "Mentalität & Sozial"], ["clusters", "Gruppe (eine pro Zeile)"], ["measures", "Trainingshinweise"], ["observe", "Beobachtungspunkte"]];
+  function gradeSummary(d) {
+    const g = d.grades; if (!g) return "";
+    const f = v => v == null ? "–" : String(v).replace(".", ",");
+    return `<section class="card stack"><h2>Bewertung im Training</h2><p class="small">Nur für Trainer · Schulnoten, Ø aller Trainer</p>
+      ${g.list.length ? `<table class="ieptable"><tr><th></th>${GRADE_AREAS.map(([, l]) => `<th>${l.slice(0, 4)}.</th>`).join("")}</tr>
+        <tr><td>Ø 4 Wochen</td>${GRADE_AREAS.map(([k]) => `<td class="${gradeTone(g.avg4[k])}">${f(g.avg4[k])}</td>`).join("")}</tr>
+        <tr><td>Ø Saison</td>${GRADE_AREAS.map(([k]) => `<td class="${gradeTone(g.season[k])}">${f(g.season[k])}</td>`).join("")}</tr>
+        ${g.list.slice(0, 6).map(r => `<tr><td>${esc(fmtDate(r.date))}</td>${GRADE_AREAS.map(([k]) => `<td>${f(r.values[k])}</td>`).join("")}</tr>`).join("")}</table>`
+        : `<p class="small">Noch keine Noten. Bewerten im Training unter „Bewertung“.</p>`}</section>`;
+  }
   function iepSection(d) {
-    const x = d.iep || {}, i = x.iep;
+    const x = d.iep || {}, old = T.iepOld, i = old ? old.iep : x.iep, vs = x.versions || [];
     if (!i) return `<section class="card stack"><div class="rowspread"><h2>Entwicklungsplan</h2><button class="linkbtn" data-act="iepEdit">Anlegen</button></div><p class="small">Noch kein IEP.</p></section>`;
     const g = i.goals || {}, p = i.plan || {}, c = i.coach || {};
     const rat = x.ratings || [];
     const avg = k => { const v = rat.map(r => r.values[k]).filter(Boolean); return v.length ? (v.reduce((a, b) => a + b, 0) / v.length).toFixed(1).replace(".", ",") : "–"; };
-    return `<section class="card stack"><div class="rowspread"><h2>Entwicklungsplan</h2><button class="linkbtn" data-act="iepEdit">Bearbeiten</button></div>
-      ${i.season ? `<p class="small">Stand: ${esc(i.season)}</p>` : ""}
+    const vtxt = v => `${v.season || "ohne Bezeichnung"} · ${fmtDate(v.date)}${v.by ? " · " + v.by : ""}`;
+    return `<section class="card stack"><div class="rowspread"><h2>Entwicklungsplan</h2>${old ? `<button class="linkbtn" data-act="iepCur">Zum aktuellen Stand</button>` : `<button class="linkbtn" data-act="iepEdit">Neuer Stand</button>`}</div>
+      ${old ? `<p class="alert">Früherer Stand: ${esc(vtxt(old.v))} – nur zum Ansehen.</p>` : vs[0] ? `<p class="small">Aktueller Stand: ${esc(vtxt(vs[0]))}</p>` : ""}
+      ${vs.length > 1 ? `<div class="vlist"><span class="small">Frühere Stände:</span>${vs.slice(1).map(v => `<button class="linkbtn" data-act="iepOld" data-v="${v.id}">${esc(vtxt(v))}</button>`).join("")}</div>` : ""}
       ${IEP_AREAS.filter(([k]) => (g[k] || []).length).map(([k, l]) => `<div class="goalarea"><b>${l}</b><ul>${g[k].map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>`).join("")}
       ${["short", "mid", "long"].some(k => p[k]) ? `<div class="goalarea"><b>Zeitplan</b><ul>${[["short", "Kurz"], ["mid", "Mittel"], ["long", "Lang"]].filter(([k]) => p[k]).map(([k, l]) => `<li><b>${l}:</b> ${esc(p[k])}</li>`).join("")}</ul></div>` : ""}
       <div class="iepcoach"><b>Nur für Trainer</b><dl>${IEP_COACH.map(([k, l]) => [l.replace(" (eine pro Zeile)", ""), k === "clusters" ? (c.clusters || []).join(", ") : c[k]]).filter(r => r[1]).map(([l, v]) => `<dt>${l}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div>
+      ${old ? `<button class="btn ghost danger-text" data-act="iepDelAsk">Diesen Stand löschen</button>${T.confirm === "iepDel" ? `<div class="card stack danger"><p><b>Stand wirklich löschen?</b></p><div class="row"><button class="btn danger-btn" data-act="iepDel">Ja, löschen</button><button class="btn ghost" data-act="cCancel">Abbrechen</button></div></div>` : ""}` : ""}
       <div class="goalarea"><b>Selbsteinschätzung nach Spielen</b>${rat.length ? `<table class="ieptable"><tr><th>Spiel</th>${IEP_AREAS.map(([, l]) => `<th>${l.slice(0, 4)}.</th>`).join("")}</tr>
         ${rat.slice(0, 8).map(r => `<tr><td>${esc(fmtDate(r.date))}</td>${IEP_AREAS.map(([k]) => `<td>${r.values[k] || "–"}</td>`).join("")}</tr>`).join("")}
         <tr><th>Ø</th>${IEP_AREAS.map(([k]) => `<th>${avg(k)}</th>`).join("")}</tr></table>` : `<p class="small">Noch keine. Spieler bewerten sich bis 3 Tage nach einem Spiel (1–5) – nach Einwilligung der Eltern.</p>`}</div></section>`;
   }
+  LZ.actions.iepOld = async (b, v) => {
+    const r = await St().get("iep.php?version=" + v);
+    if (!r.ok) return fail(r);
+    T.iepOld = { iep: r.iep, v: T.detail.iep.versions.find(x => x.id === +v), id: +v }; T.confirm = null; LZ.render();
+  };
+  LZ.actions.iepCur = () => { T.iepOld = null; T.confirm = null; LZ.render(); };
+  LZ.actions.iepDelAsk = () => { T.confirm = "iepDel"; LZ.render(); };
+  LZ.actions.iepDel = async () => {
+    const r = await St().send("iep.php", { action: "delete", id: T.iepOld.id });
+    if (!r.ok) return fail(r);
+    openPlayer(T.editNr);
+  };
   LZ.actions.iepEdit = () => {
     const i = (T.detail.iep && T.detail.iep.iep) || {};
     show("iepEdit", { iepE: { season: i.season || "", goals: Object.assign({}, i.goals || {}), plan: Object.assign({ short: "", mid: "", long: "" }, i.plan || {}), coach: Object.assign({}, i.coach || {}) } });
@@ -333,8 +362,9 @@
   }
   async function openTraining(id) {
     show("training", { tr: null });
-    const [r] = await Promise.all([St().get("trainings.php?id=" + id), refreshPlayers()]);
+    const [r, g] = await Promise.all([St().get("trainings.php?id=" + id), St().get("grades.php?training=" + id), refreshPlayers()]);
     if (!r.ok) return fail(r);
+    r.grades = g && g.ok ? g : { mine: {}, others: {}, count: {} };
     T.tr = r; LZ.render();
   }
   LZ.actions.tCreate = async () => {
@@ -345,6 +375,28 @@
     openTraining(r.id);
   };
   LZ.actions.tOpen = (b, v) => openTraining(+v);
+  /* ---------- Bewertung nach dem Training: Schulnoten 1–6, jeder Trainer einzeln, nur Trainer ---------- */
+  const GRADE_AREAS = [["verhalten", "Verhalten"], ["umsetzung", "Umsetzung"], ["einstellung", "Einstellung"], ["soziales", "Soziales"]];
+  const gradeTone = v => v == null ? "" : v <= 2 ? "g-good" : v <= 3.5 ? "g-mid" : "g-low";
+  function gradeSection(d, pres) {
+    const G = d.grades, list = LZ.C.players.filter(p => pres.has(p.nr));
+    const done = list.filter(p => G.mine[p.nr] && Object.keys(G.mine[p.nr]).length === 4).length;
+    return `<section class="card stack"><div class="rowspread"><h2>Bewertung</h2><span class="small">${done}/${list.length} bewertet</span></div>
+      <p class="small">Nur für Trainer · Schulnoten 1 (sehr gut) bis 6 · jeder Trainer bewertet für sich. In Klammern: Ø der anderen Trainer.</p>
+      ${list.length ? `<div class="gradegrid"><span></span>${GRADE_AREAS.map(([, l]) => `<b>${l.slice(0, 4)}.</b>`).join("")}
+        ${list.map(p => { const m = G.mine[p.nr] || {}, o = G.others[p.nr] || {};
+          return `<span class="gnr">${LZ.shirt(p.nr)}</span>${GRADE_AREAS.map(([k, l]) => `<label class="gcell"><select id="gr-${p.nr}-${k}" class="${gradeTone(m[k])}" aria-label="Nr. ${p.nr} ${l}">
+            <option value="">–</option>${[1, 2, 3, 4, 5, 6].map(v => `<option value="${v}" ${m[k] === v ? "selected" : ""}>${v}</option>`).join("")}</select>
+            ${o[k] != null ? `<span class="small">(${String(o[k]).replace(".", ",")})</span>` : ""}</label>`).join("")}`; }).join("")}</div>`
+        : `<p class="small">Niemand als „da“ eingetragen.</p>`}</section>`;
+  }
+  async function setGrade(nr, area, value) {
+    const G = T.tr.grades; G.mine[nr] = G.mine[nr] || {};
+    if (value) G.mine[nr][area] = value; else delete G.mine[nr][area];
+    const r = await St().send("grades.php", { action: "set", id: T.tr.training.id, nr, area, value: value || null });
+    if (!r.ok) return fail(r);
+    const el = document.getElementById(`gr-${nr}-${area}`); if (el) el.className = gradeTone(value || null);
+  }
   const trState = r => { T.tr.present = r.present; T.tr.training.state = r.state; T.tr.training.expected = false; T.confirm = null; LZ.render(); };
   LZ.actions.tAll = async (b, v) => {
     const r = await St().send("trainings.php", { action: "attendall", id: T.tr.training.id, present: v === "1" });
@@ -479,6 +531,7 @@
     else if (id === "c-consent" && e.type === "change") setConsent(el.checked);
     else if (id === "cal-url") T.calInput = el.value;
     else if (id === "cal-season") T.seasonInput = el.value;
+    else if (id.startsWith("gr-") && e.type === "change") { const [, nr, area] = id.split("-"); setGrade(+nr, area, +el.value || null); }
     else if (id === "t-date") T.newT.date = el.value;
     else if (id === "t-time") T.newT.time = el.value;
     else if (id === "t-note") T.newT.note = el.value;

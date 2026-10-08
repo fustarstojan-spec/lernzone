@@ -73,7 +73,7 @@ if ($action === 'setconsent') {
 
 if ($action === 'delete') {
     if (!$me['isAdmin']) json_out(['ok' => false, 'error' => 'Nur Admins dürfen Spieler löschen.'], 403);
-    foreach (['progress', 'profiles', 'moods', 'attendance', 'absences', 'match_squad', 'iep', 'iep_ratings', 'players'] as $t) {
+    foreach (['progress', 'profiles', 'moods', 'attendance', 'absences', 'match_squad', 'iep', 'iep_versions', 'iep_ratings', 'grades', 'players'] as $t) {
         db()->prepare("DELETE FROM $t WHERE nr = ?")->execute([$nr]);
     }
     db()->prepare("DELETE FROM accounts WHERE kind = 'player' AND ref = ?")->execute([$nr]);

@@ -142,6 +142,7 @@ Voraussetzung: Webspace mit PHP 8 und PDO/SQLite (bei fast allen Hostern Standar
 | `api/boards.php` | GET / POST | `?id=` / `{ action: "save"\|"delete", … }` (Trainer) | Tafeln; Spieler nur freigegebene |
 | `api/matches.php` | GET / POST (Trainer) | `?id=` / `{ action: "save"\|"clear", id, … }` | Spiele, Saison-Minuten |
 | `api/iep.php` | GET / POST | Spieler: Ziele + `{ action: "rate" }` · Trainer: `?nr=` + `{ action: "save" }` | Entwicklungsplan |
+| `api/grades.php` | GET / POST (Trainer) | `?training=` · `?nr=` / `{ action: "set", id, nr, area, value }` | Noten 1–6 nach dem Training |
 | `api/absence.php` | POST (Spieler) | `{ action: "set", id, reason }` / `{ action: "withdraw", id }` | `{ ok, upcoming }` |
 | `api/calendar.php` | GET (angemeldet) | `?days=14` | `{ next, upcoming, status }` |
 | `api/calendar.php` | POST | `{ action: "seturl", url }` (Admin) / `{ action: "refresh" }` (Trainer) | `{ ok, status }` |
