@@ -155,7 +155,8 @@
       <section><p class="eyebrow">${LZ.calendar ? esc(LZ.calendar.kindLabel(t.kind)) : "Training"}${t.fromCalendar ? " · aus dem Kalender" : ""}</p><h1>${esc(t.title)}</h1>
         <p class="lede">${esc(fmtDate(t.date))}${t.time ? " · " + esc(t.time) + (t.endTime ? "–" + esc(t.endTime) : "") : ""}${t.location ? " · " + esc(t.location) : ""}${t.note ? " · " + esc(t.note) : ""}</p></section>
       <section class="card stack"><div class="rowspread"><h2>Anwesenheit</h2><span class="bignum">${pres.size}</span></div>
-        <p class="small">Tippe auf ein Trikot, um „da“ oder „nicht da“ zu setzen.</p>
+        <p class="small">Tippe auf ein Trikot, um „da“ oder „nicht da“ zu setzen. Das Training zählt für die Trainingsbeteiligung, sobald mindestens einer eingetragen ist.</p>
+        <div class="row"><button class="btn ghost" data-act="tAll" data-v="1">Alle da</button><button class="btn ghost" data-act="tAll" data-v="0">Alle zurücksetzen</button></div>
         <div class="nrgrid">${LZ.C.players.map(p => { const m = moods[p.nr]; return `<button class="nr ${pres.has(p.nr) ? "" : "absent"}" data-act="tAtt" data-v="${p.nr}" aria-pressed="${pres.has(p.nr)}" aria-label="Nummer ${p.nr} ${pres.has(p.nr) ? "da" : "nicht da"}">${LZ.shirt(p.nr)}<span>${m && m.vor ? LAUNE[(m.vor.laune || 3) - 1] : "&nbsp;"}${m && m.nach ? " " + m.nach.rpe : ""}</span></button>`; }).join("")}</div></section>
       <section class="card stack"><h2>Befinden</h2>${sorted.length ? sorted.map(m => { const p = LZ.C.players.find(x => x.nr === m.nr) || {}; return `
         <div class="moodrow ${alert(m) ? "hot" : ""}"><b>Nr. ${m.nr}${p.name ? " · " + esc(p.name.split(" ")[0]) : ""}</b><span>${moodLine(m.vor, m.nach) || "–"}</span>${comments(m.vor, m.nach)}</div>`; }).join("") : `<p class="small">Noch keine Rückmeldungen. Die Spieler sehen die Abfrage am Trainingstag in „Mein Bereich“.</p>`}</section>
@@ -176,7 +177,7 @@
         ${userField("cf-user", "Benutzername", T.cf.user, "Leer lassen = Vorname.")}
         <label class="check"><input type="checkbox" id="cf-admin" ${T.cf.isAdmin ? "checked" : ""}> Admin</label>
         ${errP()}${okP()}<button class="btn wide" data-act="coachAdd" ${T.busy ? "disabled" : ""}>Trainer hinzufügen</button></section>
-      ${calCard()}` : ""}`;
+      ${calCard()}${seasonCard()}` : ""}`;
     }
 
     if (s === "coachEdit") {
@@ -285,6 +286,11 @@
     openTraining(r.id);
   };
   LZ.actions.tOpen = (b, v) => openTraining(+v);
+  LZ.actions.tAll = async (b, v) => {
+    const r = await St().send("trainings.php", { action: "attendall", id: T.tr.training.id, present: v === "1" });
+    if (!r.ok) return fail(r);
+    T.tr.present = r.present; LZ.render();
+  };
   LZ.actions.tAtt = async (b, v) => {
     const nr = +v, set = new Set(T.tr.present), on = !set.has(nr);
     on ? set.add(nr) : set.delete(nr); T.tr.present = [...set]; LZ.render();     // sofort anzeigen
@@ -309,6 +315,21 @@
       <p class="small">Alle Termine der letzten 30 und nächsten 60 Tage werden automatisch angelegt und alle 15 Minuten abgeglichen. Die Art (Training, Spiel, Turnier, Termin) erkennt die App am Titel.</p>
       <div class="row"><button class="btn" data-act="calSave" ${T.busy ? "disabled" : ""}>Speichern</button>${c.url ? `<button class="btn ghost" data-act="calRefresh" ${T.busy ? "disabled" : ""}>Jetzt aktualisieren</button>` : ""}</div></section>`;
   }
+  function seasonCard() {
+    const c = T.cal; if (!c) return "";
+    const f = d => d ? d.split("-").reverse().join(".") : "";
+    return `<section class="card stack"><h2>Saison</h2>
+      <p class="small">Die Trainingsbeteiligung zählt ab diesem Tag${c.season ? ` (aktuell ab ${esc(f(c.season))})` : " (noch nicht gesetzt: alle Trainings zählen)"}. Spieler, die später dazukommen, zählen ab dem Tag, an dem ihr Konto angelegt wurde.</p>
+      <div class="fld"><label for="cal-season">Saisonbeginn</label><input id="cal-season" type="date" value="${esc(T.seasonInput ?? c.season ?? "")}"></div>
+      <div class="row"><button class="btn" data-act="seasonSave" ${T.busy ? "disabled" : ""}>Speichern</button></div></section>`;
+  }
+  LZ.actions.seasonSave = async () => {
+    T.busy = true; LZ.render();
+    const r = await St().send("calendar.php", { action: "season", date: T.seasonInput ?? (T.cal && T.cal.season) ?? "" });
+    T.busy = false;
+    if (!r.ok) return fail(r);
+    T.cal = r.status; T.seasonInput = null; T.err = ""; T.msg = "Saisonbeginn gespeichert."; LZ.render();
+  };
   async function loadCal() {
     const r = await St().get("calendar.php");
     if (r && r.ok) { T.cal = r.status; T.calInput = null; if (T.step === "coaches") LZ.render(); }
@@ -383,6 +404,7 @@
     else if (id === "pos-def" && LZ.S.view === "coach") { T.posDef = el.value; T.msg = ""; }
     else if (id === "c-consent" && e.type === "change") setConsent(el.checked);
     else if (id === "cal-url") T.calInput = el.value;
+    else if (id === "cal-season") T.seasonInput = el.value;
     else if (id === "t-date") T.newT.date = el.value;
     else if (id === "t-time") T.newT.time = el.value;
     else if (id === "t-note") T.newT.note = el.value;

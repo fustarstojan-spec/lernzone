@@ -5,6 +5,7 @@
  * GET ?days=60               → upcoming über mehr Tage (max. 60)
  * POST {action:"seturl", url} → Kalender-Adresse speichern und sofort abrufen   (Admin; Einbettungs-Link, iframe-Code oder iCal-Adresse)
  * POST {action:"refresh"}     → sofort neu abrufen                               (Trainer)
+ * POST {action:"season", date} → Saisonbeginn (Trainingsbeteiligung zählt ab)   (Admin; leer = ohne)
  * Termin: {id, date, time, endTime, title, kind, location, note}
  */
 require __DIR__ . '/config.php';
@@ -51,6 +52,13 @@ switch ($in['action'] ?? '') {
         cal_set('calendar_url', $url);
         calendar_refresh(true);
         json_out(['ok' => true, 'status' => calendar_status() + ['url' => $url]]);
+    case 'season':
+        if (!$me['isAdmin']) json_out(['ok' => false, 'error' => 'Nur für Admins.'], 403);
+        $d = trim((string)($in['date'] ?? ''));
+        if ($d !== '' && (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $d) || !checkdate((int)substr($d, 5, 2), (int)substr($d, 8, 2), (int)substr($d, 0, 4))))
+            json_out(['ok' => false, 'error' => 'Ungültiges Datum.'], 400);
+        cal_set('season_start', $d);
+        json_out(['ok' => true, 'status' => calendar_status() + ['url' => cal_setting('calendar_url')]]);
     case 'refresh':
         calendar_refresh(true);
         json_out(['ok' => true, 'status' => calendar_status() + ($me['isAdmin'] ? ['url' => cal_setting('calendar_url')] : [])]);

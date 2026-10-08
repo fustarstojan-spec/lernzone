@@ -229,10 +229,16 @@ function account_ok(string $table, string $key, int $id): void {
 
 /* Trainingsbeteiligung: alle Trainings (nur Art „training“) seit der Aufnahme in den Kader bis heute; last = die letzten 20 (alt → neu) */
 function attendance_summary(int $nr): array {
+    // Gezählt wird ab Saisonbeginn (Einstellung) bzw. ab dem Tag, an dem das Konto angelegt wurde – das spätere Datum.
+    // Nur Trainings, bei denen der Trainer die Anwesenheit eingetragen hat (mindestens einer da), zählen.
     $since = substr((string)(account_for('player', $nr)['created_at'] ?? '2000-01-01'), 0, 10);
+    $season = (string)(db()->query("SELECT value FROM settings WHERE name = 'season_start'")->fetchColumn() ?: '');
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $season) && $season > $since) $since = $season;
     $st = db()->prepare('SELECT t.id, t.date, CASE WHEN a.nr IS NULL THEN 0 ELSE 1 END AS present
                          FROM trainings t LEFT JOIN attendance a ON a.training_id = t.id AND a.nr = ?
-                         WHERE t.date <= ? AND t.date >= ? AND t.kind = \'training\' ORDER BY t.date DESC, t.time DESC');
+                         WHERE t.date <= ? AND t.date >= ? AND t.kind = \'training\'
+                           AND EXISTS (SELECT 1 FROM attendance x WHERE x.training_id = t.id)
+                         ORDER BY t.date DESC, t.time DESC');
     $st->execute([$nr, today(), $since]);
     $rows = $st->fetchAll(PDO::FETCH_ASSOC);
     $attended = count(array_filter($rows, fn($r) => (int)$r['present'] === 1));

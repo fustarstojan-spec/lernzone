@@ -2,6 +2,13 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.11.0 – 2026-10-08
+- **Bisherige Trainingsbeteiligung übernommen:** `tools/import_attendance.php` liest eine CSV (Trikotnummer; Datum; da/nicht da) – ohne Namen und ohne Abwesenheitsgründe. Trainings an Tagen ohne Kalendereintrag werden angelegt.
+- **Saisonbeginn** (Trainer-Bereich → Trainer → „Saison“, nur Admin): Die Trainingsbeteiligung zählt ab diesem Tag; neue Spieler ab dem Tag ihres Kontos
+- Ein Training zählt erst, wenn die Anwesenheit eingetragen ist (mindestens einer da) – nicht abgehakte Trainings drücken die Quote nicht mehr
+- Training: Knöpfe „Alle da“ und „Alle zurücksetzen“
+- Kalender übernimmt ein von Hand angelegtes Training am selben Tag, statt es doppelt anzulegen
+
 ## 0.10.0 – 2026-10-08
 - **Mein Bereich:** „Nächster Termin“ mit Countdown und Ort, darunter Wochenübersicht Mo–So (diese / nächste Woche umschaltbar, heute markiert)
 

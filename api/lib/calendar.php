@@ -205,12 +205,19 @@ function cal_sync(array $occ, DateTimeImmutable $from, DateTimeImmutable $to): i
     $sel = db()->prepare('SELECT id FROM trainings WHERE cal_key = ?');
     $upd = db()->prepare('UPDATE trainings SET date = ?, time = ?, end_time = ?, title = ?, kind = ?, location = ? WHERE id = ?');
     $ins = db()->prepare('INSERT INTO trainings (date, time, end_time, title, kind, location, note, cal_key) VALUES (?, ?, ?, ?, ?, ?, \'\', ?)');
+    $own = db()->prepare("SELECT id FROM trainings WHERE cal_key = '' AND date = ? AND kind = 'training' ORDER BY id LIMIT 1");
+    $adopt = db()->prepare('UPDATE trainings SET cal_key = ? WHERE id = ?');
     db()->beginTransaction();
     foreach ($occ as $key => $o) {
         $row = [$o['start']->format('Y-m-d'), $o['allDay'] ? '' : $o['start']->format('H:i'), $o['allDay'] ? '' : $o['end']->format('H:i'),
                 $o['title'], cal_kind($o['title']), $o['location']];
         $sel->execute([$key]);
-        if ($id = $sel->fetchColumn()) $upd->execute([...$row, $id]); else $ins->execute([...$row, $key]);
+        $id = $sel->fetchColumn();
+        if (!$id && $row[4] === 'training') {                  // gleiches Training schon von Hand / aus der Excel angelegt?
+            $own->execute([$row[0]]);
+            if ($id = $own->fetchColumn()) $adopt->execute([$key, $id]);
+        }
+        if ($id) $upd->execute([...$row, $id]); else $ins->execute([...$row, $key]);
     }
     // Termine, die aus dem Kalender verschwunden sind (ab heute): löschen, wenn noch nichts eingetragen ist
     $old = db()->prepare("SELECT id, cal_key FROM trainings WHERE cal_key != '' AND date >= ? AND date <= ?");
@@ -234,7 +241,7 @@ function calendar_refresh(bool $force = false): void {
     [$ok, $body, $err] = cal_fetch($url);
     if ($ok) @file_put_contents(cal_cache_file(), $body);
     elseif (is_file(cal_cache_file())) $body = (string)file_get_contents(cal_cache_file());
-    cal_set('calendar_error', $ok ? '' : $err . ($body !== '' ? ' Angezeigt werden die zuletzt geladenen Termine.' : ''));
+    cal_set('calendar_error', $ok ? '' : rtrim($err, '. ') . ($body !== '' ? '. Angezeigt werden die zuletzt geladenen Termine.' : ''));
     if ($body === '') return;
     $now  = new DateTimeImmutable('now', cal_tz());
     $from = $now->setTime(0, 0)->modify('-' . CAL_PAST . ' days');
@@ -249,6 +256,6 @@ function calendar_refresh(bool $force = false): void {
 }
 
 function calendar_status(): array {
-    return ['configured' => cal_setting('calendar_url') !== '', 'synced' => cal_setting('calendar_synced'),
+    return ['configured' => cal_setting('calendar_url') !== '', 'synced' => cal_setting('calendar_synced'), 'season' => cal_setting('season_start'),
             'count' => (int)cal_setting('calendar_count'), 'error' => cal_setting('calendar_error')];
 }

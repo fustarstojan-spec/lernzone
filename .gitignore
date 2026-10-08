@@ -6,3 +6,4 @@ storage/*.db
 Thumbs.db
 .vscode/
 storage/calendar-cache.ics
+storage/*.csv

@@ -82,6 +82,13 @@ if ($action === 'delete') {
     json_out(['ok' => true]);
 }
 
+if ($action === 'attendall') {                                 // alle aktiven Spieler auf „da“ bzw. „nicht da“
+    db()->prepare('DELETE FROM attendance WHERE training_id = ?')->execute([$id]);
+    if (!empty($in['present'])) db()->prepare('INSERT INTO attendance (training_id, nr) SELECT ?, nr FROM players WHERE active = 1')->execute([$id]);
+    $p = db()->prepare('SELECT nr FROM attendance WHERE training_id = ? ORDER BY nr'); $p->execute([$id]);
+    json_out(['ok' => true, 'present' => array_map('intval', $p->fetchAll(PDO::FETCH_COLUMN))]);
+}
+
 if ($action === 'attend') {
     $nr = int_in($in['nr'] ?? null, 1, 99);
     if ($nr === null) json_out(['ok' => false, 'error' => 'Ungültige Nummer.'], 400);

@@ -22,7 +22,7 @@ data/plans.json       Trainingspläne und Ziele (Vorlagen "feld" und "tw")
 data/players.json     Kader: Nummer, Position, Plan – OHNE PINs
 data/demo-pins.json   Nur Weg A: PINs im Klartext
 api/                  Nur Weg B: PHP-Schnittstelle
-tools/                Nur Weg B: Datenbankschema und Kader-Import
+tools/                Nur Weg B: Datenbankschema, Kader- und Anwesenheits-Import
 storage/              Nur Weg B: SQLite-Datenbank (nicht öffentlich)
 ```
 
@@ -108,6 +108,7 @@ Voraussetzung: Webspace mit PHP 8 und PDO/SQLite (bei fast allen Hostern Standar
 2. In `js/config.js` auf `mode: "api"` umstellen.
 3. Auf dem Server (SSH) im Projektordner: `php tools/create_coach.php "Vorname" benutzername` → erstes Admin-Konto mit Einmal-Code.
 4. Spieler im Trainer-Bereich anlegen – oder `php tools/import_players.php` übernimmt `data/players.json` und gibt eine Liste mit Benutzernamen und Einmal-Codes aus.
+   Bisherige Trainingsbeteiligung (z. B. aus einer Excel): als CSV `nr;datum;anwesend` (1/0) speichern, dann `php tools/import_attendance.php storage/anwesenheit.csv --saison=JJJJ-MM-TT`. Keine Namen, keine Gründe.
 5. Prüfen, dass `storage/` und `tools/` von außen nicht erreichbar sind (`.htaccess` liegt bei; bei Nginx entsprechend sperren). Besser: `storage/` außerhalb des Web-Ordners ablegen und den Pfad in `api/config.php` anpassen.
 6. Nur über HTTPS betreiben und die HSTS-Zeile in `.htaccess` einschalten.
 
