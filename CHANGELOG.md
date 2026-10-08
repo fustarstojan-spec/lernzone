@@ -2,6 +2,9 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.16.1 – 2026-10-08
+- Trikotnummer sitzt 2 px höher im Trikot
+
 ## 0.16.0 – 2026-10-08
 - **Meine Ziele aus dem IEP** (Individueller Entwicklungsplan): Spieler sehen in „Mein Bereich“ ihr persönliches Ziel sowie Technik-, Physis-, Offensiv- und Defensivziele und den Zeitplan (ersetzt die Beispielziele)
 - **Selbsteinschätzung:** bis 3 Tage nach einem Spiel bewertet der Spieler jeden Zielbereich mit 1–5 (nach Einwilligung der Eltern); der Trainer sieht Verlauf und Durchschnitt

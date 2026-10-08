@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.16.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.16.1";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -47,7 +47,7 @@
     const fs = String(label).length > 2 ? 13 : label === "+" ? 30 : 22;
     const fill = kind === "add" ? ADD_GREY : kind === "tw" ? C.team.colors.goalkeeper : kind === "feld" ? C.team.colors.shirt
                : isGK(label) ? C.team.colors.goalkeeper : C.team.colors.shirt;
-    return `<svg viewBox="0 0 64 60" aria-hidden="true"><path d="${SHIRT_PATH}" fill="${fill}" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><text x="32" y="${label === "+" ? 39 : 41}" text-anchor="middle" dominant-baseline="central" fill="#fff" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="${fs}">${esc(label)}</text></svg>`;
+    return `<svg viewBox="0 0 64 60" aria-hidden="true"><path d="${SHIRT_PATH}" fill="${fill}" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><text x="32" y="39" text-anchor="middle" dominant-baseline="central" fill="#fff" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="${fs}">${esc(label)}</text></svg>`;
   }
   const posName = id => { const p = (C.team.positions || []).find(x => x.id === id); return p ? p.name : ""; };
   const posLabel = id => id ? `${esc(id)} · ${esc(posName(id))}` : "noch offen";
