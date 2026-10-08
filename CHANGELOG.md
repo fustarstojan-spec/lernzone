@@ -2,6 +2,9 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.3.1 – 2026-10-08
+- Projekt auf GitHub: Dateien liegen im Hauptverzeichnis, `.gitignore` und `.htaccess` (Schutz für `storage/` und `tools/`) ergänzt
+
 ## 0.3.0 – 2026-10-08
 - Projekt in Dateien aufgeteilt: Inhalte in `data/*.json`, Oberfläche in `js/app.js`, Datenzugriff in `js/store.js`
 - Umschalter Weg A / Weg B in `js/config.js`

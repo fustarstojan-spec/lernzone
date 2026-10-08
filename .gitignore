@@ -1,0 +1,7 @@
+# Datenbank mit PIN-Hashes und Fortschritt – niemals ins Repository
+storage/*.sqlite
+storage/*.db
+# Betriebssystem / Editor
+.DS_Store
+Thumbs.db
+.vscode/
