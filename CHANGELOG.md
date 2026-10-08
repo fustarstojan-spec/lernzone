@@ -2,6 +2,13 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.12.0 – 2026-10-08
+- **Training absagen:** Spieler sagen auf der Startseite oder in „Mein Bereich“ ab – mit festem Grund (Schule / Lernen, Krank, Urlaub / Familie, Sonstiges, kein Freitext), bis 2 Stunden vor Beginn (ohne Uhrzeit: bis zum Vortag); zurücknehmen mit „Ich bin doch dabei“
+- Absage = „nicht da“ in der Anwesenheit (wie in der Excel); hakt der Trainer den Spieler doch ab, ist die Absage aufgehoben
+- Startseite der Spieler: „Meine Trainings“ (die nächsten 3) und Trainingsbeteiligung
+- Trainer: Absagen mit Grund im Training, Anzahl in der Trainingsliste; „Alle da“ lässt Abgesagte aus
+- Neu: Tabelle `absences`, `api/absence.php`
+
 ## 0.11.0 – 2026-10-08
 - **Bisherige Trainingsbeteiligung übernommen:** `tools/import_attendance.php` liest eine CSV (Trikotnummer; Datum; da/nicht da) – ohne Namen und ohne Abwesenheitsgründe. Trainings an Tagen ohne Kalendereintrag werden angelegt.
 - **Saisonbeginn** (Trainer-Bereich → Trainer → „Saison“, nur Admin): Die Trainingsbeteiligung zählt ab diesem Tag; neue Spieler ab dem Tag ihres Kontos

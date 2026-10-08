@@ -247,6 +247,35 @@ function attendance_summary(int $nr): array {
             'last' => array_map(fn($r) => ['date' => $r['date'], 'present' => (bool)$r['present']], $last)];
 }
 
+/* ---------- Absagen ---------- */
+const ABSENCE_REASONS = ['schule' => 'Schule / Lernen', 'krank' => 'Krank', 'urlaub' => 'Urlaub / Familie', 'sonst' => 'Sonstiges'];
+const ABSENCE_HOURS = 2;                                     // Absagen bis 2 Stunden vor Beginn
+
+/* Bis wann darf abgesagt werden? Ohne Uhrzeit: bis zum Vortag 24 Uhr */
+function absence_deadline(array $t): int {
+    $start = strtotime($t['date'] . ' ' . ($t['time'] !== '' ? $t['time'] : '00:00'));
+    return $t['time'] !== '' ? $start - ABSENCE_HOURS * 3600 : $start;
+}
+
+/* Die nächsten Trainings eines Spielers mit seinem Absage-Stand */
+function upcoming_for(int $nr, int $days = 14, int $limit = 6): array {
+    $st = db()->prepare("SELECT t.id, t.date, t.time, t.end_time, t.title, t.location, b.reason,
+                                (SELECT COUNT(*) FROM attendance a WHERE a.training_id = t.id AND a.nr = ?) AS present
+                         FROM trainings t LEFT JOIN absences b ON b.training_id = t.id AND b.nr = ?
+                         WHERE t.kind = 'training' AND t.date >= ? AND t.date <= ? ORDER BY t.date, t.time LIMIT $limit");
+    $st->execute([$nr, $nr, today(), date('Y-m-d', strtotime("+$days days"))]);
+    $out = [];
+    foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $t) {
+        $end = strtotime($t['date'] . ' ' . ($t['end_time'] ?: ($t['time'] ?: '23:59')));
+        if ($end < time()) continue;                          // heute schon vorbei
+        $dl = absence_deadline($t);
+        $out[] = ['id' => (int)$t['id'], 'date' => $t['date'], 'time' => $t['time'], 'endTime' => $t['end_time'],
+                  'title' => $t['title'] !== '' ? $t['title'] : 'Training', 'location' => $t['location'],
+                  'absent' => $t['reason'], 'canChange' => time() < $dl, 'deadline' => date('Y-m-d H:i', $dl)];
+    }
+    return $out;
+}
+
 /* Letzte Befindens-Einträge eines Spielers, gruppiert pro Training (neu → alt) */
 function recent_moods(int $nr, int $limit = 10): array {
     $st = db()->prepare('SELECT m.training_id, t.date, t.time, m.phase, m.data FROM moods m

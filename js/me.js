@@ -1,11 +1,12 @@
 /*
  * Lernzone – Spieler-Funktionen mit Server (nur Weg B / PHP)
- * Mein Bereich: Trainingsbeteiligung, Befindens-Barometer vor/nach dem Training, eigenes Profil
- * Daten: api/my.php (lesen), api/mood.php und api/profile.php (speichern)
+ * Mein Bereich: Trainingsbeteiligung, nächste Trainings mit Absage, Befindens-Barometer vor/nach dem Training, eigenes Profil
+ * Startseite: nächste Trainings (absagen) + Trainingsbeteiligung
+ * Daten: api/my.php (lesen), api/mood.php, api/profile.php und api/absence.php (speichern)
  */
 (function () {
   const LZ = window.LZ, esc = LZ.esc;
-  const K = { data: null, forNr: null, err: "", edit: {}, M: {}, P: null, msg: "", busy: false };
+  const K = { data: null, forNr: null, err: "", edit: {}, M: {}, P: null, msg: "", busy: false, abs: null, absErr: "", at: 0 };
 
   const LAUNE = ["😞", "🙁", "😐", "🙂", "😄"];
   const MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
@@ -25,15 +26,55 @@
     const nr = LZ.S.user.nr;
     if (K.forNr !== nr) { K.data = null; K.edit = {}; K.M = {}; }
     const r = await LZ.Store.get("my.php");
-    if (r.ok) { K.data = r; K.forNr = nr; K.err = ""; } else K.err = r.error || "Konnte deine Daten nicht laden.";
-    if (LZ.S.view === "me") LZ.render();
+    if (r.ok) { K.data = r; K.forNr = nr; K.err = ""; K.at = Date.now(); } else K.err = r.error || "Konnte deine Daten nicht laden.";
+    if (["me", "home"].includes(LZ.S.view)) LZ.render();
   }
-  LZ.on("enter", v => { if (v === "me") load(); });
-  LZ.on("ready", () => { if (LZ.S.view === "me") load(); });
+  LZ.on("enter", v => { if (v === "me" || (v === "home" && Date.now() - K.at > 30000)) load(); });
+  LZ.on("ready", () => {
+    if (["me", "home"].includes(LZ.S.view)) load();
+    // Startseite: nach „Nächster Termin“ (calendar.js) einreihen
+    LZ.on("homeTop", () => {
+      if (!active() || !K.data || K.forNr !== LZ.S.user.nr) return "";
+      return trainingsCard(K.data, true) + attendanceCard(K.data.attendance, true);
+    });
+  });
 
   /* ---------- Bausteine für Mein Bereich ---------- */
-  function attendanceCard(a) {
-    if (!a.total) return `<section class="card stack"><h2>Trainingsbeteiligung</h2><p class="small">Noch keine Trainings eingetragen.</p></section>`;
+  /* Nächste Trainings mit „Absagen“ */
+  const hm = s => s.slice(11, 16);
+  function trainingsCard(d, home) {
+    const list = (d.upcoming || []).slice(0, home ? 3 : 6), R = d.reasons || {};
+    if (!list.length) return home ? "" : `<section class="card stack"><h2>Meine Trainings</h2><p class="small">In den nächsten zwei Wochen ist kein Training eingetragen.</p></section>`;
+    const row = t => {
+      const when = `${esc(fmtDate(t.date))}${t.time ? " · " + esc(t.time) : ""}`;
+      const dl = `${fmtDate(t.deadline.slice(0, 10))} ${hm(t.deadline)}`;
+      let right;
+      if (K.abs === t.id) right = `<div class="reasons">${Object.entries(R).map(([k, l]) => `<button class="btn ghost small-btn" data-act="absSet" data-t="${t.id}" data-v="${k}">${esc(l)}</button>`).join("")}
+          <button class="linkbtn" data-act="absCancel">Abbrechen</button></div>`;
+      else if (t.absent) right = `<span class="abschip">Abgesagt · ${esc(R[t.absent] || t.absent)}</span>${t.canChange ? `<button class="linkbtn" data-act="absBack" data-t="${t.id}">Ich bin doch dabei</button>` : ""}`;
+      else right = t.canChange ? `<button class="btn ghost small-btn" data-act="absOpen" data-t="${t.id}">Absagen</button>` : `<span class="small">Absagen nur noch beim Trainer</span>`;
+      return `<li class="trrow${t.absent ? " off" : ""}"><div><b>${when}</b><span class="small">${esc(t.title)}${t.location ? " · " + esc(t.location) : ""}</span>
+        ${!t.absent && t.canChange && K.abs !== t.id ? `<span class="small">absagen bis ${esc(dl)} Uhr</span>` : ""}</div><div class="trright">${right}</div></li>`;
+    };
+    return `<section class="card stack"><h2>Meine Trainings</h2>
+      ${K.abs ? `<p class="small"><b>Warum kannst du nicht kommen?</b> Dein Trainer sieht nur den Grund.</p>` : ""}
+      ${K.absErr ? `<p class="err" style="text-align:left">${esc(K.absErr)}</p>` : ""}
+      <ul class="trlist">${list.map(row).join("")}</ul></section>`;
+  }
+  LZ.actions.absOpen = b => { K.abs = +b.dataset.t; K.absErr = ""; LZ.render(); };
+  LZ.actions.absCancel = () => { K.abs = null; K.absErr = ""; LZ.render(); };
+  async function absSend(body) {
+    if (K.busy) return; K.busy = true;
+    const r = await LZ.Store.send("absence.php", body);
+    K.busy = false;
+    if (!r.ok) { K.absErr = r.error || "Hat nicht geklappt."; LZ.render(); return; }
+    K.abs = null; K.absErr = ""; K.data.upcoming = r.upcoming; LZ.render();
+  }
+  LZ.actions.absSet = b => absSend({ action: "set", id: +b.dataset.t, reason: b.dataset.v });
+  LZ.actions.absBack = b => absSend({ action: "withdraw", id: +b.dataset.t });
+
+  function attendanceCard(a, home) {
+    if (!a.total) return home ? "" : `<section class="card stack"><h2>Trainingsbeteiligung</h2><p class="small">Noch keine Trainings eingetragen.</p></section>`;
     const pct = Math.round(a.attended / a.total * 100);
     return `<section class="card stack">
       <div class="rowspread"><h2>Trainingsbeteiligung</h2><span class="bignum">${pct}&nbsp;%</span></div>
@@ -102,7 +143,7 @@
     if (!active()) return "";
     if (K.err) return `<section class="card"><p class="err" style="text-align:left">${esc(K.err)}</p></section>`;
     if (!K.data || K.forNr !== LZ.S.user.nr) return `<section class="card"><p class="small">Lade deine Daten …</p></section>`;
-    return attendanceCard(K.data.attendance) + moodCard(K.data) + profileCard(K.data);
+    return attendanceCard(K.data.attendance) + trainingsCard(K.data) + moodCard(K.data) + profileCard(K.data);
   });
 
   /* ---------- Profil bearbeiten ---------- */

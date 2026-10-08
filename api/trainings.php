@@ -3,7 +3,7 @@
  * Trainings (nur Trainer)
  * GET          → [{id, date, time, endTime, title, kind, location, note, fromCalendar, present, vor, nach, avgLaune, avgRpe, alerts}]
  *                (alt → neu um heute herum: vergangene 30 Tage und kommende 14 Tage; Termine aus dem Google-Kalender automatisch)
- * GET ?id=5    → {training, present:[nr], moods:[{nr, vor, nach}]}
+ * GET ?id=5    → {training, present:[nr], absences:[{nr, reason, label}], moods:[{nr, vor, nach}]}
  * POST {action:"create", date, time, note}
  * POST {action:"delete", id}
  * POST {action:"attend", id, nr, present}
@@ -37,11 +37,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         if (!$t) json_out(['ok' => false, 'error' => 'Dieses Training gibt es nicht.'], 404);
         $p = db()->prepare('SELECT nr FROM attendance WHERE training_id = ? ORDER BY nr');
         $p->execute([$id]);
+        $a = db()->prepare('SELECT nr, reason FROM absences WHERE training_id = ? ORDER BY nr');
+        $a->execute([$id]);
+        $abs = array_map(fn($r) => ['nr' => (int)$r['nr'], 'reason' => $r['reason'], 'label' => ABSENCE_REASONS[$r['reason']] ?? $r['reason']], $a->fetchAll(PDO::FETCH_ASSOC));
         json_out(['ok' => true, 'training' => $tOut($t),
-                  'present' => array_map('intval', $p->fetchAll(PDO::FETCH_COLUMN)), 'moods' => $moodsOf($id)]);
+                  'present' => array_map('intval', $p->fetchAll(PDO::FETCH_COLUMN)), 'absences' => $abs, 'moods' => $moodsOf($id)]);
     }
     calendar_refresh();
-    $st = db()->prepare('SELECT t.*, (SELECT COUNT(*) FROM attendance a WHERE a.training_id = t.id) AS present
+    $st = db()->prepare('SELECT t.*, (SELECT COUNT(*) FROM attendance a WHERE a.training_id = t.id) AS present,
+                                (SELECT COUNT(*) FROM absences b WHERE b.training_id = t.id) AS absent
                          FROM trainings t WHERE t.date >= ? AND t.date <= ? ORDER BY t.date DESC, t.time DESC LIMIT 120');
     $st->execute([date('Y-m-d', strtotime('-30 days')), date('Y-m-d', strtotime('+14 days'))]);
     $rows = $st->fetchAll(PDO::FETCH_ASSOC);
@@ -51,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $nach = array_filter(array_map(fn($x) => $x['nach'], $m));
         $alerts = count(array_filter($vor, fn($v) => !empty($v['nichtfit']) || ($v['laune'] ?? 5) <= 2));
         return $tOut($t) + [
-                'present' => (int)$t['present'], 'vor' => count($vor), 'nach' => count($nach),
+                'present' => (int)$t['present'], 'absent' => (int)$t['absent'], 'vor' => count($vor), 'nach' => count($nach),
                 'avgLaune' => $avg(array_map(fn($v) => $v['laune'] ?? null, $vor)),
                 'avgRpe' => $avg(array_map(fn($v) => $v['rpe'] ?? null, $nach)), 'alerts' => $alerts];
     }, $rows));
@@ -77,14 +81,16 @@ $st->execute([$id]);
 if ((int)$st->fetchColumn() === 0) json_out(['ok' => false, 'error' => 'Dieses Training gibt es nicht.'], 404);
 
 if ($action === 'delete') {
-    foreach (['attendance', 'moods'] as $t) db()->prepare("DELETE FROM $t WHERE training_id = ?")->execute([$id]);
+    foreach (['attendance', 'moods', 'absences'] as $t) db()->prepare("DELETE FROM $t WHERE training_id = ?")->execute([$id]);
     db()->prepare('DELETE FROM trainings WHERE id = ?')->execute([$id]);
     json_out(['ok' => true]);
 }
 
 if ($action === 'attendall') {                                 // alle aktiven Spieler auf „da“ bzw. „nicht da“
     db()->prepare('DELETE FROM attendance WHERE training_id = ?')->execute([$id]);
-    if (!empty($in['present'])) db()->prepare('INSERT INTO attendance (training_id, nr) SELECT ?, nr FROM players WHERE active = 1')->execute([$id]);
+    // Wer abgesagt hat, bleibt „nicht da“
+    if (!empty($in['present'])) db()->prepare('INSERT INTO attendance (training_id, nr) SELECT ?, nr FROM players
+                                               WHERE active = 1 AND nr NOT IN (SELECT nr FROM absences WHERE training_id = ?)')->execute([$id, $id]);
     $p = db()->prepare('SELECT nr FROM attendance WHERE training_id = ? ORDER BY nr'); $p->execute([$id]);
     json_out(['ok' => true, 'present' => array_map('intval', $p->fetchAll(PDO::FETCH_COLUMN))]);
 }
@@ -92,7 +98,10 @@ if ($action === 'attendall') {                                 // alle aktiven S
 if ($action === 'attend') {
     $nr = int_in($in['nr'] ?? null, 1, 99);
     if ($nr === null) json_out(['ok' => false, 'error' => 'Ungültige Nummer.'], 400);
-    if (!empty($in['present'])) db()->prepare('INSERT OR IGNORE INTO attendance (training_id, nr) VALUES (?, ?)')->execute([$id, $nr]);
+    if (!empty($in['present'])) {                                // doch gekommen → Absage aufheben
+        db()->prepare('INSERT OR IGNORE INTO attendance (training_id, nr) VALUES (?, ?)')->execute([$id, $nr]);
+        db()->prepare('DELETE FROM absences WHERE training_id = ? AND nr = ?')->execute([$id, $nr]);
+    }
     else db()->prepare('DELETE FROM attendance WHERE training_id = ? AND nr = ?')->execute([$id, $nr]);
     json_out(['ok' => true]);
 }

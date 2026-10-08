@@ -133,7 +133,8 @@ Voraussetzung: Webspace mit PHP 8 und PDO/SQLite (bei fast allen Hostern Standar
 | `api/my.php` | GET (Spieler) | – | `{ consent, profile, attendance, today }` |
 | `api/profile.php` | POST (Spieler) | `{ profile }` | `{ ok, profile }` |
 | `api/mood.php` | POST (Spieler) | `{ training, phase: "vor"\|"nach", data }` | `{ ok, data }` |
-| `api/trainings.php` | GET / POST (Trainer) | `?id=` / `{ action: "create"\|"delete"\|"attend", … }` | |
+| `api/trainings.php` | GET / POST (Trainer) | `?id=` / `{ action: "create"\|"delete"\|"attend"\|"attendall", … }` | |
+| `api/absence.php` | POST (Spieler) | `{ action: "set", id, reason }` / `{ action: "withdraw", id }` | `{ ok, upcoming }` |
 | `api/calendar.php` | GET (angemeldet) | `?days=14` | `{ next, upcoming, status }` |
 | `api/calendar.php` | POST | `{ action: "seturl", url }` (Admin) / `{ action: "refresh" }` (Trainer) | `{ ok, status }` |
 

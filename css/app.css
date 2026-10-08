@@ -293,3 +293,16 @@ code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:
 .wkday .wkev,.wkitem .evtitle{min-width:0;overflow-wrap:anywhere}
 .wkday{grid-template-columns:4.2em minmax(0,1fr)}
 .wkitem .evtitle{white-space:normal}
+/* 0.12.0 Absagen */
+.trlist{list-style:none;margin:0;padding:0;display:grid}
+.trrow{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--rule);align-items:center;flex-wrap:wrap}
+.trrow:last-child{border-bottom:0}
+.trrow>div:first-child{display:flex;flex-direction:column;gap:2px;min-width:0}
+.trrow.off>div:first-child b{text-decoration:line-through;color:var(--muted)}
+.trright{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.small-btn{padding:6px 12px;font-size:.88rem;min-height:0}
+.reasons{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.abschip{display:inline-block;padding:3px 10px;border-radius:999px;background:#f3e3e5;color:#5e2129;font-weight:700;font-size:.82rem}
+.abstag{font-style:normal;font-size:.7rem;color:#5e2129;font-weight:700}
+.abslist{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.9rem;padding-top:8px;border-top:1px solid var(--rule)}
+.abslist b{width:100%}

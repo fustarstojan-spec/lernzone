@@ -59,6 +59,15 @@ CREATE TABLE IF NOT EXISTS attendance (
   PRIMARY KEY (training_id, nr)
 );
 
+-- Absagen der Spieler (ab 0.12.0): nur ein fester Grund, kein Freitext (Datenschutz)
+CREATE TABLE IF NOT EXISTS absences (
+  training_id  INTEGER NOT NULL,
+  nr           INTEGER NOT NULL,
+  reason       TEXT    NOT NULL,                     -- schule | krank | urlaub | sonst
+  created_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (training_id, nr)
+);
+
 CREATE TABLE IF NOT EXISTS moods (
   training_id  INTEGER NOT NULL,
   nr           INTEGER NOT NULL,

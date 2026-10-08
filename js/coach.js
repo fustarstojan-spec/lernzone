@@ -142,13 +142,14 @@
       <section class="stack">${T.trainings === null ? `<p class="small">Lade …</p>` : T.trainings.length ? T.trainings.map(t => `
         <button class="trow ${t.date < todayIso() ? "" : "future"}" data-act="tOpen" data-v="${t.id}">
           <span class="tdate">${esc(fmtDate(t.date))}${t.time ? ` · ${esc(t.time)}` : ""} · ${esc(t.title)}</span>
-          <span class="small">${LZ.calendar ? LZ.calendar.chip(t.kind) + " " : ""}${t.note ? esc(t.note) + " · " : ""}${t.present} da${t.avgLaune !== null ? ` · Laune Ø ${String(t.avgLaune).replace(".", ",")}` : ""}${t.avgRpe !== null ? ` · Belastung Ø ${String(t.avgRpe).replace(".", ",")}` : ""}</span>
+          <span class="small">${LZ.calendar ? LZ.calendar.chip(t.kind) + " " : ""}${t.note ? esc(t.note) + " · " : ""}${t.present} da${t.absent ? ` · ${t.absent} abgesagt` : ""}${t.avgLaune !== null ? ` · Laune Ø ${String(t.avgLaune).replace(".", ",")}` : ""}${t.avgRpe !== null ? ` · Belastung Ø ${String(t.avgRpe).replace(".", ",")}` : ""}</span>
           ${t.alerts ? `<span class="tbadge">${t.alerts} ansprechen</span>` : ""}</button>`).join("") : `<p class="small">Noch keine Trainings angelegt.</p>`}</section>`;
     }
 
     if (s === "training") {
       const d = T.tr; if (!d) return `${tabs()}<p class="small">Lade …</p>`;
       const t = d.training, pres = new Set(d.present), moods = Object.fromEntries(d.moods.map(m => [m.nr, m]));
+      const abs = Object.fromEntries((d.absences || []).map(a => [a.nr, a]));
       const alert = m => m.vor && (m.vor.nichtfit || (m.vor.laune || 5) <= 2);
       const sorted = d.moods.slice().sort((a, b) => (alert(b) ? 1 : 0) - (alert(a) ? 1 : 0));
       return `<button class="back" data-act="ctab" data-v="trainings">‹ Trainings</button>${tabs()}
@@ -157,7 +158,8 @@
       <section class="card stack"><div class="rowspread"><h2>Anwesenheit</h2><span class="bignum">${pres.size}</span></div>
         <p class="small">Tippe auf ein Trikot, um „da“ oder „nicht da“ zu setzen. Das Training zählt für die Trainingsbeteiligung, sobald mindestens einer eingetragen ist.</p>
         <div class="row"><button class="btn ghost" data-act="tAll" data-v="1">Alle da</button><button class="btn ghost" data-act="tAll" data-v="0">Alle zurücksetzen</button></div>
-        <div class="nrgrid">${LZ.C.players.map(p => { const m = moods[p.nr]; return `<button class="nr ${pres.has(p.nr) ? "" : "absent"}" data-act="tAtt" data-v="${p.nr}" aria-pressed="${pres.has(p.nr)}" aria-label="Nummer ${p.nr} ${pres.has(p.nr) ? "da" : "nicht da"}">${LZ.shirt(p.nr)}<span>${m && m.vor ? LAUNE[(m.vor.laune || 3) - 1] : "&nbsp;"}${m && m.nach ? " " + m.nach.rpe : ""}</span></button>`; }).join("")}</div></section>
+        <div class="nrgrid">${LZ.C.players.map(p => { const m = moods[p.nr]; return `<button class="nr ${pres.has(p.nr) ? "" : "absent"}" data-act="tAtt" data-v="${p.nr}" aria-pressed="${pres.has(p.nr)}" aria-label="Nummer ${p.nr} ${pres.has(p.nr) ? "da" : "nicht da"}">${LZ.shirt(p.nr)}<span>${abs[p.nr] && !pres.has(p.nr) ? `<em class="abstag">abgesagt</em>` : `${m && m.vor ? LAUNE[(m.vor.laune || 3) - 1] : "&nbsp;"}${m && m.nach ? " " + m.nach.rpe : ""}`}</span></button>`; }).join("")}</div>
+        ${(d.absences || []).length ? `<div class="abslist"><b>Abgesagt (${d.absences.length})</b>${d.absences.map(a => `<span>Nr. ${a.nr} · ${esc(a.label)}</span>`).join("")}</div>` : ""}</section>
       <section class="card stack"><h2>Befinden</h2>${sorted.length ? sorted.map(m => { const p = LZ.C.players.find(x => x.nr === m.nr) || {}; return `
         <div class="moodrow ${alert(m) ? "hot" : ""}"><b>Nr. ${m.nr}${p.name ? " · " + esc(p.name.split(" ")[0]) : ""}</b><span>${moodLine(m.vor, m.nach) || "–"}</span>${comments(m.vor, m.nach)}</div>`; }).join("") : `<p class="small">Noch keine Rückmeldungen. Die Spieler sehen die Abfrage am Trainingstag in „Mein Bereich“.</p>`}</section>
       ${errP()}
@@ -293,7 +295,9 @@
   };
   LZ.actions.tAtt = async (b, v) => {
     const nr = +v, set = new Set(T.tr.present), on = !set.has(nr);
-    on ? set.add(nr) : set.delete(nr); T.tr.present = [...set]; LZ.render();     // sofort anzeigen
+    on ? set.add(nr) : set.delete(nr); T.tr.present = [...set];
+    if (on && T.tr.absences) T.tr.absences = T.tr.absences.filter(a => a.nr !== nr);   // doch gekommen
+    LZ.render();     // sofort anzeigen
     const r = await St().send("trainings.php", { action: "attend", id: T.tr.training.id, nr, present: on });
     if (!r.ok) { on ? set.delete(nr) : set.add(nr); T.tr.present = [...set]; fail(r); }
   };

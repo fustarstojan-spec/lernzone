@@ -3,6 +3,7 @@
  * Alles für „Mein Bereich“ in einem Aufruf (nur angemeldeter Spieler)
  * GET → {ok, consent, profile, attendance:{total, attended, last:[{date, present}]},
  *        today:[{id, date, time, note, vor, nach}]}
+ *        upcoming:[{id, date, time, endTime, title, location, absent, canChange, deadline}]  (nächste Trainings, Absagen)
  *        today = Trainings von heute (und gestern, für die Abfrage „nach dem Training“ bei späten Einheiten)
  */
 require __DIR__ . '/config.php';
@@ -26,4 +27,5 @@ foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $t) {
 }
 
 json_out(['ok' => true, 'consent' => $u['consent'], 'profile' => (object)profile_of($u['nr']),
-          'attendance' => attendance_summary($u['nr']), 'today' => $today]);
+          'attendance' => attendance_summary($u['nr']), 'today' => $today,
+          'upcoming' => upcoming_for($u['nr']), 'reasons' => ABSENCE_REASONS]);
