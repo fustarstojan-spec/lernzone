@@ -396,3 +396,16 @@ code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:
 .vlist{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
 .gradegrid>b{font-size:.72rem;letter-spacing:-.01em;overflow-wrap:anywhere;line-height:1.1}
 .gradetable th{font-size:.78rem}
+/* 0.18.0 Aufstellung: Grundordnung wählen, Positionen per Namen */
+.formgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.formbtn{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px;border:1px solid var(--rule);border-radius:12px;background:var(--surface)}
+.formbtn:hover{border-color:var(--shirt)}
+.formbtn .thumb{width:100%}.formbtn .thumb .pitch{max-width:100%}
+.pitch .tok.ghost circle:not(.hit){fill:rgba(255,255,255,.18);stroke:#fff;stroke-dasharray:.8 .6}
+.pitch .tok.ghost text{fill:#fff}
+.picker{border:2px solid var(--shirt)}
+.slotgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.slotgrid button{all:unset;box-sizing:border-box;cursor:pointer;text-align:center;padding:6px 2px;border:1px solid var(--rule);border-radius:10px;display:flex;flex-direction:column}
+.slotgrid button.taken{background:#f3e3e5}
+.slotgrid button.fit{border:2px solid #2f8a4f}
+.squad button.picked{outline:3px solid #ffe066}

@@ -2,6 +2,12 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.18.0 – 2026-10-08
+- **Aufstellung:** nach der Spielauswahl zuerst die Grundordnung wählen (4-1-4-1, 4-4-2, 4-3-3, 4-2-3-1, 3-5-2, 3-4-3) – das Feld zeigt leere Positionen
+- Namen im Kader antippen → Position wählen (frei/belegt, passende Positionen grün markiert); „Vom Feld nehmen (Bank)“
+- „Alle vom Feld“ leert alle Positionen; „Grundordnung ändern“ nimmt die Spieler mit (gleiche Position, sonst nächstgelegene freie)
+- „nach Positionen füllen“ kennt jetzt auch LM, RM, ZM und 10
+
 ## 0.17.1 – 2026-10-08
 - Noten: Bezeichnungen ausgeschrieben (Verhalten, Umsetzung, Einstellung, Soziales)
 - Vorgabe 1: Sobald ein Trainer im Training die erste Note ändert, bekommen alle Anwesenden in allen Bereichen eine 1, die übrigen Noten passt er nur noch bei Abweichungen an

@@ -50,12 +50,12 @@ Sprache: Deutsch. Antworten kurz und direkt.
 
 ## Stand und nächste Schritte
 
-- Aktuell: Version 0.17.1 (siehe `CHANGELOG.md`), Stand auf GitHub.
+- Aktuell: Version 0.18.0 (siehe `CHANGELOG.md`). 0.18.0 liegt lokal, noch nicht auf GitHub.
 - IEP (ab 0.16.0): Quelle sind die IEP-Dateien des Trainers im Google Drive (U13_IEP_v2.xlsx, Individueller Entwicklungsplan.pdf, Saison 25/26). Tabelle `iep` (data JSON: goals ind/tech/phys/off/def, plan short/mid/long, season, coach{…}), `iep_ratings` (Selbsteinschätzung 1–5 pro Spiel und Bereich, bis 3 Tage danach, nur mit Einwilligung). `coach`-Teil (inkl. psychologischer Einschätzung) nur für Trainer – `api/iep.php` gibt Spielern nur goals/plan/season. Zuordnung über Trikotnummer (Nr. 18 vom Trainer zu bestätigen); Nr. 20 und Nr. 23 haben noch keinen IEP.
 - IEP-Stände (ab 0.17.0): Tabelle `iep_versions` (jedes Speichern = neue Version, neueste gilt; alte Tabelle `iep` nur noch Altbestand). Trainer-Noten nach dem Training: Tabelle `grades` (training_id, nr, coach_id, area verhalten/umsetzung/einstellung/soziales, value 1–6), jeder Trainer einzeln, Vorgabe 1 (wird beim ersten Eintrag eines Trainers für alle Anwesenden gesetzt), **nur für Trainer** – nie an Spieler ausgeben.
 - Anwesenheit (ab 0.13.0): Wer nicht absagt, ist da. `trainings.att_done` 0 offen / 1 erfasst / 2 fällt aus; `att_autofill()` schreibt nach Trainingsende fest (nur Trainings ab `settings.auto_att_from`). Beteiligung zählt nur att_done = 1.
 - Trainer-Startseite (ab 0.13.0): `js/dashboard.js` + `api/dashboard.php`, Reiter Übersicht · Lernzone · Taktik · Spielzeiten. Trainer sagen Termine ab (`coach_absences`).
-- Taktiktafel (ab 0.14.0): `js/taktik.js` + `api/boards.php`, Tabelle `boards` (kind board/lineup, training_id = Spiel, shared, data JSON in Metern). Freigegebene Tafeln: Spieler sehen nur ihre eigene Nummer (Server blendet andere aus).
+- Taktiktafel (ab 0.14.0): `js/taktik.js` + `api/boards.php`, Tabelle `boards` (kind board/lineup, training_id = Spiel, shared, data JSON in Metern). Freigegebene Tafeln: Spieler sehen nur ihre eigene Nummer (Server blendet andere aus). Aufstellungen (ab 0.18.0): erst Grundordnung wählen (`FORMATIONS` in `js/taktik.js`, `data.formation`), leere Positionen, Spieler per Namen → Position.
 - Spielzeiten (ab 0.15.0): `js/spielzeiten.js` + `api/matches.php`, Tabellen `matches` (Dauer, Ergebnis), `match_squad` (starter 1/0), `match_subs` (minute, nr_out, nr_in). Minuten werden immer aus Startelf + Wechseln berechnet (`match_minutes()`), nie gespeichert. Spieler sehen ihre Spielzeiten (noch) nicht.
 - Absagen (ab 0.12.0): Spieler sagen Trainings ab (nur kind = training), fester Grund ohne Freitext, bis 2 Std. vorher; Tabelle `absences`; Absage zählt als „nicht da“.
 - Trainingsbeteiligung: bis 07.10.2026 aus der Excel des Trainers übernommen (nur „ja“ zählt), Saisonbeginn 30.06.2026; ab jetzt wird in der App abgehakt. Zählt nur Trainings mit eingetragener Anwesenheit.

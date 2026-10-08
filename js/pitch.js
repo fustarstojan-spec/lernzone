@@ -67,7 +67,7 @@
       if (it.t === "ball") { s += `<g class="tok bball" data-tok="${esc(it.id)}" ${tr}><circle r="2.2" class="hit"/><circle r="1.2" class="ballc"/></g>`; return; }
       const gk = it.t === "own" && (it.lab === "TW" || (it.nr && GK.includes(it.nr)));
       const main = it.nr ? String(it.nr) : (it.lab || "");
-      s += `<g class="tok ${it.t}${it.me ? " me" : ""}${it.sel ? " sel" : ""}" data-tok="${esc(it.id)}" ${tr}>
+      s += `<g class="tok ${it.t}${it.me ? " me" : ""}${it.sel ? " sel" : ""}${it.ghost ? " ghost" : ""}" data-tok="${esc(it.id)}" ${tr}>
         <circle r="3.4" class="hit"/><circle r="2.6"${gk ? ` style="fill:${GKC}"` : ""}/>
         <text y=".15"${main.length > 1 ? ' style="font-size:2.3px"' : ""}>${esc(main)}</text>
         ${it.nr && it.lab ? `<text y="4.6" class="sub">${esc(it.lab)}</text>` : ""}</g>`;

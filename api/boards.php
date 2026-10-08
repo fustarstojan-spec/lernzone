@@ -43,7 +43,8 @@ function board_clean($d): array {
         $f = $pt($l['f'] ?? null); $t = $pt($l['t'] ?? null); if (!$f || !$t) continue;
         $lines[] = ['id' => substr(preg_replace('/[^a-z0-9]/i', '', (string)($l['id'] ?? '')), 0, 12) ?: bin2hex(random_bytes(4)), 'k' => $l['k'], 'f' => $f, 't' => $t];
     }
-    return ['items' => $items, 'lines' => $lines];
+    $f = preg_match('/^[0-9]-[0-9](-[0-9]){1,3}$/', (string)($d['formation'] ?? '')) ? (string)$d['formation'] : '';
+    return ['items' => $items, 'lines' => $lines] + ($f !== '' ? ['formation' => $f] : []);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {

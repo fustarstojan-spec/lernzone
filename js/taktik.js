@@ -12,8 +12,20 @@
   const clone = o => JSON.parse(JSON.stringify(o));
 
   /* ---------- Grundordnungen (eigene Seite unten, Angriff nach oben) ---------- */
-  const OWN_4141 = [["TW", 34, 100], ["LV", 9, 80], ["IV", 26, 86], ["IV", 42, 86], ["RV", 59, 80], ["6", 34, 74],
-    ["LA", 9, 58], ["8", 24, 63], ["8", 44, 63], ["RA", 59, 58], ["ST", 34, 47]];
+  const BACK4 = [["TW", 34, 100], ["LV", 9, 80], ["IV", 26, 86], ["IV", 42, 86], ["RV", 59, 80]];
+  const BACK3 = [["TW", 34, 100], ["IV", 17, 85], ["IV", 34, 87], ["IV", 51, 85]];
+  const FORMATIONS = {
+    "4-1-4-1": BACK4.concat([["6", 34, 74], ["LA", 9, 58], ["8", 24, 63], ["8", 44, 63], ["RA", 59, 58], ["ST", 34, 47]]),
+    "4-4-2":   BACK4.concat([["LM", 9, 62], ["ZM", 26, 66], ["ZM", 42, 66], ["RM", 59, 62], ["ST", 27, 47], ["ST", 41, 47]]),
+    "4-3-3":   BACK4.concat([["6", 34, 72], ["8", 22, 62], ["8", 46, 62], ["LA", 10, 48], ["ST", 34, 45], ["RA", 58, 48]]),
+    "4-2-3-1": BACK4.concat([["6", 26, 72], ["6", 42, 72], ["LA", 10, 56], ["10", 34, 58], ["RA", 58, 56], ["ST", 34, 45]]),
+    "3-5-2":   BACK3.concat([["LM", 7, 64], ["6", 34, 73], ["8", 24, 62], ["8", 44, 62], ["RM", 61, 64], ["ST", 27, 47], ["ST", 41, 47]]),
+    "3-4-3":   BACK3.concat([["LM", 8, 65], ["ZM", 26, 68], ["ZM", 42, 68], ["RM", 60, 65], ["LA", 12, 48], ["ST", 34, 45], ["RA", 56, 48]])
+  };
+  const OWN_4141 = FORMATIONS["4-1-4-1"];
+  // Positionen ohne eigenes Kürzel im Kader: passende Spielerpositionen fürs automatische Füllen
+  const EXTRA = { LM: "Linkes Mittelfeld", RM: "Rechtes Mittelfeld", ZM: "Zentrales Mittelfeld", "10": "Zehner" };
+  const ALIAS = { LM: ["LA", "LV"], RM: ["RA", "RV"], ZM: ["8", "6"], "10": ["8", "ST"] };
   const OPP = {
     "4-4-2": [[34, 5], [10, 22], [26, 19], [42, 19], [58, 22], [10, 36], [26, 34], [42, 34], [58, 36], [27, 46], [41, 46]],
     "4-3-3": [[34, 5], [10, 22], [26, 19], [42, 19], [58, 22], [22, 33], [34, 30], [46, 33], [12, 45], [34, 47], [56, 45]]
@@ -29,7 +41,14 @@
   /* ---------- Liste ---------- */
   const gameText = g => g ? `${(LZ.calendar ? LZ.calendar.dayName(g.date) : g.date)}${g.time ? " · " + g.time : ""} · ${g.title}` : "";
   const thumb = d => `<span class="thumb">${window.LZPitch.field({ zones: false, board: d, label: "Vorschau" })}</span>`;
+  function formationPicker(title, back) {
+    return `${LZ.coachNav("taktik")}<button class="back" data-act="${back}">‹ Zurück</button>
+      <section><p class="eyebrow">${esc(title)}</p><h1>Welche Grundordnung?</h1><p class="lede">Danach setzt du die Spieler auf die Positionen.</p></section>
+      <div class="formgrid">${Object.keys(FORMATIONS).map(f => `<button class="formbtn" data-act="tbFormation" data-v="${f}">
+        <span class="thumb">${window.LZPitch.field({ zones: false, board: { items: FORMATIONS[f].map(([lab, x, y], i) => ({ id: "f" + i, t: "own", x, y, lab })), lines: [] }, label: f })}</span><b>${f}</b></button>`).join("")}</div>`;
+  }
   function listView() {
+    if (TB.pickForm) return formationPicker(TB.pickForm.title, "tbBackList");
     if (TB.pickGame) return `${LZ.coachNav("taktik")}<button class="back" data-act="tbBackList">‹ Taktik</button>
       <section><p class="eyebrow">Neue Aufstellung</p><h1>Für welches Spiel?</h1></section>
       <ul class="blist">${TB.games.map(g => `<li><button data-act="tbNewLineup" data-v="${g.id}"><span><b>${esc(g.title)}</b><span class="small">${esc(gameText(g))}</span></span>${LZ.calendar ? LZ.calendar.chip(g.kind) : ""}</button></li>`).join("")}
@@ -45,15 +64,33 @@
           <span class="small">${b.shared ? "für Spieler sichtbar" : "nur Trainer"}${b.by ? " · " + esc(b.by) : ""}</span></span><span aria-hidden="true">›</span></button></li>`).join("")}</ul>`}`;
   }
   LZ.actions.tbPickGame = () => { TB.pickGame = true; LZ.render(); };
-  LZ.actions.tbBackList = () => { TB.pickGame = false; TB.cur = null; loadList(); LZ.render(); };
+  LZ.actions.tbBackList = () => { TB.pickGame = false; TB.pickForm = null; TB.cur = null; loadList(); LZ.render(); };
   LZ.actions.tbNew = () => edit({ id: null, title: "", kind: "board", trainingId: null, shared: false,
     data: { items: OWN_4141.map(([lab, x, y]) => ({ id: uid(), t: "own", x, y, lab })).concat(OPP["4-4-2"].map(([x, y], i) => ({ id: uid(), t: "opp", x, y, lab: String(i + 1) })), [{ id: uid(), t: "ball", x: 34, y: 52.5 }]), lines: [] } });
+  /* Neue Aufstellung: Spiel wählen → Grundordnung wählen → leere Positionen */
   LZ.actions.tbNewLineup = (b, v) => {
     const g = TB.games.find(x => x.id === +v);
-    edit({ id: null, title: g ? "Aufstellung " + g.title : "Aufstellung", kind: "lineup", trainingId: g ? g.id : null, shared: false,
-      data: { items: OWN_4141.map(([lab, x, y]) => ({ id: uid(), t: "own", x, y, lab })), lines: [] } });
-    autoFill(); LZ.render();
+    TB.pickGame = false; TB.pickForm = { game: g || null, title: g ? g.title : "Aufstellung ohne Spiel" }; LZ.render(); LZ.top();
   };
+  const slots = f => FORMATIONS[f].map(([lab, x, y]) => ({ id: uid(), t: "own", x, y, lab }));
+  LZ.actions.tbFormation = (b, f) => {
+    if (TB.cur && TB.reform) {                         // Grundordnung einer bestehenden Aufstellung ändern: Spieler nach Position mitnehmen
+      const d = TB.cur.data, old = d.items.filter(i => i.t === "own" && i.nr), neu = slots(f);
+      neu.forEach(s => { const k = old.findIndex(o => o.lab === s.lab); if (k >= 0) { s.nr = old[k].nr; old.splice(k, 1); } });
+      old.forEach(o => {                                // Position gibt es nicht mehr → nächstgelegene freie Position
+        const free = neu.filter(s => !s.nr); if (!free.length) return;
+        free.sort((a, b) => Math.hypot(a.x - o.x, a.y - o.y) - Math.hypot(b.x - o.x, b.y - o.y))[0].nr = o.nr;
+      });
+      d.items = d.items.filter(i => i.t !== "own").concat(neu); d.formation = f;
+      TB.reform = false; TB.sel = null; TB.pick = null; changed(); LZ.render(); return;
+    }
+    const g = TB.pickForm && TB.pickForm.game;
+    TB.pickForm = null;
+    edit({ id: null, title: g ? "Aufstellung " + g.title : "Aufstellung", kind: "lineup", trainingId: g ? g.id : null, shared: false,
+      data: { formation: f, items: slots(f), lines: [] } });
+  };
+  LZ.actions.tbReform = () => { TB.reform = true; LZ.render(); LZ.top(); };
+  LZ.actions.tbReformNo = () => { TB.reform = false; LZ.render(); };
   LZ.actions.tbOpen = async (b, v) => {
     const r = await LZ.Store.get("boards.php?id=" + v);
     if (!r.ok) { TB.err = r.error; LZ.render(); return; }
@@ -61,7 +98,7 @@
   };
   function edit(board) {
     TB.cur = clone(board); TB.cur.data.items = TB.cur.data.items || []; TB.cur.data.lines = TB.cur.data.lines || [];
-    TB.mode = "move"; TB.sel = null; TB.dirty = !board.id; TB.msg = ""; TB.err = ""; TB.pickGame = false; TB.confirm = false;
+    TB.mode = "move"; TB.sel = null; TB.pick = null; TB.reform = false; TB.dirty = !board.id; TB.msg = ""; TB.err = ""; TB.pickGame = false; TB.confirm = false;
     LZ.render(); LZ.top();
   }
 
@@ -69,7 +106,11 @@
   const MODES = [["move", "Bewegen"], ["pass", "Pass →"], ["run", "Laufweg ⇢"], ["line", "Linie"], ["del", "Löschen"]];
   function editorView() {
     const c = TB.cur, d = c.data;
-    const items = d.items.map(it => Object.assign({}, it, { sel: it.id === TB.sel }));
+    if (TB.reform) return formationPicker("Grundordnung ändern – Spieler bleiben auf gleichen Positionen", "tbReformNo");
+    const isL = c.kind === "lineup";
+    const items = d.items.map(it => Object.assign({}, it, { sel: it.id === TB.sel, ghost: isL && it.t === "own" && !it.nr }));
+    const pickP = TB.pick ? (LZ.C.players || []).find(p => p.nr === TB.pick) : null;
+    const ownSlots = d.items.filter(i => i.t === "own");
     const used = new Set(d.items.filter(i => i.nr).map(i => i.nr));
     const players = LZ.C.players || [];
     const bench = players.filter(p => !used.has(p.nr));
@@ -84,15 +125,20 @@
       <p class="small">${TB.mode === "move" ? "Figuren mit dem Finger oder der Maus verschieben. Antippen wählt eine Figur aus." : TB.mode === "del" ? "Figur oder Linie antippen, um sie zu entfernen." : "Auf dem Feld ziehen, um zu zeichnen."}</p>
       <div class="tbar">
         <button data-act="tbAdd" data-v="own">+ Eigener</button><button data-act="tbAdd" data-v="opp">+ Gegner</button><button data-act="tbAdd" data-v="ball">+ Ball</button>
-        <button data-act="tbPreset" data-v="own">Wir 4-1-4-1</button><button data-act="tbPreset" data-v="4-4-2">Gegner 4-4-2</button><button data-act="tbPreset" data-v="4-3-3">Gegner 4-3-3</button>
+        ${isL ? `<button data-act="tbReform">Grundordnung: ${esc(d.formation || "4-1-4-1")} ändern</button><button data-act="tbEmpty">Alle vom Feld</button>`
+          : `<button data-act="tbPreset" data-v="own">Wir 4-1-4-1</button>`}<button data-act="tbPreset" data-v="4-4-2">Gegner 4-4-2</button><button data-act="tbPreset" data-v="4-3-3">Gegner 4-3-3</button>
         <button data-act="tbClear" data-v="lines">Linien weg</button><button data-act="tbClear" data-v="opp">Gegner weg</button>
       </div>
       ${selIt && selIt.t !== "ball" ? `<section class="card stack"><div class="rowspread"><h3>Ausgewählt: ${esc(selIt.nr ? "Nr. " + selIt.nr : selIt.lab || "Figur")}</h3><button class="linkbtn" data-act="tbSel" data-v="">fertig</button></div>
         <div class="fld"><label for="tb-lab">Beschriftung (Position)</label><input id="tb-lab" maxlength="4" value="${esc(selIt.lab || "")}"></div>
         ${selIt.t === "own" ? `<p class="small">Spieler zuordnen: Nummer antippen.${selIt.nr ? ` <button class="linkbtn" data-act="tbAssign" data-v="0">Nummer entfernen</button>` : ""}</p>` : ""}</section>` : ""}
-      ${players.length ? `<section class="card stack"><div class="rowspread"><h3>${c.kind === "lineup" ? "Kader" : "Spieler zuordnen (optional)"}</h3>${c.kind === "lineup" ? `<button class="linkbtn" data-act="tbAuto">nach Positionen füllen</button>` : ""}</div>
-        <p class="small">${selIt && selIt.t === "own" ? "Tippe eine Nummer an, um sie der ausgewählten Figur zu geben." : "Erst eine eigene Figur auf dem Feld antippen, dann hier die Nummer."}</p>
-        <div class="squad">${players.map(p => `<button class="${used.has(p.nr) ? "used" : ""}" data-act="tbAssign" data-v="${p.nr}" title="${esc([p.posOff, p.posDef].filter(Boolean).join(" / "))}">${LZ.shirt(p.nr)}<span>${esc((p.name || "").split(" ")[0] || [p.posOff, p.posDef].filter(Boolean).join("/") || "")}</span></button>`).join("")}</div>
+      ${pickP ? `<section class="card stack picker"><div class="rowspread"><h3>Nr. ${pickP.nr}${pickP.name ? " · " + esc(pickP.name.split(" ")[0]) : ""} – welche Position?</h3><button class="linkbtn" data-act="tbPickNo">abbrechen</button></div>
+        ${pickP.posOff || pickP.posDef ? `<p class="small">Positionen laut Kader: ${esc([pickP.posOff, pickP.posDef].filter(Boolean).join(" / "))}</p>` : ""}
+        <div class="slotgrid">${ownSlots.map(s => `<button class="${s.nr ? "taken" : ""} ${[pickP.posOff, pickP.posDef].includes(s.lab) ? "fit" : ""}" data-act="tbSlot" data-v="${s.id}"><b>${esc(s.lab || "?")}</b><span class="small">${s.nr ? (s.nr === pickP.nr ? "hier" : "Nr. " + s.nr) : "frei"}</span></button>`).join("")}</div>
+        ${used.has(pickP.nr) ? `<button class="linkbtn" data-act="tbUnplace">Vom Feld nehmen (Bank)</button>` : ""}</section>` : ""}
+      ${players.length ? `<section class="card stack"><div class="rowspread"><h3>${isL ? "Kader" : "Spieler zuordnen (optional)"}</h3>${isL ? `<button class="linkbtn" data-act="tbAuto">nach Positionen füllen</button>` : ""}</div>
+        <p class="small">${selIt && selIt.t === "own" ? "Tippe eine Nummer an, um sie der ausgewählten Figur zu geben." : "Namen antippen und dann die Position wählen – oder erst eine Position auf dem Feld antippen."}</p>
+        <div class="squad">${players.map(p => `<button class="${used.has(p.nr) ? "used" : ""} ${TB.pick === p.nr ? "picked" : ""}" data-act="tbSquad" data-v="${p.nr}" title="${esc([p.posOff, p.posDef].filter(Boolean).join(" / "))}">${LZ.shirt(p.nr)}<span>${esc((p.name || "").split(" ")[0] || [p.posOff, p.posDef].filter(Boolean).join("/") || "")}</span></button>`).join("")}</div>
         ${c.kind === "lineup" ? `<p class="small"><b>Startelf:</b> ${used.size} · <b>Bank:</b> ${bench.map(p => p.nr).join(", ") || "–"}</p>` : ""}</section>` : ""}
       <label class="check"><input type="checkbox" id="tb-shared" ${c.shared ? "checked" : ""}> Für Spieler sichtbar (sie sehen Positionen und nur ihre eigene Nummer)</label>
       ${TB.err ? `<p class="err" style="text-align:left">${esc(TB.err)}</p>` : ""}${TB.msg ? `<p class="okmsg">${esc(TB.msg)}</p>` : ""}
@@ -124,6 +170,20 @@
     TB.sel = null; changed(); LZ.render();
   };
   LZ.actions.tbClear = (b, v) => { const d = TB.cur.data; if (v === "lines") d.lines = []; else d.items = d.items.filter(i => i.t !== v); TB.sel = null; changed(); LZ.render(); };
+  /* Kader-Knopf: mit ausgewählter Position → zuordnen; sonst Positionsauswahl öffnen */
+  LZ.actions.tbSquad = (b, v) => {
+    const it = TB.cur.data.items.find(i => i.id === TB.sel);
+    if (it && it.t === "own") return LZ.actions.tbAssign(b, v);
+    TB.pick = TB.pick === +v ? null : +v; TB.err = ""; LZ.render();
+  };
+  LZ.actions.tbPickNo = () => { TB.pick = null; LZ.render(); };
+  LZ.actions.tbSlot = (b, id) => {
+    const d = TB.cur.data, s = d.items.find(i => i.id === id); if (!s) return;
+    d.items.forEach(i => { if (i.nr === TB.pick) delete i.nr; });       // Spieler nur einmal auf dem Feld
+    s.nr = TB.pick; TB.pick = null; changed(); LZ.render();
+  };
+  LZ.actions.tbUnplace = () => { TB.cur.data.items.forEach(i => { if (i.nr === TB.pick) delete i.nr; }); TB.pick = null; changed(); LZ.render(); };
+  LZ.actions.tbEmpty = () => { TB.cur.data.items.forEach(i => { if (i.t === "own") delete i.nr; }); TB.sel = null; TB.pick = null; changed(); LZ.render(); };
   LZ.actions.tbAssign = (b, v) => {
     const it = TB.cur.data.items.find(i => i.id === TB.sel);
     if (!it || it.t !== "own") { TB.err = "Erst eine eigene Figur auf dem Feld antippen."; LZ.render(); return; }
@@ -139,7 +199,8 @@
     const d = TB.cur.data, players = LZ.C.players || [], used = new Set(d.items.filter(i => i.nr).map(i => i.nr));
     const gk = LZ.gkNrs ? LZ.gkNrs() : [];
     for (const key of ["posOff", "posDef"]) d.items.filter(i => i.t === "own" && !i.nr).forEach(i => {
-      const p = players.find(p => !used.has(p.nr) && (i.lab === "TW" ? gk.includes(p.nr) || p[key] === "TW" : p[key] === i.lab));
+      const ok = [i.lab].concat(ALIAS[i.lab] || []);
+      const p = players.find(p => !used.has(p.nr) && (i.lab === "TW" ? gk.includes(p.nr) || p[key] === "TW" : ok.includes(p[key])));
       if (p) { i.nr = p.nr; used.add(p.nr); }
     });
   }
@@ -253,7 +314,7 @@
     const mine = b.data.items.find(i => i.me);
     return `<button class="back" data-act="home">‹ Übersicht</button>
       <section><p class="eyebrow">${b.kind === "lineup" ? "Aufstellung" : "Taktiktafel"}${b.game ? " · " + esc(gameText(b.game)) : ""}</p><h1>${esc(b.title)}</h1>
-      ${mine ? `<p class="lede">Du spielst hier: <b>${esc(mine.lab ? mine.lab + " · " + LZ.posName(mine.lab) : "siehe gelber Ring")}</b></p>` : b.kind === "lineup" ? `<p class="lede">Du bist diesmal nicht in der Startelf eingezeichnet – sprich mit deinem Trainer.</p>` : ""}</section>
+      ${mine ? `<p class="lede">Du spielst hier: <b>${esc(mine.lab ? [mine.lab, LZ.posName(mine.lab) || EXTRA[mine.lab]].filter(Boolean).join(" · ") : "siehe gelber Ring")}</b></p>` : b.kind === "lineup" ? `<p class="lede">Du bist diesmal nicht in der Startelf eingezeichnet – sprich mit deinem Trainer.</p>` : ""}</section>
       <div class="tboard">${window.LZPitch.field({ zones: true, board: b.data, label: b.title })}</div>
       <div class="legend"><span><i class="dotk" style="background:${LZ.C.team.colors.shirt}"></i>Wir</span><span><i class="dotk me"></i>Du</span><span><i class="dotk" style="background:#e9eef3;border:1px solid #23303b"></i>Gegner</span><span>━ Pass</span><span>╍ Laufweg</span></div>`;
   };
