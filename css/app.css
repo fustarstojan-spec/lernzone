@@ -153,3 +153,22 @@ main{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:18px 56px;d
 .prow .meter{grid-column:1/-1;margin:0}
 .prow span{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.9rem}
 @media (prefers-reduced-motion:no-preference){.opt,.seg button,.phase{transition:background .15s,border-color .15s}}
+
+/* Spieler anlegen */
+.nr.add{border-style:dashed}
+.nr.add span{color:var(--muted);font-weight:600}
+.coachbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;border-radius:10px;background:var(--accent-soft);font-size:.9rem;font-weight:600}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font-weight:700;text-decoration:underline;text-underline-offset:2px}
+.fldlabel,.fld label{font-weight:700}
+.fld{display:grid;gap:6px}
+.fld input{font:inherit;font-size:1.3rem;padding:11px 14px;border:1.5px solid var(--rule);border-radius:12px;background:var(--surface);color:var(--fg);width:100%;box-sizing:border-box;font-variant-numeric:tabular-nums;letter-spacing:.06em}
+.fld input:focus{border-color:var(--accent);outline:none}
+.row{display:flex;gap:8px;align-items:stretch}
+.row input{flex:1;min-width:0}
+.typepick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.typebtn{display:grid;justify-items:center;gap:6px;padding:14px 8px;border:2px solid var(--rule);border-radius:14px;background:var(--surface);font-weight:700}
+.typebtn svg{width:64px;height:60px}
+.typebtn[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.pinshow{font-family:var(--display);font-size:3.2rem;font-weight:700;letter-spacing:.25em;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.1}
+code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:5px}
+.btn:disabled{opacity:.6;cursor:default}

@@ -7,7 +7,7 @@ Lern-App für die U14 des SV Heimstetten: Spielphasenmodell, Zonen-Trainer, Quiz
 ```
 index.html            Grundgerüst der Seite
 css/app.css           Design (Vereinsfarben, Layout, Dark Mode)
-js/config.js          Umschalter: mode "local" (Weg A) oder "api" (Weg B)
+js/config.js          mode "auto" (Standard): erkennt selbst, ob PHP läuft; sonst "local" (Weg A) oder "api" (Weg B)
 js/store.js           Datenzugriff – die einzige Stelle, die Daten liest/speichert
 js/pitch.js           Spielfeld-Grafik (SVG)
 js/app.js             Oberfläche und Abläufe (enthält keine Daten)
@@ -37,7 +37,19 @@ Quizfrage in `data/phases.json`:
 Spielsituation (`sit`): Koordinaten in Metern auf einem 68 × 105 m-Feld, `x` von links nach rechts, `y` von oben (gegnerisches Tor) nach unten (eigenes Tor).
 `own: [[Nr, x, y]]`, `opp: [[x, y]]`, `ball: [x, y]`, `arrows: [{ "f": [x,y], "t": [x,y], "k": "pass" | "run" }]`.
 
-## Weg A – ohne Server-Login (aktueller Stand)
+## Spieler anlegen (nur mit PHP, z. B. XAMPP)
+
+Mein Bereich → graues „+“-Trikot → Trainer-PIN → Torwart oder Feldspieler wählen, Nummer und PIN eingeben → „Spieler anlegen“.
+Die PIN wird danach einmal angezeigt und nur verschlüsselt gespeichert.
+
+Trainer-PIN (6 Ziffern):
+- XAMPP / localhost: beim ersten Tippen auf das „+“ direkt in der App festlegen.
+- Echter Server: `php tools/set_coach_pin.php 123456` (aus Sicherheitsgründen geht das Festlegen dort nicht über die App).
+
+Die Datenbank (`storage/lernzone.sqlite`) wird beim ersten Aufruf automatisch angelegt. Liegt `data/demo-pins.json` vor, wird der Demo-Kader mit PIN 1234 übernommen.
+Datenbank zurücksetzen: Apache stoppen, `storage/lernzone.sqlite` löschen, Apache starten.
+
+## Weg A – ohne Server-Login
 
 `js/config.js` → `mode: "local"`. Läuft auf jedem einfachen Webspace, ohne PHP.
 Fortschritt bleibt im Browser des jeweiligen Geräts. Die PINs in `demo-pins.json` sind öffentlich lesbar, also kein echter Schutz.
@@ -62,11 +74,14 @@ PINs werden mit `password_hash()` gespeichert, nach 5 Fehlversuchen ist die Anme
 
 | Datei | Methode | Eingabe | Antwort |
 |---|---|---|---|
-| `api/me.php` | GET | – | `{ user }` oder `{ user: null }` |
+| `api/me.php` | GET | – | `{ user, coach: { active, hasPin, canSetup } }` |
 | `api/login.php` | POST | `{ nr, pin }` | `{ ok, user }` / `{ ok: false, error }` |
 | `api/logout.php` | POST | – | `{ ok }` |
 | `api/progress.php` | GET | – | `{ quiz, tasks }` |
 | `api/progress.php` | POST | `{ quiz, tasks }` | `{ ok }` |
+| `api/players.php` | GET | – | `[{ nr, pos, plan }]` |
+| `api/players.php` | POST (Trainer) | `{ nr, type: "tw"\|"feld", pin }` | `{ ok, player }` |
+| `api/coach.php` | POST | `{ action: "login"\|"setup"\|"logout", pin }` | `{ ok, coach }` |
 
 `user = { nr, pos, plan }`.
 `quiz = { "<modul>": { best, of, last } }`, `tasks = { "<Jahr>-W<KW>": { "<index>": true } }`.

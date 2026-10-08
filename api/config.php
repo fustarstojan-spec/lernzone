@@ -28,8 +28,73 @@ function db(): PDO {
     static $pdo = null;
     if ($pdo === null) {
         $pdo = new PDO(DB_DSN, DB_USER, DB_PASS, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        $pdo->exec(file_get_contents(__DIR__ . '/../tools/schema.sql'));   // legt fehlende Tabellen an
+        seed_demo_players($pdo);
     }
     return $pdo;
+}
+
+/*
+ * Nur für die Entwicklung (z. B. XAMPP): Ist die Datenbank leer und liegt data/demo-pins.json vor,
+ * werden die Spieler aus data/players.json mit den Demo-PINs übernommen.
+ * Auf dem echten Server demo-pins.json NICHT hochladen, dann passiert hier nichts.
+ */
+function seed_demo_players(PDO $pdo): void {
+    $pinsFile = __DIR__ . '/../data/demo-pins.json';
+    if (!is_file($pinsFile)) return;
+    if ((int)$pdo->query('SELECT COUNT(*) FROM players')->fetchColumn() > 0) return;
+    $players = json_decode((string)file_get_contents(__DIR__ . '/../data/players.json'), true) ?: [];
+    $pins    = json_decode((string)file_get_contents($pinsFile), true) ?: [];
+    $st = $pdo->prepare('INSERT INTO players (nr, pos, plan, pin_hash) VALUES (?, ?, ?, ?)');
+    foreach ($players as $p) {
+        if (!isset($pins[(string)$p['nr']])) continue;
+        $st->execute([$p['nr'], $p['pos'], $p['plan'], password_hash((string)$pins[(string)$p['nr']], PASSWORD_DEFAULT)]);
+    }
+}
+
+function setting(string $name): ?string {
+    $st = db()->prepare('SELECT value FROM settings WHERE name = ?');
+    $st->execute([$name]);
+    $v = $st->fetchColumn();
+    return $v === false ? null : (string)$v;
+}
+
+function set_setting(string $name, string $value): void {
+    $st = db()->prepare('INSERT INTO settings (name, value) VALUES (?, ?)
+                         ON CONFLICT(name) DO UPDATE SET value = excluded.value');
+    $st->execute([$name, $value]);
+}
+
+/* Anfrage kommt vom selben Rechner (XAMPP / localhost) */
+function is_local_request(): bool {
+    return in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true);
+}
+
+function coach_state(): array {
+    $hasPin = setting('coach_pin_hash') !== null;
+    return [
+        'active'   => !empty($_SESSION['coach']),
+        'hasPin'   => $hasPin,
+        'canSetup' => !$hasPin && is_local_request(),
+    ];
+}
+
+function require_coach(): void {
+    if (empty($_SESSION['coach'])) json_out(['ok' => false, 'error' => 'Nur für Trainer.'], 403);
+}
+
+/* Fehlversuche pro Sitzung zählen (getrennt für Spieler und Trainer) */
+function check_lock(string $k): void {
+    if (($_SESSION[$k . '_locked_until'] ?? 0) > time()) {
+        json_out(['ok' => false, 'error' => 'Zu viele Versuche. Warte ein paar Minuten.'], 429);
+    }
+}
+function count_fail(string $k): void {
+    $_SESSION[$k . '_tries'] = ($_SESSION[$k . '_tries'] ?? 0) + 1;
+    if ($_SESSION[$k . '_tries'] >= MAX_LOGIN_TRIES) {
+        $_SESSION[$k . '_locked_until'] = time() + LOCK_SECONDS;
+        $_SESSION[$k . '_tries'] = 0;
+    }
 }
 
 function json_out(array $data, int $status = 200): never {

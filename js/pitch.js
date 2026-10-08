@@ -7,9 +7,9 @@
   let n = 0;
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-  function setup(zones, team) {
+  function setup(zones, team, gkNrs) {
     LX = zones.laneX; TY = zones.thirdY;
-    GK = team.goalkeepers || []; GKC = team.colors.goalkeeper;
+    GK = gkNrs || team.goalkeepers || []; GKC = team.colors.goalkeeper;
   }
 
   /* o: { own:[[nr,x,y]], opp:[[x,y]], ball:[x,y], arrows:[{f,t,k:"pass"|"run"}],

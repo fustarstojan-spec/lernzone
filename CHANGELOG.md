@@ -2,6 +2,13 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.4.0 – 2026-10-08
+- Neue Spieler anlegen: graues „+“-Trikot in der Nummernwahl → Torwart (blau) oder Feldspieler (rot), Trikotnummer und 4-stellige PIN (auch zufällig)
+- Nur für Trainer: 6-stellige Trainer-PIN, beim ersten Mal auf XAMPP direkt in der App festlegen
+- Kader kommt mit PHP aus der Datenbank (`api/players.php`), Trikotfarbe richtet sich nach Torwart/Feldspieler
+- `js/config.js` erkennt automatisch, ob PHP läuft (`mode: "auto"`); ohne PHP läuft die App wie bisher
+- Datenbank wird beim ersten Aufruf automatisch angelegt und auf XAMPP mit dem Demo-Kader (PIN 1234) befüllt
+
 ## 0.3.2 – 2026-10-08
 - Umlaute auf eigenem Server (XAMPP) korrigiert: `index.html` als vollständiges HTML-Dokument mit UTF-8, `.htaccess` mit `AddDefaultCharset UTF-8`
 

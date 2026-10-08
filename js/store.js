@@ -8,6 +8,10 @@
  *   logout()
  *   getProgress()          → { quiz:{}, tasks:{} }   (synchron, aus dem Zwischenspeicher)
  *   saveProgress(progress) → speichert im Hintergrund
+ *   canManage              → true, wenn Spieler angelegt werden können (nur Weg B / PHP)
+ *   coach                  → { active, hasPin, canSetup }   Trainer-Status
+ *   coachLogin(pin) / coachSetup(pin) / coachLogout()     → { ok, error }
+ *   addPlayer({nr, type, pin})                             → { ok, player, error }
  *
  * user = { nr, pos, plan }
  * progress = { quiz: { <modulId>: {best, of, last} }, tasks: { "<Jahr>-W<KW>": { <index>: true|false } } }
@@ -27,8 +31,7 @@
     if (!r.ok) throw new Error(url + " → HTTP " + r.status);
     return r.json();
   }
-  async function loadStatic() {
-    const names = ["team", "zones", "phases", "plans", "players"];
+  async function loadStatic(names = ["team", "zones", "phases", "plans", "players"]) {
     const parts = await Promise.all(names.map(n => getJSON(cfg.dataBase + n + ".json")));
     return Object.fromEntries(names.map((n, i) => [n, parts[i]]));
   }
@@ -45,6 +48,8 @@
 
     return {
       mode: "local",
+      canManage: false,
+      coach: { active: false, hasPin: false, canSetup: false },
       async loadContent() { content = await loadStatic(); return content; },
       async init() {
         user = findUser(ls.get("lz:session", null));
@@ -72,13 +77,26 @@
     const post = (file, body) => getJSON(api + file, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {})
     });
+    // wie post, liefert aber auch bei Fehlerstatus (400/401/403/409) die JSON-Antwort mit Fehlermeldung
+    const postAny = async (file, body) => {
+      const r = await fetch(api + file, { method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
+      return r.json();
+    };
 
-    return {
+    const api_ = {
       mode: "api",
-      async loadContent() { return loadStatic(); },
+      canManage: true,
+      coach: { active: false, hasPin: false, canSetup: false },
+      async loadContent() {
+        const c = await loadStatic(["team", "zones", "phases", "plans"]);
+        c.players = await getJSON(api + "players.php");      // Kader aus der Datenbank
+        return c;
+      },
       async init() {
         const me = await getJSON(api + "me.php");
         user = me.user || null;
+        if (me.coach) api_.coach = me.coach;
         progress = user ? normalize(await getJSON(api + "progress.php")) : emptyProgress();
         return { user };
       },
@@ -93,15 +111,42 @@
           return { ok: false, error: "Server nicht erreichbar. Versuch es gleich nochmal." };
         }
       },
-      async logout() { try { await post("logout.php"); } catch (e) {} user = null; progress = emptyProgress(); },
+      async logout() { try { await post("logout.php"); } catch (e) {} user = null; progress = emptyProgress(); api_.coach.active = false; },
       getProgress() { return progress; },
       async saveProgress(p) {
         progress = p;
         if (!user) return;            // Gäste speichern nichts auf dem Server
         try { await post("progress.php", p); } catch (e) { console.warn("Fortschritt nicht gespeichert", e); }
+      },
+      async coachLogin(pin)  { return coachCall({ action: "login", pin }); },
+      async coachSetup(pin)  { return coachCall({ action: "setup", pin }); },
+      async coachLogout()    { return coachCall({ action: "logout" }); },
+      async addPlayer(data) {
+        try { return await postAny("players.php", data); }
+        catch (e) { return { ok: false, error: "Server nicht erreichbar." }; }
       }
     };
+    async function coachCall(body) {
+      try {
+        const r = await postAny("coach.php", body);
+        if (r.coach) api_.coach = r.coach;
+        return r;
+      } catch (e) { return { ok: false, error: "Server nicht erreichbar." }; }
+    }
+    return api_;
   }
 
-  window.LZStore = cfg.mode === "api" ? ApiStore() : LocalStore();
+  /* ---------- Welche Variante? ---------- *
+   * mode "auto": Antwortet api/me.php mit JSON, läuft PHP → Weg B. Sonst Weg A.          */
+  async function detectMode() {
+    if (cfg.mode !== "auto") return cfg.mode;
+    try {
+      const r = await fetch(cfg.apiBase + "me.php", { credentials: "same-origin" });
+      if (!r.ok || !(r.headers.get("content-type") || "").includes("json")) return "local";
+      await r.json();
+      return "api";
+    } catch (e) { return "local"; }
+  }
+
+  window.LZStoreReady = detectMode().then(m => m === "api" ? ApiStore() : LocalStore());
 })();

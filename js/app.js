@@ -4,13 +4,16 @@
  * Keine Daten und keine PINs in dieser Datei.
  */
 (function () {
-  const Store = window.LZStore, field = o => window.LZPitch.field(o);
+  let Store = null;
+  const field = o => window.LZPitch.field(o);
   let C = null;                       // Inhalte aus data/*.json
   let PH = {};
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
+  // Spieler anlegen: step "auth" | "setup" | "setup2" | "form" | "done"
+  const A = { step: "auth", cpin: "", first: "", err: "", type: "feld", nr: "", pin: "", created: null };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.3.2";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.4.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -30,11 +33,19 @@
     p.quiz[mod] = { best: Math.max(score, prev ? prev.best : 0), of, last: score };
     Store.saveProgress(p);
   }
-  function shirt(label) {
-    const fs = String(label).length > 2 ? 13 : 22;
-    const fill = C.team.goalkeepers.includes(+label) ? C.team.colors.goalkeeper : C.team.colors.shirt;
-    return `<svg viewBox="0 0 64 60" aria-hidden="true"><path d="M21 4 9 9.5 2 23l10 5 2.5-5.5V57h35V22.5L52 28l10-5-7-13.5L43 4c-2 5-6 8-11 8s-9-3-11-8Z" fill="${fill}" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><text x="32" y="41" text-anchor="middle" dominant-baseline="central" fill="#fff" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="${fs}">${esc(label)}</text></svg>`;
+  const SHIRT_PATH = "M21 4 9 9.5 2 23l10 5 2.5-5.5V57h35V22.5L52 28l10-5-7-13.5L43 4c-2 5-6 8-11 8s-9-3-11-8Z";
+  const ADD_GREY = "#8d8a8b";
+  const gkNrs = () => [...new Set([...C.team.goalkeepers, ...C.players.filter(p => p.plan === "tw").map(p => p.nr)])];
+  const isGK = nr => { const p = C.players.find(x => x.nr === +nr); return p ? p.plan === "tw" : C.team.goalkeepers.includes(+nr); };
+  // kind: undefined = nach Kader, "tw" = blau, "feld" = rot, "add" = grau mit +
+  function shirt(label, kind) {
+    const fs = String(label).length > 2 ? 13 : label === "+" ? 30 : 22;
+    const fill = kind === "add" ? ADD_GREY : kind === "tw" ? C.team.colors.goalkeeper : kind === "feld" ? C.team.colors.shirt
+               : isGK(label) ? C.team.colors.goalkeeper : C.team.colors.shirt;
+    return `<svg viewBox="0 0 64 60" aria-hidden="true"><path d="${SHIRT_PATH}" fill="${fill}" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><text x="32" y="${label === "+" ? 39 : 41}" text-anchor="middle" dominant-baseline="central" fill="#fff" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="${fs}">${esc(label)}</text></svg>`;
   }
+  const pad = act => `<div class="pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => `<button data-act="${act}" data-d="${d}">${d}</button>`).join("")}<span></span><button data-act="${act}" data-d="0">0</button><button data-act="${act}" data-d="del" aria-label="Löschen">⌫</button></div>`;
+  const dots = (n, len) => `<div class="pins" aria-label="${n} von ${len} Ziffern">${Array.from({ length: len }, (_, i) => `<i class="${i < n ? "on" : ""}"></i>`).join("")}</div>`;
   const legend = () => `<div class="legend"><span><i class="dotk" style="background:${C.team.colors.shirt}"></i>Wir</span><span><i class="dotk" style="background:#e9eef3;border:1px solid #23303b"></i>Gegner</span><span>━ Pass</span><span>╍ Laufweg</span></div>`;
   const ballLabel = b => b === "own" ? "Wir haben den Ball" : "Gegner hat den Ball";
 
@@ -149,12 +160,84 @@
   function loginView() {
     if (S.loginNr === null) return `<button class="back" data-act="home">‹ Übersicht</button>
   <section><p class="eyebrow">Mein Bereich</p><h1>Wähle deine Nummer</h1><p class="lede">Danach gibst du deine 4-stellige PIN ein. Die bekommst du von deinem Trainer.</p></section>
-  <div class="nrgrid">${C.players.map(p => `<button class="nr" data-act="pickNr" data-v="${p.nr}" aria-label="Nummer ${p.nr}">${shirt(p.nr)}<span>${p.pos === "Tor" ? "Tor" : "&nbsp;"}</span></button>`).join("")}</div>`;
+  ${Store.coach.active ? `<div class="coachbar"><span>Als Trainer angemeldet</span><button class="linkbtn" data-act="coachOut">Trainer abmelden</button></div>` : ""}
+  <div class="nrgrid">${C.players.map(p => `<button class="nr" data-act="pickNr" data-v="${p.nr}" aria-label="Nummer ${p.nr}">${shirt(p.nr)}<span>${p.plan === "tw" ? "Tor" : "&nbsp;"}</span></button>`).join("")}
+  ${Store.canManage ? `<button class="nr add" data-act="addStart" aria-label="Neuen Spieler anlegen">${shirt("+", "add")}<span>Neu</span></button>` : ""}</div>`;
     return `<button class="back" data-act="unpick">‹ Andere Nummer</button>
   <section style="display:grid;justify-items:center;gap:8px;text-align:center"><div style="width:72px">${shirt(S.loginNr)}</div><h1>PIN eingeben</h1></section>
-  <div class="pins" aria-label="${S.pin.length} von 4 Ziffern">${[0, 1, 2, 3].map(i => `<i class="${i < S.pin.length ? "on" : ""}"></i>`).join("")}</div>
+  ${dots(S.pin.length, 4)}
   <p class="err" role="alert">${esc(S.err)}</p>
-  <div class="pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => `<button data-act="pin" data-d="${d}">${d}</button>`).join("")}<span></span><button data-act="pin" data-d="0">0</button><button data-act="pindel" aria-label="Löschen">⌫</button></div>`;
+  ${pad("pin")}`;
+  }
+
+  /* ---------- Spieler anlegen (nur Trainer, nur mit PHP) ---------- */
+  function addView() {
+    const back = `<button class="back" data-act="addBack">‹ Zur Nummernwahl</button>`;
+    const head = (t, sub) => `<section style="display:grid;justify-items:center;gap:8px;text-align:center"><div style="width:72px">${shirt("+", "add")}</div><h1>${t}</h1>${sub ? `<p class="lede">${sub}</p>` : ""}</section>`;
+    if (A.step === "auth") {
+      if (!Store.coach.hasPin && !Store.coach.canSetup) return `${back}${head("Trainer-PIN fehlt", "Auf diesem Server ist noch keine Trainer-PIN eingerichtet. Richte sie mit <code>php tools/set_coach_pin.php</code> ein.")}`;
+      return `${back}${head("Trainer-PIN", "Neue Spieler kann nur der Trainer anlegen.")}${dots(A.cpin.length, 6)}<p class="err" role="alert">${esc(A.err)}</p>${pad("cpin")}`;
+    }
+    if (A.step === "setup" || A.step === "setup2") {
+      return `${back}${head(A.step === "setup" ? "Trainer-PIN festlegen" : "Trainer-PIN wiederholen", A.step === "setup" ? "Lege einmalig eine 6-stellige Trainer-PIN fest. Damit schützt du das Anlegen neuer Spieler." : "Gib dieselbe PIN noch einmal ein.")}${dots(A.cpin.length, 6)}<p class="err" role="alert">${esc(A.err)}</p>${pad("cpin")}`;
+    }
+    if (A.step === "done") {
+      const p = A.created;
+      return `<section style="display:grid;justify-items:center;gap:10px;text-align:center"><div style="width:96px">${shirt(p.nr)}</div>
+      <p class="eyebrow">${p.plan === "tw" ? "Torwart" : "Feldspieler"} angelegt</p><h1>Nr. ${p.nr}</h1></section>
+      <div class="card stack" style="text-align:center"><p class="eyebrow">PIN für Nr. ${p.nr}</p><p class="pinshow">${esc(A.pin)}</p>
+      <p class="small">Notiere die PIN jetzt und gib sie dem Spieler. Sie wird verschlüsselt gespeichert und hier nicht noch einmal angezeigt.</p></div>
+      <button class="btn wide" data-act="addAgain">Weiteren Spieler anlegen</button>
+      <button class="btn ghost wide" data-act="addBack">Zur Nummernwahl</button>`;
+    }
+    // Formular
+    const typeBtn = (t, label) => `<button class="typebtn" data-act="addType" data-v="${t}" aria-pressed="${A.type === t}">${shirt(A.nr && /^\d{1,2}$/.test(A.nr) ? A.nr : (t === "tw" ? "TW" : "?"), t)}<span>${label}</span></button>`;
+    return `${back}
+    <section><p class="eyebrow">Kader</p><h1>Neuer Spieler</h1></section>
+    ${Store.coach.active ? `<div class="coachbar"><span>Als Trainer angemeldet</span><button class="linkbtn" data-act="coachOut">Trainer abmelden</button></div>` : ""}
+    <div class="stack"><p class="fldlabel">Trikot</p><div class="typepick">${typeBtn("tw", "Torwart")}${typeBtn("feld", "Feldspieler")}</div></div>
+    <div class="fld"><label for="add-nr">Trikotnummer</label>
+      <input id="add-nr" type="text" inputmode="numeric" maxlength="2" autocomplete="off" placeholder="z. B. 23" value="${esc(A.nr)}"></div>
+    <div class="fld"><label for="add-pin">PIN für den Spieler (4 Ziffern)</label>
+      <div class="row"><input id="add-pin" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="z. B. 4821" value="${esc(A.pin)}">
+      <button class="btn ghost" data-act="addRandom">Zufällig</button></div></div>
+    <p class="err" role="alert" style="text-align:left">${esc(A.err)}</p>
+    <button class="btn wide" data-act="addSave" ${S.busy ? "disabled" : ""}>Spieler anlegen</button>`;
+  }
+  function addStart() {
+    Object.assign(A, { cpin: "", first: "", err: "", type: "feld", nr: "", pin: "", created: null });
+    A.step = Store.coach.active ? "form" : (Store.coach.hasPin ? "auth" : (Store.coach.canSetup ? "setup" : "auth"));
+    S.view = "add"; render(); window.scrollTo(0, 0);
+  }
+  async function coachPinComplete() {
+    const pin = A.cpin; A.cpin = "";
+    if (A.step === "setup") { A.first = pin; A.step = "setup2"; render(); return; }
+    S.busy = true;
+    let r;
+    if (A.step === "setup2") {
+      if (pin !== A.first) { S.busy = false; A.step = "setup"; A.first = ""; A.err = "Die PINs stimmen nicht überein. Bitte neu festlegen."; render(); return; }
+      r = await Store.coachSetup(pin);
+    } else r = await Store.coachLogin(pin);
+    S.busy = false;
+    if (r.ok) { A.step = "form"; A.err = ""; } else A.err = r.error || "Das hat nicht geklappt.";
+    render();
+  }
+  async function addSave() {
+    const nr = A.nr.trim(), pin = A.pin.trim();
+    if (!/^\d{1,2}$/.test(nr) || +nr < 1) { A.err = "Bitte eine Trikotnummer von 1 bis 99 eingeben."; render(); return; }
+    if (C.players.some(p => p.nr === +nr)) { A.err = `Die Nummer ${+nr} ist schon vergeben.`; render(); return; }
+    if (!/^\d{4}$/.test(pin)) { A.err = "Die PIN muss genau 4 Ziffern haben."; render(); return; }
+    S.busy = true; A.err = ""; render();
+    const r = await Store.addPlayer({ nr: +nr, type: A.type, pin });
+    S.busy = false;
+    if (!r.ok) {
+      A.err = r.error || "Speichern hat nicht geklappt.";
+      if (/Trainer/.test(A.err)) { Store.coach.active = false; A.step = "auth"; }
+      render(); return;
+    }
+    C.players.push(r.player); C.players.sort((a, b) => a.nr - b.nr);
+    window.LZPitch.setup(C.zones, C.team, gkNrs());
+    A.created = r.player; A.pin = pin; A.step = "done"; render(); window.scrollTo(0, 0);
   }
 
   /* ---------- Mein Bereich ---------- */
@@ -175,7 +258,7 @@
   /* ---------- Render & Events ---------- */
   function render() {
     document.getElementById("shirtBtn").innerHTML = shirt(S.user ? S.user.nr : "?");
-    app.innerHTML = S.view === "phase" ? phaseView() : S.view === "zonen" ? zonenView() : S.view === "me" ? meView() : home();
+    app.innerHTML = S.view === "phase" ? phaseView() : S.view === "zonen" ? zonenView() : S.view === "me" ? meView() : S.view === "add" ? addView() : home();
   }
   function go(v, arg) {
     S.view = v; S.arg = arg;
@@ -214,13 +297,34 @@
     else if (a === "znext") { Z.i++; if (Z.i >= ZROUNDS) { Z.done = true; saveBest("zonen", Z.score, ZROUNDS); } else nextZ(); render(); }
     else if (a === "pickNr") { S.loginNr = +v; S.pin = ""; S.err = ""; render(); }
     else if (a === "unpick") { S.loginNr = null; S.pin = ""; S.err = ""; render(); }
-    else if (a === "pindel") { S.pin = S.pin.slice(0, -1); S.err = ""; render(); }
+    else if (a === "pin" && b.dataset.d === "del") { S.pin = S.pin.slice(0, -1); S.err = ""; render(); }
     else if (a === "pin") {
       if (S.pin.length >= 4 || S.busy) return;
       S.pin += b.dataset.d; S.err = ""; render();
       if (S.pin.length === 4) tryLogin();
     }
+    else if (a === "addStart") addStart();
+    else if (a === "addBack") { S.view = "me"; S.loginNr = null; S.pin = ""; S.err = ""; render(); window.scrollTo(0, 0); }
+    else if (a === "addAgain") addStart();
+    else if (a === "addType") { A.type = v; render(); }
+    else if (a === "addRandom") { A.pin = String(rand(10000)).padStart(4, "0"); render(); }
+    else if (a === "addSave") { if (!S.busy) addSave(); }
+    else if (a === "cpin") {
+      if (S.busy) return;
+      if (b.dataset.d === "del") { A.cpin = A.cpin.slice(0, -1); A.err = ""; render(); return; }
+      if (A.cpin.length >= 6) return;
+      A.cpin += b.dataset.d; A.err = ""; render();
+      if (A.cpin.length === 6) coachPinComplete();
+    }
+    else if (a === "coachOut") { Store.coachLogout().then(() => { if (S.view === "add") { S.view = "me"; S.loginNr = null; } render(); }); }
     else if (a === "logout") { Store.logout().then(() => { S.user = null; go("home"); }); }
+  });
+  document.addEventListener("input", e => {
+    if (e.target.id === "add-nr") {
+      e.target.value = e.target.value.replace(/\D/g, "").slice(0, 2); A.nr = e.target.value;
+      document.querySelectorAll(".typebtn").forEach(btn => { const t = btn.querySelector("text"); if (t) t.textContent = A.nr || (btn.dataset.v === "tw" ? "TW" : "?"); });
+    }
+    if (e.target.id === "add-pin") { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4); A.pin = e.target.value; }
   });
   document.addEventListener("change", e => {
     if (!e.target.classList.contains("taskbox")) return;
@@ -231,9 +335,10 @@
   /* ---------- Start ---------- */
   (async function boot() {
     try {
+      Store = await window.LZStoreReady;
       C = await Store.loadContent();
       PH = Object.fromEntries(C.phases.map(p => [p.id, p]));
-      window.LZPitch.setup(C.zones, C.team);
+      window.LZPitch.setup(C.zones, C.team, gkNrs());
       const s = await Store.init();
       S.user = s.user;
       render();

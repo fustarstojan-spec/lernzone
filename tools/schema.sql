@@ -12,3 +12,8 @@ CREATE TABLE IF NOT EXISTS progress (
   data        TEXT    NOT NULL,           -- JSON: {quiz:{}, tasks:{}}
   updated_at  TEXT    NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS settings (
+  name   TEXT PRIMARY KEY,                -- z. B. coach_pin_hash
+  value  TEXT NOT NULL
+);

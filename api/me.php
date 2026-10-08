@@ -1,4 +1,4 @@
 <?php
-// GET → {user} (null, wenn nicht angemeldet)
+// GET → {user, coach:{active, hasPin, canSetup}}
 require __DIR__ . '/config.php';
-json_out(['user' => current_user()]);
+json_out(['user' => current_user(), 'coach' => coach_state()]);
