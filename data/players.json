@@ -2,96 +2,134 @@
  {
   "nr": 1,
   "pos": "Tor",
-  "plan": "tw"
+  "plan": "tw",
+  "posOff": "TW",
+  "posDef": "TW"
  },
  {
   "nr": 2,
-  "pos": "Rechtsverteidiger",
-  "plan": "feld"
+  "pos": "Feldspieler",
+  "plan": "feld",
+  "posOff": "",
+  "posDef": ""
  },
  {
   "nr": 3,
-  "pos": "Linksverteidiger",
-  "plan": "feld"
+  "pos": "Feldspieler",
+  "plan": "feld",
+  "posOff": "",
+  "posDef": ""
  },
  {
   "nr": 4,
-  "pos": "Innenverteidiger",
-  "plan": "feld"
+  "pos": "Feldspieler",
+  "plan": "feld",
+  "posOff": "",
+  "posDef": ""
  },
  {
   "nr": 5,
-  "pos": "Innenverteidiger",
-  "plan": "feld"
+  "pos": "Feldspieler",
+  "plan": "feld",
+  "posOff": "",
+  "posDef": ""
  },
  {
   "nr": 6,
-  "pos": "Sechser",
-  "plan": "feld"
+  "pos": "Feldspieler",
+  "plan": "feld",
+  "posOff": "",
+  "posDef": ""
  },
  {
   "nr": 7,
-  "pos": "Rechtsaußen",
-  "plan": "feld"
+  "pos": "Feldspieler",
+  "plan": "feld",
+  "posOff": "",
+  "posDef": ""
  },
  {
   "nr": 8,
-  "pos": "Achter",
-  "plan": "feld"
+  "pos": "Feldspieler",
+  "plan": "feld",
+  "posOff": "",
+  "posDef": ""
  },
  {
   "nr": 9,
-  "pos": "Stürmer",
-  "plan": "feld"
+  "pos": "Feldspieler",
+  "plan": "feld",
+  "posOff": "",
+  "posDef": ""
  },
  {
   "nr": 10,
-  "pos": "Zehner",
-  "plan": "feld"
+  "pos": "Feldspieler",
+  "plan": "feld",
+  "posOff": "",
+  "posDef": ""
  },
  {
   "nr": 11,
-  "pos": "Linksaußen",
-  "plan": "feld"
+  "pos": "Feldspieler",
+  "plan": "feld",
+  "posOff": "",
+  "posDef": ""
  },
  {
   "nr": 12,
   "pos": "Feldspieler",
-  "plan": "feld"
+  "plan": "feld",
+  "posOff": "",
+  "posDef": ""
  },
  {
   "nr": 13,
   "pos": "Feldspieler",
-  "plan": "feld"
+  "plan": "feld",
+  "posOff": "",
+  "posDef": ""
  },
  {
   "nr": 14,
   "pos": "Feldspieler",
-  "plan": "feld"
+  "plan": "feld",
+  "posOff": "",
+  "posDef": ""
  },
  {
   "nr": 15,
   "pos": "Feldspieler",
-  "plan": "feld"
+  "plan": "feld",
+  "posOff": "",
+  "posDef": ""
  },
  {
   "nr": 16,
   "pos": "Feldspieler",
-  "plan": "feld"
+  "plan": "feld",
+  "posOff": "",
+  "posDef": ""
  },
  {
   "nr": 17,
   "pos": "Feldspieler",
-  "plan": "feld"
+  "plan": "feld",
+  "posOff": "",
+  "posDef": ""
  },
  {
   "nr": 18,
   "pos": "Feldspieler",
-  "plan": "feld"
+  "plan": "feld",
+  "posOff": "",
+  "posDef": ""
  },
  {
   "nr": 22,
   "pos": "Tor",
-  "plan": "tw"
+  "plan": "tw",
+  "posOff": "TW",
+  "posDef": "TW"
  }
 ]

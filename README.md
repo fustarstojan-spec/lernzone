@@ -11,7 +11,7 @@ js/config.js          mode "auto" (Standard): erkennt selbst, ob PHP läuft; son
 js/store.js           Datenzugriff – die einzige Stelle, die Daten liest/speichert
 js/pitch.js           Spielfeld-Grafik (SVG)
 js/app.js             Oberfläche und Abläufe (enthält keine Daten)
-data/team.json        Teamname, System, Trikotfarben, Torhüter-Nummern
+data/team.json        Teamname, Grundordnung, Trikotfarben, Positionskürzel (für Profile und Spielsituationen)
 data/zones.json       5 Spuren, 3 Drittel, Maße
 data/phases.json      Die Spielphasen 1–4 und Phase 5 „Standards“: Grundlagen, Prinzipien, Situation, Quiz
 data/plans.json       Trainingspläne und Ziele (Vorlagen "feld" und "tw")
@@ -35,7 +35,7 @@ Quizfrage in `data/phases.json`:
 `correct` ist die Position der richtigen Antwort (0 = erste). Die Reihenfolge wird in der App gemischt.
 
 Spielsituation (`sit`): Koordinaten in Metern auf einem 68 × 105 m-Feld, `x` von links nach rechts, `y` von oben (gegnerisches Tor) nach unten (eigenes Tor).
-`own: [[Nr, x, y]]`, `opp: [[x, y]]`, `ball: [x, y]`, `arrows: [{ "f": [x,y], "t": [x,y], "k": "pass" | "run" }]`.
+`own: [[Position, x, y]]` (Kürzel aus `data/team.json`, z. B. "IV"), `opp: [[x, y]]`, `ball: [x, y]`, `arrows: [{ "f": [x,y], "t": [x,y], "k": "pass" | "run" }]`.
 
 ## Spieler anlegen (nur mit PHP, z. B. XAMPP)
 
@@ -83,9 +83,10 @@ PINs werden mit `password_hash()` gespeichert, nach 5 Fehlversuchen ist die Anme
 | `api/players.php` | GET | – | `[{ nr, pos, plan }]` |
 | `api/players.php` | POST (Trainer) | `{ nr, type: "tw"\|"feld", pin }` | `{ ok, player }` |
 | `api/players.php` | POST (Trainer) | `{ action: "setpin", nr, pin }` | `{ ok, nr }` |
+| `api/players.php` | POST (Trainer) | `{ action: "setpos", nr, posOff, posDef }` | `{ ok, player }` |
 | `api/coach.php` | POST | `{ action: "login"\|"setup"\|"logout", pin }` | `{ ok, coach }` |
 
-`user = { nr, pos, plan }`.
+`user = { nr, pos, plan, posOff, posDef }`.
 `quiz = { "<modul>": { best, of, last } }`, `tasks = { "<Jahr>-W<KW>": { "<index>": true } }`.
 
 ### Nächste Ausbaustufen

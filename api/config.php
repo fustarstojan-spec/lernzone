@@ -29,9 +29,29 @@ function db(): PDO {
     if ($pdo === null) {
         $pdo = new PDO(DB_DSN, DB_USER, DB_PASS, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
         $pdo->exec(file_get_contents(__DIR__ . '/../tools/schema.sql'));   // legt fehlende Tabellen an
+        migrate($pdo);
         seed_demo_players($pdo);
     }
     return $pdo;
+}
+
+/* Ergänzt Spalten, die in älteren Datenbanken noch fehlen */
+function migrate(PDO $pdo): void {
+    $cols = array_column($pdo->query('PRAGMA table_info(players)')->fetchAll(PDO::FETCH_ASSOC), 'name');
+    foreach (['pos_off', 'pos_def'] as $c) {
+        if (!in_array($c, $cols, true)) $pdo->exec("ALTER TABLE players ADD COLUMN $c TEXT NOT NULL DEFAULT ''");
+    }
+}
+
+/* Erlaubte Positionskürzel aus data/team.json */
+function valid_positions(): array {
+    $team = json_decode((string)file_get_contents(__DIR__ . '/../data/team.json'), true) ?: [];
+    return array_column($team['positions'] ?? [], 'id');
+}
+
+function player_out(array $r): array {
+    return ['nr' => (int)$r['nr'], 'pos' => $r['pos'], 'plan' => $r['plan'],
+            'posOff' => (string)($r['pos_off'] ?? ''), 'posDef' => (string)($r['pos_def'] ?? '')];
 }
 
 /*
@@ -45,10 +65,11 @@ function seed_demo_players(PDO $pdo): void {
     if ((int)$pdo->query('SELECT COUNT(*) FROM players')->fetchColumn() > 0) return;
     $players = json_decode((string)file_get_contents(__DIR__ . '/../data/players.json'), true) ?: [];
     $pins    = json_decode((string)file_get_contents($pinsFile), true) ?: [];
-    $st = $pdo->prepare('INSERT INTO players (nr, pos, plan, pin_hash) VALUES (?, ?, ?, ?)');
+    $st = $pdo->prepare('INSERT INTO players (nr, pos, plan, pos_off, pos_def, pin_hash) VALUES (?, ?, ?, ?, ?, ?)');
     foreach ($players as $p) {
         if (!isset($pins[(string)$p['nr']])) continue;
-        $st->execute([$p['nr'], $p['pos'], $p['plan'], password_hash((string)$pins[(string)$p['nr']], PASSWORD_DEFAULT)]);
+        $st->execute([$p['nr'], $p['pos'], $p['plan'], $p['posOff'] ?? '', $p['posDef'] ?? '',
+                      password_hash((string)$pins[(string)$p['nr']], PASSWORD_DEFAULT)]);
     }
 }
 
@@ -114,10 +135,10 @@ function require_method(string $m): void {
 
 function current_user(): ?array {
     if (empty($_SESSION['nr'])) return null;
-    $st = db()->prepare('SELECT nr, pos, plan FROM players WHERE nr = ? AND active = 1');
+    $st = db()->prepare('SELECT nr, pos, plan, pos_off, pos_def FROM players WHERE nr = ? AND active = 1');
     $st->execute([$_SESSION['nr']]);
     $u = $st->fetch(PDO::FETCH_ASSOC);
-    return $u ? ['nr' => (int)$u['nr'], 'pos' => $u['pos'], 'plan' => $u['plan']] : null;
+    return $u ? player_out($u) : null;
 }
 
 function require_user(): array {

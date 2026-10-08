@@ -2,6 +2,14 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.6.0 – 2026-10-08
+- Jeder Spieler hat eine offensivere und eine defensivere Position (Trikotnummern sagen nichts über die Position aus)
+- Trainer-Modus: Positionen beim Anlegen und unter „Kader verwalten“ festlegen; Kader zeigt die Positionen unter den Trikots
+- Mein Bereich zeigt beide Positionen
+- Spielsituationen mit Positionskürzeln statt Nummern (4-1-4-1), eigene Positionen mit gelbem Ring markiert
+- Phase 1: neue Situation „Abstoß“ nach unserem Spielaufbau, drei neue Quizfragen dazu
+- Positionsliste in `data/team.json`, Datenbank wird automatisch um die neuen Spalten ergänzt
+
 ## 0.5.0 – 2026-10-08
 - Trainer-Modus „Kader verwalten“: alle Trikots, Antippen → neue PIN vergeben (auch zufällig), alte PIN gilt danach nicht mehr
 - Einstieg über „Trainer: Kader verwalten“ unter der Nummernwahl oder über das graue „+“-Trikot

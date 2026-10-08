@@ -17,13 +17,16 @@ $pdo->exec(file_get_contents(__DIR__ . '/schema.sql'));
 $players = json_decode(file_get_contents($root . '/data/players.json'), true);
 $only    = isset($argv[1]) ? (int)$argv[1] : null;
 
-$st = $pdo->prepare('INSERT INTO players (nr, pos, plan, pin_hash) VALUES (?, ?, ?, ?)
-                     ON CONFLICT(nr) DO UPDATE SET pos = excluded.pos, plan = excluded.plan, pin_hash = excluded.pin_hash');
+$cols = array_column($pdo->query('PRAGMA table_info(players)')->fetchAll(PDO::FETCH_ASSOC), 'name');
+foreach (['pos_off', 'pos_def'] as $c) if (!in_array($c, $cols, true)) $pdo->exec("ALTER TABLE players ADD COLUMN $c TEXT NOT NULL DEFAULT ''");
+$st = $pdo->prepare('INSERT INTO players (nr, pos, plan, pos_off, pos_def, pin_hash) VALUES (?, ?, ?, ?, ?, ?)
+                     ON CONFLICT(nr) DO UPDATE SET pos = excluded.pos, plan = excluded.plan, pos_off = excluded.pos_off,
+                     pos_def = excluded.pos_def, pin_hash = excluded.pin_hash');
 
 echo "Nr.  PIN\n---------\n";
 foreach ($players as $p) {
     if ($only !== null && $p['nr'] !== $only) continue;
     $pin = str_pad((string)random_int(0, 9999), 4, '0', STR_PAD_LEFT);
-    $st->execute([$p['nr'], $p['pos'], $p['plan'], password_hash($pin, PASSWORD_DEFAULT)]);
+    $st->execute([$p['nr'], $p['pos'], $p['plan'], $p['posOff'] ?? '', $p['posDef'] ?? '', password_hash($pin, PASSWORD_DEFAULT)]);
     printf("%-4d %s\n", $p['nr'], $pin);
 }

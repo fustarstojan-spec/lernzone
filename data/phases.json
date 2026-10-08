@@ -46,139 +46,192 @@
   "sit": {
    "own": [
     [
-     1,
-     34,
-     100
+     "TW",
+     24.84,
+     99.5
     ],
     [
-     4,
-     47,
-     92
+     "IV",
+     43.16,
+     99.5
     ],
     [
-     5,
-     21,
-     92
-    ],
-    [
-     6,
-     34,
-     81
-    ],
-    [
-     2,
-     62,
-     72
-    ],
-    [
-     3,
-     6,
-     72
-    ],
-    [
-     8,
-     46,
-     62
-    ],
-    [
-     10,
-     23,
-     58
-    ],
-    [
+     "8",
      7,
-     63,
-     42
+     99
     ],
     [
-     11,
-     5,
-     42
+     "8",
+     61,
+     99
     ],
     [
-     9,
+     "IV",
+     24.84,
+     88.5
+    ],
+    [
+     "6",
+     43.16,
+     88.5
+    ],
+    [
+     "LV",
+     7,
+     70
+    ],
+    [
+     "RV",
+     61,
+     70
+    ],
+    [
+     "ST",
      34,
-     38
+     57
+    ],
+    [
+     "LA",
+     24.84,
+     47
+    ],
+    [
+     "RA",
+     43.16,
+     47
     ]
    ],
    "opp": [
     [
-     40,
-     84
+     34,
+     2.5
+    ],
+    [
+     29,
+     93
+    ],
+    [
+     38,
+     93
+    ],
+    [
+     12,
+     78
     ],
     [
      28,
-     84
+     76
     ],
     [
-     34,
-     70
+     40,
+     76
     ],
     [
-     50,
-     67
+     56,
+     78
     ],
     [
-     18,
-     67
+     12,
+     52
     ],
     [
-     34,
-     56
+     30,
+     42
+    ],
+    [
+     38,
+     42
+    ],
+    [
+     56,
+     52
     ]
    ],
    "ball": [
-    34,
-    100
+    27.6,
+    102.4
    ],
    "arrows": [
     {
      "f": [
-      34,
-      100
+      24.84,
+      99.5
      ],
      "t": [
-      47,
-      92
+      9.5,
+      99
      ],
      "k": "pass"
     },
     {
      "f": [
-      62,
-      72
+      24.84,
+      99.5
      ],
      "t": [
-      62,
-      62
+      24.84,
+      91.2
+     ],
+     "k": "pass"
+    },
+    {
+     "f": [
+      7,
+      70
+     ],
+     "t": [
+      7,
+      61
+     ],
+     "k": "run"
+    },
+    {
+     "f": [
+      61,
+      70
+     ],
+     "t": [
+      61,
+      61
      ],
      "k": "run"
     },
     {
      "f": [
       34,
-      81
+      57
      ],
      "t": [
-      38,
-      77
+      34,
+      65
      ],
      "k": "run"
     }
    ],
-   "cap": "Spielaufbau vom Torwart: Die Innenverteidiger gehen breit bis an die Strafraumecken, die 6 bietet sich zwischen den Gegnern an, die Außenverteidiger schieben hoch."
+   "cap": "Abstoß: Der TW steht am linken Fünfereck, ein IV am rechten. Die beiden 8er gehen auf gleicher Höhe in die Außenspuren. Der zweite IV und die 6 stehen an der Strafraumgrenze zwischen Zentrum und Halbspur. Die Außenverteidiger schieben hoch, der Stürmer lässt sich ins Zentrum fallen, und die Außenstürmer stehen jenseits der Mittellinie an der Grenze zwischen Zentrum und Halbspur."
   },
   "quiz": [
    {
-    "q": "Unser Torwart hat den Ball im Spielaufbau. Wo stehen die Innenverteidiger am besten?",
+    "q": "Abstoß für uns: Wo steht unser Torwart?",
     "options": [
-     "Breit, etwa an den Strafraumecken",
-     "Eng nebeneinander vor dem Tor",
-     "Beide an der Mittellinie",
-     "Direkt neben dem Torwart"
+     "Am linken Fünfereck",
+     "Auf der Torlinie",
+     "Am Elfmeterpunkt",
+     "An der Strafraumgrenze"
     ],
     "correct": 0,
-    "why": "Breit stehen macht das Feld groß und öffnet Passwege. Ein Gegner kann nicht beide gleichzeitig anlaufen."
+    "why": "Unser TW ist im Aufbau Feldspieler: Er steht am linken Fünfereck, ein IV am rechten. So haben wir hinten Überzahl."
+   },
+   {
+    "q": "Abstoß für uns: Wo stehen die beiden 8er?",
+    "options": [
+     "Tief in den Außenspuren, ungefähr auf Höhe von TW und IV",
+     "Im Mittelkreis",
+     "Neben dem Stürmer",
+     "An der Mittellinie in der Zentrumsspur"
+    ],
+    "correct": 0,
+    "why": "Die 8er holen sich den Ball tief außen ab. Dadurch werden Zentrum und Halbspuren frei für die 6, den zweiten IV und den Stürmer."
    },
    {
     "q": "Was bedeutet „offene Stellung“ bei der Ballannahme?",
@@ -223,6 +276,17 @@
     ],
     "correct": 0,
     "why": "Wer breit steht, zieht den Gegner auseinander. Dadurch entstehen Lücken in den Halbspuren und im Zentrum."
+   },
+   {
+    "q": "Abstoß für uns: Was macht der Stürmer?",
+    "options": [
+     "Er lässt sich in der Zentrumsspur fallen",
+     "Er bleibt ganz vorne an der Abseitslinie",
+     "Er geht auf den Flügel",
+     "Er stellt sich neben den Torwart"
+    ],
+    "correct": 0,
+    "why": "Lässt sich der Stürmer fallen, bekommt er den Ball zwischen den Linien und die Außenstürmer starten in die Tiefe."
    }
   ]
  },
@@ -269,57 +333,57 @@
   "sit": {
    "own": [
     [
-     8,
+     "8",
      46,
      35
     ],
     [
-     7,
+     "RA",
      60,
      24
     ],
     [
-     9,
+     "ST",
      36,
      22
     ],
     [
-     6,
+     "6",
      36,
      46
     ],
     [
-     10,
+     "8",
      26,
      34
     ],
     [
-     11,
+     "LA",
      8,
      30
     ],
     [
-     2,
+     "RV",
      60,
      50
     ],
     [
-     4,
+     "IV",
      44,
      62
     ],
     [
-     5,
+     "IV",
      28,
      62
     ],
     [
-     3,
+     "LV",
      10,
      52
     ],
     [
-     1,
+     "TW",
      34,
      98
     ]
@@ -400,7 +464,7 @@
      "k": "run"
     }
    ],
-   "cap": "Ballverlust in der rechten Halbspur: Die 8 attackiert sofort, die 7 und die 9 machen eng, die 6 schließt den Weg ins Zentrum."
+   "cap": "Ballverlust in der rechten Halbspur: Der rechte 8er attackiert sofort, RA und ST machen eng, die 6 schließt den Weg ins Zentrum. Der Nächste ist der Erste."
   },
   "quiz": [
    {
@@ -507,57 +571,57 @@
   "sit": {
    "own": [
     [
-     2,
+     "RV",
      58,
      52
     ],
     [
-     7,
+     "RA",
      57,
      40
     ],
     [
-     8,
+     "8",
      48,
      46
     ],
     [
-     6,
+     "6",
      40,
      53
     ],
     [
-     10,
+     "8",
      33,
      44
     ],
     [
-     11,
+     "LA",
      24,
      42
     ],
     [
-     9,
+     "ST",
      38,
      32
     ],
     [
-     4,
+     "IV",
      46,
      63
     ],
     [
-     5,
+     "IV",
      35,
      65
     ],
     [
-     3,
+     "LV",
      25,
      62
     ],
     [
-     1,
+     "TW",
      34,
      98
     ]
@@ -627,7 +691,7 @@
      "k": "run"
     }
    ],
-   "cap": "Ball auf der rechten Außenbahn: Die 2 attackiert, alle schieben zur Ballseite. Die ballferne Seite wird kleiner, der Pass ins Zentrum ist zu."
+   "cap": "Ball auf der rechten Außenbahn: Der RV attackiert, alle schieben zur Ballseite. Die ballferne Seite wird kleiner, und der Pass ins Zentrum ist zu."
   },
   "quiz": [
    {
@@ -730,57 +794,57 @@
   "sit": {
    "own": [
     [
-     6,
+     "6",
      34,
      60
     ],
     [
-     9,
+     "ST",
      36,
      40
     ],
     [
-     7,
+     "RA",
      60,
      44
     ],
     [
-     11,
+     "LA",
      8,
      44
     ],
     [
-     8,
+     "8",
      48,
      52
     ],
     [
-     10,
+     "8",
      24,
      50
     ],
     [
-     2,
+     "RV",
      62,
      64
     ],
     [
-     3,
+     "LV",
      6,
      64
     ],
     [
-     4,
+     "IV",
      44,
      74
     ],
     [
-     5,
+     "IV",
      26,
      74
     ],
     [
-     1,
+     "TW",
      34,
      98
     ]
@@ -861,7 +925,7 @@
      "k": "run"
     }
    ],
-   "cap": "Ballgewinn durch die 6: Der erste Blick geht nach vorne, die 9 startet in die Tiefe, die Außen sprinten mit und geben Breite."
+   "cap": "Ballgewinn durch die 6: Der erste Blick geht nach vorne, der ST startet in die Tiefe, RA und LA sprinten mit und geben Breite."
   },
   "quiz": [
    {
@@ -968,57 +1032,57 @@
   "sit": {
    "own": [
     [
-     7,
+     "RA",
      64.5,
      4
     ],
     [
-     9,
+     "ST",
      37,
      12.5
     ],
     [
-     4,
+     "IV",
      28.5,
      11.5
     ],
     [
-     5,
+     "IV",
      44,
      16.5
     ],
     [
-     10,
+     "8",
      21,
      17
     ],
     [
-     8,
+     "8",
      57,
      10
     ],
     [
-     6,
+     "6",
      34,
      23
     ],
     [
-     11,
+     "LA",
      15,
      25
     ],
     [
-     2,
+     "RV",
      50,
      45
     ],
     [
-     3,
+     "LV",
      18,
      45
     ],
     [
-     1,
+     "TW",
      34,
      98
     ]
@@ -1108,7 +1172,7 @@
      "k": "run"
     }
    ],
-   "cap": "Ecke von rechts: Die 9 läuft an den kurzen Pfosten, die 4 in den Torraum. Die 6 und die 11 warten an der Strafraumgrenze auf zweite Bälle, die 2 und die 3 sichern gegen einen Konter ab."
+   "cap": "Ecke von rechts: Der ST läuft an den kurzen Pfosten, ein IV in den Torraum. Die 6 und der LA warten an der Strafraumgrenze auf zweite Bälle, RV und LV sichern gegen einen Konter ab."
   },
   "quiz": [
    {

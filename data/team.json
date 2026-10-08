@@ -1,6 +1,6 @@
 {
  "name": "SV Heimstetten U14",
- "system": "1-4-3-3",
+ "system": "4-1-4-1",
  "colors": {
   "shirt": "#5e2129",
   "goalkeeper": "#2E78FF"
@@ -8,5 +8,43 @@
  "goalkeepers": [
   1,
   22
+ ],
+ "positions": [
+  {
+   "id": "TW",
+   "name": "Torwart"
+  },
+  {
+   "id": "RV",
+   "name": "Rechtsverteidiger"
+  },
+  {
+   "id": "IV",
+   "name": "Innenverteidiger"
+  },
+  {
+   "id": "LV",
+   "name": "Linksverteidiger"
+  },
+  {
+   "id": "6",
+   "name": "Sechser"
+  },
+  {
+   "id": "8",
+   "name": "Achter"
+  },
+  {
+   "id": "RA",
+   "name": "Rechtsaußen"
+  },
+  {
+   "id": "LA",
+   "name": "Linksaußen"
+  },
+  {
+   "id": "ST",
+   "name": "Stürmer"
+  }
  ]
 }

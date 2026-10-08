@@ -178,3 +178,11 @@ code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:
 .coachbar-links{display:flex;gap:14px}
 .ball.set{background:var(--set-chip);color:var(--set-ink)}
 .phase-set{min-height:0;width:100%}
+.fld select{font:inherit;font-size:1.05rem;padding:11px 12px;border:1.5px solid var(--rule);border-radius:12px;background:var(--surface);color:var(--fg);width:100%;box-sizing:border-box}
+.fld select:focus{border-color:var(--accent);outline:none}
+.okmsg{color:var(--ok);font-weight:700}
+.poscards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.poscard{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:12px 14px;display:grid;gap:2px}
+.posid{font-family:var(--display);font-size:2rem;font-weight:700;line-height:1;color:var(--accent)}
+.pitch .own.me circle{stroke:#ffe066;stroke-width:.9}
+.dotk.me{background:transparent;border:3px solid #e0b800}

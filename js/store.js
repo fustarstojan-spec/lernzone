@@ -13,8 +13,9 @@
  *   coachLogin(pin) / coachSetup(pin) / coachLogout()     → { ok, error }
  *   addPlayer({nr, type, pin})                             → { ok, player, error }
  *   setPin(nr, pin)                                        → { ok, error }
+ *   setPositions(nr, posOff, posDef)                       → { ok, player, error }
  *
- * user = { nr, pos, plan }
+ * user = { nr, pos, plan, posOff, posDef }   (posOff/posDef = Positionskürzel aus data/team.json)
  * progress = { quiz: { <modulId>: {best, of, last} }, tasks: { "<Jahr>-W<KW>": { <index>: true|false } } }
  */
 (function () {
@@ -128,6 +129,10 @@
       },
       async setPin(nr, pin) {
         try { return await postAny("players.php", { action: "setpin", nr, pin }); }
+        catch (e) { return { ok: false, error: "Server nicht erreichbar." }; }
+      },
+      async setPositions(nr, posOff, posDef) {
+        try { return await postAny("players.php", { action: "setpos", nr, posOff, posDef }); }
         catch (e) { return { ok: false, error: "Server nicht erreichbar." }; }
       }
     };

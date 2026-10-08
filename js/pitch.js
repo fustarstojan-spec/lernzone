@@ -1,6 +1,6 @@
 /*
  * Lernzone – Spielfeld-Grafik (SVG, Maße in Metern: 68 × 105, Angriff nach oben)
- * LZPitch.setup(zones, team) einmal aufrufen, dann LZPitch.field({...}).
+ * LZPitch.setup(zones, team, gkNrs) einmal aufrufen, dann LZPitch.field({...}).
  */
 (function () {
   let LX, TY, GK = [], GKC = "#2E78FF";
@@ -12,7 +12,7 @@
     GK = gkNrs || team.goalkeepers || []; GKC = team.colors.goalkeeper;
   }
 
-  /* o: { own:[[nr,x,y]], opp:[[x,y]], ball:[x,y], arrows:[{f,t,k:"pass"|"run"}],
+  /* o: { own:[[pos,x,y]], me:[pos], opp:[[x,y]], ball:[x,y], arrows:[{f,t,k:"pass"|"run"}],
           hl:[{l,t,c}], tap:bool, zones:bool, label } */
   function field(o = {}) {
     const id = "f" + (++n);
@@ -37,7 +37,12 @@
       s += `<line x1="${sx.toFixed(2)}" y1="${sy.toFixed(2)}" x2="${ex.toFixed(2)}" y2="${ey.toFixed(2)}" class="${a.k}" marker-end="url(#${id}${a.k === "pass" ? "p" : "r"})"/>`;
     });
     (o.opp || []).forEach(([x, y]) => s += `<g class="opp"><circle cx="${x}" cy="${y}" r="2.4"/></g>`);
-    (o.own || []).forEach(([nr, x, y]) => s += `<g class="own"><circle cx="${x}" cy="${y}" r="2.6"${GK.includes(nr) ? ` style="fill:${GKC}"` : ""}/><text x="${x}" y="${y + .15}">${nr}</text></g>`);
+    // own: [Positionskürzel, x, y]; TW blau; o.me = Kürzel des angemeldeten Spielers → gelber Ring
+    const me = o.me || [];
+    (o.own || []).forEach(([lab, x, y]) => {
+      const gk = lab === "TW" || GK.includes(lab);
+      s += `<g class="own${me.includes(lab) ? " me" : ""}"><circle cx="${x}" cy="${y}" r="2.6"${gk ? ` style="fill:${GKC}"` : ""}/><text x="${x}" y="${y + .15}"${String(lab).length > 1 ? ' style="font-size:2.3px"' : ""}>${esc(lab)}</text></g>`;
+    });
     if (o.ball) s += `<circle cx="${o.ball[0]}" cy="${o.ball[1]}" r="1.1" class="ballc"/>`;
     if (o.tap) for (let t = 0; t < 3; t++) for (let l = 0; l < 5; l++)
       s += `<rect x="${LX[l]}" y="${TY[t]}" width="${(LX[l + 1] - LX[l]).toFixed(2)}" height="35" class="ztap" data-act="zone" data-l="${l}" data-t="${t}"><title>Zone antippen</title></rect>`;

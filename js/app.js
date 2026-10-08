@@ -10,10 +10,10 @@
   let PH = {};
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   // Spieler anlegen: step "auth" | "setup" | "setup2" | "form" | "done"
-  const A = { step: "auth", cpin: "", first: "", err: "", type: "feld", nr: "", pin: "", created: null };
+  const A = { step: "auth", cpin: "", first: "", err: "", type: "feld", nr: "", pin: "", created: null, posOff: "", posDef: "", msg: "" };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.5.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.6.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -44,9 +44,14 @@
                : isGK(label) ? C.team.colors.goalkeeper : C.team.colors.shirt;
     return `<svg viewBox="0 0 64 60" aria-hidden="true"><path d="${SHIRT_PATH}" fill="${fill}" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><text x="32" y="${label === "+" ? 39 : 41}" text-anchor="middle" dominant-baseline="central" fill="#fff" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="${fs}">${esc(label)}</text></svg>`;
   }
+  const posName = id => { const p = (C.team.positions || []).find(x => x.id === id); return p ? p.name : ""; };
+  const posLabel = id => id ? `${esc(id)} · ${esc(posName(id))}` : "noch offen";
+  const posSelect = (id, val, label) => `<div class="fld"><label for="${id}">${label}</label>
+    <select id="${id}"><option value="">– noch offen –</option>${(C.team.positions || []).map(p => `<option value="${esc(p.id)}" ${p.id === val ? "selected" : ""}>${esc(p.id)} · ${esc(p.name)}</option>`).join("")}</select></div>`;
+  const myPositions = () => S.user ? [S.user.posOff, S.user.posDef].filter(Boolean) : [];
   const pad = act => `<div class="pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => `<button data-act="${act}" data-d="${d}">${d}</button>`).join("")}<span></span><button data-act="${act}" data-d="0">0</button><button data-act="${act}" data-d="del" aria-label="Löschen">⌫</button></div>`;
   const dots = (n, len) => `<div class="pins" aria-label="${n} von ${len} Ziffern">${Array.from({ length: len }, (_, i) => `<i class="${i < n ? "on" : ""}"></i>`).join("")}</div>`;
-  const legend = () => `<div class="legend"><span><i class="dotk" style="background:${C.team.colors.shirt}"></i>Wir</span><span><i class="dotk" style="background:#e9eef3;border:1px solid #23303b"></i>Gegner</span><span>━ Pass</span><span>╍ Laufweg</span></div>`;
+  const legend = (withMe) => `<div class="legend"><span><i class="dotk" style="background:${C.team.colors.shirt}"></i>Wir</span>${withMe ? `<span><i class="dotk me"></i>Du</span>` : ""}<span><i class="dotk" style="background:#e9eef3;border:1px solid #23303b"></i>Gegner</span><span>━ Pass</span><span>╍ Laufweg</span></div>`;
   const ballLabel = b => b === "own" ? "Wir haben den Ball" : b === "set" ? "Ruhender Ball" : "Gegner hat den Ball";
 
   /* ---------- Startseite ---------- */
@@ -87,7 +92,9 @@
     <div class="card stack"><h3>Unterphasen</h3><dl class="sub">${ph.unter.map(([a, b]) => `<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join("")}</dl></div>
     <p class="merk">${esc(ph.merk)}</p>`;
     } else if (S.tab === "material") {
-      body = `<div class="stack">${field({ ...ph.sit, label: ph.sit.cap })}${legend()}<p class="caption">${esc(ph.sit.cap)}</p></div>
+      const me = myPositions().filter(m => ph.sit.own.some(o => o[0] === m));
+      body = `<div class="stack">${field({ ...ph.sit, label: ph.sit.cap, me })}${legend(me.length > 0)}<p class="caption">${esc(ph.sit.cap)}</p>
+      ${me.length ? `<p class="small">Gelber Ring: deine Position${me.length > 1 ? "en" : ""} (${me.map(esc).join(", ")}).</p>` : ""}</div>
     <h3>Unsere Prinzipien</h3><ul class="prin">${ph.prin.map(([t, x]) => `<li><b>${esc(t)}</b><span>${esc(x)}</span></li>`).join("")}</ul>`;
     } else body = quizHTML(ph);
     return `<button class="back" data-act="home">‹ Übersicht</button>
@@ -200,9 +207,9 @@
     }
     if (A.step === "kader") {
       return `${toGrid}
-      <section><p class="eyebrow">Trainer</p><h1>Kader verwalten</h1><p class="lede">Tippe auf ein Trikot, um die PIN zu ändern. Mit dem grauen Trikot legst du einen neuen Spieler an.</p></section>
+      <section><p class="eyebrow">Trainer</p><h1>Kader verwalten</h1><p class="lede">Tippe auf ein Trikot, um Positionen oder PIN zu ändern. Mit dem grauen Trikot legst du einen neuen Spieler an.</p></section>
       ${coachBar()}
-      <div class="nrgrid">${C.players.map(p => `<button class="nr" data-act="editNr" data-v="${p.nr}" aria-label="PIN von Nummer ${p.nr} ändern">${shirt(p.nr)}<span>${p.plan === "tw" ? "Tor" : "&nbsp;"}</span></button>`).join("")}
+      <div class="nrgrid">${C.players.map(p => `<button class="nr" data-act="editNr" data-v="${p.nr}" aria-label="Nummer ${p.nr} bearbeiten">${shirt(p.nr)}<span>${p.posOff || p.posDef ? esc([p.posOff, p.posDef].filter(Boolean).join(" / ")) : (p.plan === "tw" ? "Tor" : "–")}</span></button>`).join("")}
       <button class="nr add" data-act="addFromKader" aria-label="Neuen Spieler anlegen">${shirt("+", "add")}<span>Neu</span></button></div>`;
     }
     if (A.step === "edit") {
@@ -211,10 +218,16 @@
       <section style="display:grid;justify-items:center;gap:8px;text-align:center"><div style="width:84px">${shirt(p.nr)}</div>
       <p class="eyebrow">${p.plan === "tw" ? "Torwart" : "Feldspieler"}</p><h1>Nr. ${p.nr}</h1></section>
       ${coachBar()}
-      ${pinField("edit-pin", "Neue PIN (4 Ziffern)")}
-      <p class="err" role="alert" style="text-align:left">${esc(A.err)}</p>
-      <button class="btn wide" data-act="pinSave" ${S.busy ? "disabled" : ""}>PIN speichern</button>
-      <p class="small">Die alte PIN gilt danach nicht mehr.</p>`;
+      <section class="card stack"><h2>Positionen</h2>
+        ${posSelect("pos-off", A.posOff, "Offensivere Position")}
+        ${posSelect("pos-def", A.posDef, "Defensivere Position")}
+        ${A.msg ? `<p class="okmsg" role="status">${esc(A.msg)}</p>` : ""}
+        <button class="btn wide" data-act="posSave" ${S.busy ? "disabled" : ""}>Positionen speichern</button></section>
+      <section class="card stack"><h2>PIN</h2>
+        ${pinField("edit-pin", "Neue PIN (4 Ziffern)")}
+        <button class="btn wide" data-act="pinSave" ${S.busy ? "disabled" : ""}>PIN speichern</button>
+        <p class="small">Die alte PIN gilt danach nicht mehr.</p></section>
+      <p class="err" role="alert" style="text-align:left">${esc(A.err)}</p>`;
     }
     if (A.step === "pindone") {
       return `<section style="display:grid;justify-items:center;gap:10px;text-align:center"><div style="width:96px">${shirt(A.editNr)}</div>
@@ -225,7 +238,8 @@
     if (A.step === "done") {
       const p = A.created;
       return `<section style="display:grid;justify-items:center;gap:10px;text-align:center"><div style="width:96px">${shirt(p.nr)}</div>
-      <p class="eyebrow">${p.plan === "tw" ? "Torwart" : "Feldspieler"} angelegt</p><h1>Nr. ${p.nr}</h1></section>
+      <p class="eyebrow">${p.plan === "tw" ? "Torwart" : "Feldspieler"} angelegt</p><h1>Nr. ${p.nr}</h1>
+      ${p.posOff || p.posDef ? `<p class="small">Offensiver: ${posLabel(p.posOff)}<br>Defensiver: ${posLabel(p.posDef)}</p>` : ""}</section>
       ${pinCard(p.nr, `PIN für Nr. ${p.nr}`)}
       <button class="btn wide" data-act="addAgain">Weiteren Spieler anlegen</button>
       <button class="btn ghost wide" data-act="kaderOpen">Zum Kader</button>`;
@@ -238,13 +252,15 @@
     <div class="stack"><p class="fldlabel">Trikot</p><div class="typepick">${typeBtn("tw", "Torwart")}${typeBtn("feld", "Feldspieler")}</div></div>
     <div class="fld"><label for="add-nr">Trikotnummer</label>
       <input id="add-nr" type="text" inputmode="numeric" maxlength="2" autocomplete="off" placeholder="z. B. 23" value="${esc(A.nr)}"></div>
+    ${posSelect("pos-off", A.posOff, "Offensivere Position")}
+    ${posSelect("pos-def", A.posDef, "Defensivere Position")}
     ${pinField("add-pin", "PIN für den Spieler (4 Ziffern)")}
     <p class="err" role="alert" style="text-align:left">${esc(A.err)}</p>
     <button class="btn wide" data-act="addSave" ${S.busy ? "disabled" : ""}>Spieler anlegen</button>`;
   }
   // Einstieg: target = "form" (neuer Spieler) oder "kader"; from = woher man kam
   function coachStart(target, from) {
-    Object.assign(A, { cpin: "", first: "", err: "", type: "feld", nr: "", pin: "", created: null, editNr: null, next: target, from });
+    Object.assign(A, { cpin: "", first: "", err: "", type: "feld", nr: "", pin: "", created: null, editNr: null, posOff: "", posDef: "", msg: "", next: target, from });
     A.step = Store.coach.active ? target : (Store.coach.hasPin ? "auth" : (Store.coach.canSetup ? "setup" : "auth"));
     S.view = "add"; render(); window.scrollTo(0, 0);
   }
@@ -271,12 +287,21 @@
     if (C.players.some(p => p.nr === +nr)) { A.err = `Die Nummer ${+nr} ist schon vergeben.`; render(); return; }
     if (!/^\d{4}$/.test(pin)) { A.err = "Die PIN muss genau 4 Ziffern haben."; render(); return; }
     S.busy = true; A.err = ""; render();
-    const r = await Store.addPlayer({ nr: +nr, type: A.type, pin });
+    const r = await Store.addPlayer({ nr: +nr, type: A.type, pin, posOff: A.posOff, posDef: A.posDef });
     S.busy = false;
     if (!r.ok) { A.err = r.error || "Speichern hat nicht geklappt."; coachLost(r); render(); return; }
     C.players.push(r.player); C.players.sort((a, b) => a.nr - b.nr);
     window.LZPitch.setup(C.zones, C.team, gkNrs());
     A.created = r.player; A.pin = pin; A.step = "done"; render(); window.scrollTo(0, 0);
+  }
+  async function posSave() {
+    S.busy = true; A.err = ""; A.msg = ""; render();
+    const r = await Store.setPositions(A.editNr, A.posOff, A.posDef);
+    S.busy = false;
+    if (!r.ok) { A.err = r.error || "Speichern hat nicht geklappt."; coachLost(r); render(); return; }
+    const i = C.players.findIndex(x => x.nr === A.editNr); if (i >= 0) C.players[i] = r.player;
+    if (S.user && S.user.nr === A.editNr) S.user = r.player;
+    A.msg = "Positionen gespeichert."; render();
   }
   async function pinSave() {
     const pin = A.pin.trim();
@@ -294,7 +319,9 @@
     const pl = S.user, plan = C.plans[pl.plan], p = prog(), wk = weekKey(), done = p.tasks[wk] || {};
     const nDone = plan.week.filter((_, i) => done[i]).length;
     const mods = [["zonen", "Spielfeld & Zonen"], ...C.phases.map(x => [x.id, x.title])];
-    return `<section class="me-head">${shirt(pl.nr)}<div><p class="eyebrow">Mein Bereich</p><h1>Nr. ${pl.nr}</h1><p class="small">${esc(pl.pos)} · ${esc(C.team.name)}</p></div></section>
+    return `<section class="me-head">${shirt(pl.nr)}<div><p class="eyebrow">Mein Bereich</p><h1>Nr. ${pl.nr}</h1><p class="small">${esc(C.team.name)}</p></div></section>
+  <section class="poscards"><div class="poscard"><p class="eyebrow">Offensivere Position</p><p class="posid">${esc(pl.posOff || "–")}</p><p class="small">${pl.posOff ? esc(posName(pl.posOff)) : "legt dein Trainer fest"}</p></div>
+  <div class="poscard"><p class="eyebrow">Defensivere Position</p><p class="posid">${esc(pl.posDef || "–")}</p><p class="small">${pl.posDef ? esc(posName(pl.posDef)) : "legt dein Trainer fest"}</p></div></section>
   <section class="stack"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><h2>Diese Woche</h2><span class="small" style="font-variant-numeric:tabular-nums">${nDone}/${plan.week.length} erledigt</span></div>
   ${plan.week.map(([d, t], i) => `<label class="task ${done[i] ? "done" : ""}"><input type="checkbox" class="taskbox" id="task-${i}" data-i="${i}" ${done[i] ? "checked" : ""}><span class="day">${esc(d)}</span><span class="txt">${esc(t)}</span></label>`).join("")}</section>
   <section class="stack"><h2>Meine Ziele</h2>${plan.goals.map(g => `<div class="goal"><b>${esc(g.t)}</b><span class="small">Zeitraum: ${esc(g.when)}</span></div>`).join("")}</section>
@@ -354,11 +381,17 @@
     else if (a === "addStart") coachStart("form", "grid");
     else if (a === "kaderStart") coachStart("kader", "grid");
     else if (a === "kaderOpen") { if (Store.coach.active) setStep("kader", { from: "kader" }); else coachStart("kader", "grid"); }
-    else if (a === "addFromKader" || a === "addAgain") { setStep("form", { from: "kader", type: "feld", nr: "", created: null }); }
-    else if (a === "editNr") setStep("edit", { editNr: +v });
+    else if (a === "addFromKader" || a === "addAgain") { setStep("form", { from: "kader", type: "feld", nr: "", created: null, posOff: "", posDef: "" }); }
+    else if (a === "editNr") { const p = C.players.find(x => x.nr === +v) || {}; setStep("edit", { editNr: +v, posOff: p.posOff || "", posDef: p.posDef || "", msg: "" }); }
+    else if (a === "posSave") { if (!S.busy) posSave(); }
     else if (a === "pinSave") { if (!S.busy) pinSave(); }
     else if (a === "addBack") { S.view = "me"; S.loginNr = null; S.pin = ""; S.err = ""; render(); window.scrollTo(0, 0); }
-    else if (a === "addType") { A.type = v; render(); }
+    else if (a === "addType") {
+      A.type = v;
+      if (v === "tw" && !A.posOff && !A.posDef) { A.posOff = "TW"; A.posDef = "TW"; }
+      if (v === "feld" && A.posOff === "TW" && A.posDef === "TW") { A.posOff = ""; A.posDef = ""; }
+      render();
+    }
     else if (a === "addRandom") { A.pin = String(rand(10000)).padStart(4, "0"); render(); }
     else if (a === "addSave") { if (!S.busy) addSave(); }
     else if (a === "cpin") {
@@ -379,6 +412,8 @@
     if (e.target.id === "add-pin" || e.target.id === "edit-pin") { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4); A.pin = e.target.value; }
   });
   document.addEventListener("change", e => {
+    if (e.target.id === "pos-off") { A.posOff = e.target.value; A.msg = ""; return; }
+    if (e.target.id === "pos-def") { A.posDef = e.target.value; A.msg = ""; return; }
     if (!e.target.classList.contains("taskbox")) return;
     const p = prog(), wk = weekKey(); p.tasks[wk] = p.tasks[wk] || {};
     p.tasks[wk][e.target.dataset.i] = e.target.checked; Store.saveProgress(p); render();
