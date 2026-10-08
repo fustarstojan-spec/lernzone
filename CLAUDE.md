@@ -21,6 +21,7 @@ Sprache: Deutsch. Antworten kurz und direkt.
   - `js/coach.js` – Trainer-Bereich: Kader, Trainings, Trainer-Konten.
   - `js/dashboard.js` – Trainer-Startseite (Übersicht) und Reiter-Navigation `LZ.coachNav()`.
   - `js/taktik.js` – Taktiktafel und Aufstellungen (Trainer), freigegebene Tafeln (Spieler).
+  - `js/spielzeiten.js` – Spielzeiten pro Spiel und Saison (Trainer).
   - `js/pitch.js` – Spielfeld-SVG (68 × 105 m, Angriff nach oben, 5 Spuren × 3 Drittel).
 - Inhalte in `data/*.json` (Phasen, Quiz, Pläne, Positionen, Kader ohne PINs). Quizfrage: `{ q, options, correct, why }`.
 - Backend: PHP 8.1+ in `api/`, SQLite in `storage/lernzone.sqlite` (nie ins Repo), Schema `tools/schema.sql`, Migration in `api/config.php → migrate()`.
@@ -49,11 +50,11 @@ Sprache: Deutsch. Antworten kurz und direkt.
 
 ## Stand und nächste Schritte
 
-- Aktuell: Version 0.14.0 (siehe `CHANGELOG.md`). 0.11.0–0.14.0 liegen lokal, noch nicht auf GitHub.
+- Aktuell: Version 0.15.0 (siehe `CHANGELOG.md`). 0.11.0–0.15.0 liegen lokal, noch nicht auf GitHub.
 - Anwesenheit (ab 0.13.0): Wer nicht absagt, ist da. `trainings.att_done` 0 offen / 1 erfasst / 2 fällt aus; `att_autofill()` schreibt nach Trainingsende fest (nur Trainings ab `settings.auto_att_from`). Beteiligung zählt nur att_done = 1.
 - Trainer-Startseite (ab 0.13.0): `js/dashboard.js` + `api/dashboard.php`, Reiter Übersicht · Lernzone · Taktik · Spielzeiten. Trainer sagen Termine ab (`coach_absences`).
 - Taktiktafel (ab 0.14.0): `js/taktik.js` + `api/boards.php`, Tabelle `boards` (kind board/lineup, training_id = Spiel, shared, data JSON in Metern). Freigegebene Tafeln: Spieler sehen nur ihre eigene Nummer (Server blendet andere aus).
-- In Arbeit: 0.15.0 Spielzeiten (Startelf aus der Aufstellung, Wechsel mit Minute, Minuten pro Spieler, Saison).
+- Spielzeiten (ab 0.15.0): `js/spielzeiten.js` + `api/matches.php`, Tabellen `matches` (Dauer, Ergebnis), `match_squad` (starter 1/0), `match_subs` (minute, nr_out, nr_in). Minuten werden immer aus Startelf + Wechseln berechnet (`match_minutes()`), nie gespeichert. Spieler sehen ihre Spielzeiten (noch) nicht.
 - Absagen (ab 0.12.0): Spieler sagen Trainings ab (nur kind = training), fester Grund ohne Freitext, bis 2 Std. vorher; Tabelle `absences`; Absage zählt als „nicht da“.
 - Trainingsbeteiligung: bis 07.10.2026 aus der Excel des Trainers übernommen (nur „ja“ zählt), Saisonbeginn 30.06.2026; ab jetzt wird in der App abgehakt. Zählt nur Trainings mit eingetragener Anwesenheit.
 - Mannschaftskalender ist ein öffentlicher Google-Kalender; die Adresse steht nur in der Datenbank (nicht im Repo).

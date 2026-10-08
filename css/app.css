@@ -357,3 +357,17 @@ code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:
 .blist .small{display:block}
 .thumb{width:72px;flex:none}
 .thumb .pitch{max-width:72px;border-radius:5px}
+/* 0.15.0 Spielzeiten */
+.squad button.sq-start{background:var(--shirt);color:#fff;border-color:var(--shirt)}
+.squad button.sq-bank{background:#f3e3e5;border-color:#d9b9be}
+.squad button.sq-none{opacity:.5}
+.wrow{align-items:flex-end;gap:10px}
+.wrow .fld{margin:0}
+.sublist,.minlist{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.sublist li{display:grid;grid-template-columns:3em 1fr 1fr auto;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--rule)}
+.minlist li{display:grid;grid-template-columns:7.5em 1fr 3em;gap:10px;align-items:center}
+.minlist .meter{margin:0}
+.minlist b{text-align:right;font-variant-numeric:tabular-nums}
+.wrow{flex-wrap:wrap}
+.score{display:flex;align-items:center;gap:6px}
+.score input{width:4em}

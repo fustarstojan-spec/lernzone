@@ -89,6 +89,28 @@ CREATE TABLE IF NOT EXISTS boards (
   updated_by   INTEGER
 );
 
+-- Spielzeiten (ab 0.15.0): pro Spiel Dauer, Ergebnis, Spieltagskader (Startelf/Bank) und Wechsel
+CREATE TABLE IF NOT EXISTS matches (
+  training_id    INTEGER PRIMARY KEY,                -- Spiel = trainings.id (kind spiel/turnier)
+  duration       INTEGER NOT NULL DEFAULT 70,        -- Spielzeit in Minuten (U14: 2 × 35)
+  goals_for      INTEGER,
+  goals_against  INTEGER,
+  updated_at     TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS match_squad (
+  training_id  INTEGER NOT NULL,
+  nr           INTEGER NOT NULL,
+  starter      INTEGER NOT NULL DEFAULT 0,           -- 1 = Startelf, 0 = Bank
+  PRIMARY KEY (training_id, nr)
+);
+CREATE TABLE IF NOT EXISTS match_subs (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  training_id  INTEGER NOT NULL,
+  minute       INTEGER NOT NULL,
+  nr_out       INTEGER,                              -- NULL = nur rein (z. B. nach Verletzung ohne Gegenwechsel)
+  nr_in        INTEGER
+);
+
 CREATE TABLE IF NOT EXISTS moods (
   training_id  INTEGER NOT NULL,
   nr           INTEGER NOT NULL,

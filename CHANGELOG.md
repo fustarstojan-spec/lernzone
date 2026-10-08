@@ -2,6 +2,12 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.15.0 – 2026-10-08
+- **Spielzeiten** (Reiter „Spielzeiten“): alle Spiele und Turniere seit Saisonbeginn aus dem Kalender
+- Pro Spiel: Spielzeit (Standard 70 Min.), Ergebnis, Kader per Antippen (nicht dabei → Startelf → Bank), Startelf aus der gespeicherten Aufstellung übernehmen, Wechsel mit Minute (raus/rein, auch fliegende Wechsel mehrfach) → Minuten pro Spieler
+- Saison-Übersicht: Spiele im Kader, Startelf, Einsätze, Minuten und Anteil an den möglichen Minuten – sortierbar, für faire Spielzeit
+- Neu: `api/matches.php`, `js/spielzeiten.js`, Tabellen `matches`, `match_squad`, `match_subs`
+
 ## 0.14.0 – 2026-10-08
 - **Taktiktafel** (Reiter „Taktik“): eigene Spieler, Gegner und Ball mit Finger oder Maus verschieben; Pässe (→), Laufwege (⇢) und Linien zeichnen; Löschen-Werkzeug; Grundordnungen „Wir 4-1-4-1“, „Gegner 4-4-2 / 4-3-3“; Beschriftung pro Figur
 - **Aufstellung pro Spiel:** Spiel aus dem Kalender wählen, Spieler den Positionen zuordnen (antippen → Nummer), „nach Positionen füllen“, Startelf und Bank
