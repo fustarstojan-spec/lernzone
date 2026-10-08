@@ -1,0 +1,3 @@
+# Alle Textdateien als UTF-8 ausliefern (Umlaute)
+AddDefaultCharset UTF-8
+AddCharset UTF-8 .html .css .js .json .md

@@ -2,6 +2,9 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.3.2 – 2026-10-08
+- Umlaute auf eigenem Server (XAMPP) korrigiert: `index.html` als vollständiges HTML-Dokument mit UTF-8, `.htaccess` mit `AddDefaultCharset UTF-8`
+
 ## 0.3.1 – 2026-10-08
 - Projekt auf GitHub: Dateien liegen im Hauptverzeichnis, `.gitignore` und `.htaccess` (Schutz für `storage/` und `tools/`) ergänzt
 
