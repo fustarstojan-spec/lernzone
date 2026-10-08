@@ -12,6 +12,7 @@
  *   coach                  → { active, hasPin, canSetup }   Trainer-Status
  *   coachLogin(pin) / coachSetup(pin) / coachLogout()     → { ok, error }
  *   addPlayer({nr, type, pin})                             → { ok, player, error }
+ *   setPin(nr, pin)                                        → { ok, error }
  *
  * user = { nr, pos, plan }
  * progress = { quiz: { <modulId>: {best, of, last} }, tasks: { "<Jahr>-W<KW>": { <index>: true|false } } }
@@ -102,7 +103,7 @@
       },
       async login(nr, pin) {
         try {
-          const r = await post("login.php", { nr, pin });
+          const r = await postAny("login.php", { nr, pin });
           if (!r.ok) return { ok: false, error: r.error || "Anmeldung fehlgeschlagen." };
           user = r.user;
           progress = normalize(await getJSON(api + "progress.php"));
@@ -123,6 +124,10 @@
       async coachLogout()    { return coachCall({ action: "logout" }); },
       async addPlayer(data) {
         try { return await postAny("players.php", data); }
+        catch (e) { return { ok: false, error: "Server nicht erreichbar." }; }
+      },
+      async setPin(nr, pin) {
+        try { return await postAny("players.php", { action: "setpin", nr, pin }); }
         catch (e) { return { ok: false, error: "Server nicht erreichbar." }; }
       }
     };

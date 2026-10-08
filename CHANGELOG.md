@@ -2,6 +2,12 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.5.0 – 2026-10-08
+- Trainer-Modus „Kader verwalten“: alle Trikots, Antippen → neue PIN vergeben (auch zufällig), alte PIN gilt danach nicht mehr
+- Einstieg über „Trainer: Kader verwalten“ unter der Nummernwahl oder über das graue „+“-Trikot
+- Neue Spielphase 5 „Standards“ (ruhender Ball): Grundlagen, Eckball-Situation, 5 Prinzipien, Quiz mit 5 Fragen
+- Korrektur: Bei falscher PIN erscheint wieder „PIN stimmt nicht“ statt „Server nicht erreichbar“
+
 ## 0.4.0 – 2026-10-08
 - Neue Spieler anlegen: graues „+“-Trikot in der Nummernwahl → Torwart (blau) oder Feldspieler (rot), Trikotnummer und 4-stellige PIN (auch zufällig)
 - Nur für Trainer: 6-stellige Trainer-PIN, beim ersten Mal auf XAMPP direkt in der App festlegen

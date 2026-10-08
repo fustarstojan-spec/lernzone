@@ -2,9 +2,10 @@
 /*
  * Kader
  * GET                         → [{nr, pos, plan}]  (öffentlich, ohne PINs)
- * POST {nr, type, pin}        → neuen Spieler anlegen (nur Trainer)
+ * POST {nr, type, pin}                  → neuen Spieler anlegen (nur Trainer)
  *      type: "tw" = Torwart (blaues Trikot), "feld" = Feldspieler (rotes Trikot)
  *      pin:  4 Ziffern
+ * POST {action:"setpin", nr, pin}        → PIN eines Spielers ändern (nur Trainer)
  */
 require __DIR__ . '/config.php';
 
@@ -16,12 +17,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 require_method('POST');
 require_coach();
 
-$in   = json_in();
-$nr   = filter_var($in['nr'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 99]]);
-$type = (string)($in['type'] ?? '');
-$pin  = (string)($in['pin'] ?? '');
+$in     = json_in();
+$action = (string)($in['action'] ?? 'add');
+$nr     = filter_var($in['nr'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 99]]);
+$type   = (string)($in['type'] ?? '');
+$pin    = (string)($in['pin'] ?? '');
 
 if ($nr === false)                       json_out(['ok' => false, 'error' => 'Die Nummer muss zwischen 1 und 99 liegen.'], 400);
+
+if ($action === 'setpin') {
+    if (!preg_match('/^\d{4}$/', $pin)) json_out(['ok' => false, 'error' => 'Die PIN muss genau 4 Ziffern haben.'], 400);
+    $st = db()->prepare('UPDATE players SET pin_hash = ? WHERE nr = ? AND active = 1');
+    $st->execute([password_hash($pin, PASSWORD_DEFAULT), $nr]);
+    if ($st->rowCount() === 0) json_out(['ok' => false, 'error' => "Nr. $nr gibt es nicht."], 404);
+    json_out(['ok' => true, 'nr' => $nr]);
+}
+if ($action !== 'add') json_out(['ok' => false, 'error' => 'Unbekannte Aktion'], 400);
+
 if (!in_array($type, ['tw', 'feld'], true)) json_out(['ok' => false, 'error' => 'Bitte Torwart oder Feldspieler wählen.'], 400);
 if (!preg_match('/^\d{4}$/', $pin))      json_out(['ok' => false, 'error' => 'Die PIN muss genau 4 Ziffern haben.'], 400);
 

@@ -13,7 +13,7 @@ js/pitch.js           Spielfeld-Grafik (SVG)
 js/app.js             Oberfläche und Abläufe (enthält keine Daten)
 data/team.json        Teamname, System, Trikotfarben, Torhüter-Nummern
 data/zones.json       5 Spuren, 3 Drittel, Maße
-data/phases.json      Die 4 Spielphasen: Grundlagen, Prinzipien, Situation, Quiz
+data/phases.json      Die Spielphasen 1–4 und Phase 5 „Standards“: Grundlagen, Prinzipien, Situation, Quiz
 data/plans.json       Trainingspläne und Ziele (Vorlagen "feld" und "tw")
 data/players.json     Kader: Nummer, Position, Plan – OHNE PINs
 data/demo-pins.json   Nur Weg A: PINs im Klartext
@@ -40,7 +40,8 @@ Spielsituation (`sit`): Koordinaten in Metern auf einem 68 × 105 m-Feld, `x` vo
 ## Spieler anlegen (nur mit PHP, z. B. XAMPP)
 
 Mein Bereich → graues „+“-Trikot → Trainer-PIN → Torwart oder Feldspieler wählen, Nummer und PIN eingeben → „Spieler anlegen“.
-Die PIN wird danach einmal angezeigt und nur verschlüsselt gespeichert.
+PIN ändern: Mein Bereich → „Trainer: Kader verwalten“ → Trikot antippen → neue PIN → „PIN speichern“.
+Jede PIN wird danach einmal angezeigt und nur verschlüsselt gespeichert.
 
 Trainer-PIN (6 Ziffern):
 - XAMPP / localhost: beim ersten Tippen auf das „+“ direkt in der App festlegen.
@@ -81,6 +82,7 @@ PINs werden mit `password_hash()` gespeichert, nach 5 Fehlversuchen ist die Anme
 | `api/progress.php` | POST | `{ quiz, tasks }` | `{ ok }` |
 | `api/players.php` | GET | – | `[{ nr, pos, plan }]` |
 | `api/players.php` | POST (Trainer) | `{ nr, type: "tw"\|"feld", pin }` | `{ ok, player }` |
+| `api/players.php` | POST (Trainer) | `{ action: "setpin", nr, pin }` | `{ ok, nr }` |
 | `api/coach.php` | POST | `{ action: "login"\|"setup"\|"logout", pin }` | `{ ok, coach }` |
 
 `user = { nr, pos, plan }`.

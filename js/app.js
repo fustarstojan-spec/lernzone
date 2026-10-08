@@ -13,7 +13,7 @@
   const A = { step: "auth", cpin: "", first: "", err: "", type: "feld", nr: "", pin: "", created: null };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.4.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.5.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -47,7 +47,7 @@
   const pad = act => `<div class="pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => `<button data-act="${act}" data-d="${d}">${d}</button>`).join("")}<span></span><button data-act="${act}" data-d="0">0</button><button data-act="${act}" data-d="del" aria-label="Löschen">⌫</button></div>`;
   const dots = (n, len) => `<div class="pins" aria-label="${n} von ${len} Ziffern">${Array.from({ length: len }, (_, i) => `<i class="${i < n ? "on" : ""}"></i>`).join("")}</div>`;
   const legend = () => `<div class="legend"><span><i class="dotk" style="background:${C.team.colors.shirt}"></i>Wir</span><span><i class="dotk" style="background:#e9eef3;border:1px solid #23303b"></i>Gegner</span><span>━ Pass</span><span>╍ Laufweg</span></div>`;
-  const ballLabel = b => b === "own" ? "Wir haben den Ball" : "Gegner hat den Ball";
+  const ballLabel = b => b === "own" ? "Wir haben den Ball" : b === "set" ? "Ruhender Ball" : "Gegner hat den Ball";
 
   /* ---------- Startseite ---------- */
   function home() {
@@ -60,13 +60,18 @@
     <span class="meter"><b style="width:${pc(ph.id)}%"></b></span></button>`;
     return `<section><p class="eyebrow">${S.user ? `Angemeldet als Nr. ${S.user.nr}` : "Spielphasenmodell"}</p>
     <h1>${S.user ? "Weiter geht's" : "Lernen, wie wir spielen"}</h1>
-    <p class="lede">Das Spiel hat vier Phasen, die sich immer wieder abwechseln. Für jede Phase gibt es Grundlagen, Lernmaterial und ein Quiz.</p></section>
+    <p class="lede">Das Spiel hat vier Phasen, die sich immer wieder abwechseln. Dazu kommen die Standards, wenn das Spiel ruht. Für jede Phase gibt es Grundlagen, Lernmaterial und ein Quiz.</p></section>
   <button class="card mod0" data-act="zonen"><span class="mini"><i></i></span>
     <span><span class="eyebrow">Modul 0 · Basis</span><h2>Spielfeld &amp; Zonen</h2><span class="small">${p.quiz.zonen ? `Bester Durchgang: ${p.quiz.zonen.best}/${p.quiz.zonen.of}` : "5 Spuren, 3 Drittel – unsere gemeinsame Sprache"}</span></span>
     <span aria-hidden="true" style="font-size:1.4rem;color:var(--muted)">›</span></button>
   <div class="cycle">${card(PH.bb)}${card(PH.ud)}${card(PH.uo)}${card(PH.gb)}
     <span class="hub" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4.5h-4.5"/></svg></span></div>
   <p class="small" style="text-align:center">Im Uhrzeigersinn: Ballbesitz → Ballverlust → Gegner hat den Ball → Ballgewinn → …</p>
+  ${PH.st ? `<button class="phase phase-set" data-act="phase" data-v="st">
+    <span class="ball set">${ballLabel("set")} · Spielunterbrechung</span>
+    <span class="eyebrow">Phase ${PH.st.nr}</span><span class="t">${esc(PH.st.title)}</span>
+    <span class="small">${p.quiz.st ? `Bestes Quiz: ${p.quiz.st.best}/${p.quiz.st.of}` : "Ecke, Freistoß, Einwurf, Strafstoß – Quiz noch offen"}</span>
+    <span class="meter"><b style="width:${pc("st")}%"></b></span></button>` : ""}
   <p class="draft">Entwurf: Texte, Situationen und Fragen sind Vorschläge und werden durch die Inhalte des Trainerteams ersetzt.</p>
   <p class="small" style="text-align:center">Version ${APP_VERSION}</p>`;
   }
@@ -160,9 +165,10 @@
   function loginView() {
     if (S.loginNr === null) return `<button class="back" data-act="home">‹ Übersicht</button>
   <section><p class="eyebrow">Mein Bereich</p><h1>Wähle deine Nummer</h1><p class="lede">Danach gibst du deine 4-stellige PIN ein. Die bekommst du von deinem Trainer.</p></section>
-  ${Store.coach.active ? `<div class="coachbar"><span>Als Trainer angemeldet</span><button class="linkbtn" data-act="coachOut">Trainer abmelden</button></div>` : ""}
+  ${coachBar()}
   <div class="nrgrid">${C.players.map(p => `<button class="nr" data-act="pickNr" data-v="${p.nr}" aria-label="Nummer ${p.nr}">${shirt(p.nr)}<span>${p.plan === "tw" ? "Tor" : "&nbsp;"}</span></button>`).join("")}
-  ${Store.canManage ? `<button class="nr add" data-act="addStart" aria-label="Neuen Spieler anlegen">${shirt("+", "add")}<span>Neu</span></button>` : ""}</div>`;
+  ${Store.canManage ? `<button class="nr add" data-act="addStart" aria-label="Neuen Spieler anlegen">${shirt("+", "add")}<span>Neu</span></button>` : ""}</div>
+  ${Store.canManage && !Store.coach.active ? `<p style="text-align:center"><button class="linkbtn" data-act="kaderStart">Trainer: Kader verwalten</button></p>` : ""}`;
     return `<button class="back" data-act="unpick">‹ Andere Nummer</button>
   <section style="display:grid;justify-items:center;gap:8px;text-align:center"><div style="width:72px">${shirt(S.loginNr)}</div><h1>PIN eingeben</h1></section>
   ${dots(S.pin.length, 4)}
@@ -170,45 +176,79 @@
   ${pad("pin")}`;
   }
 
-  /* ---------- Spieler anlegen (nur Trainer, nur mit PHP) ---------- */
-  function addView() {
-    const back = `<button class="back" data-act="addBack">‹ Zur Nummernwahl</button>`;
+  /* ---------- Trainer-Bereich (nur mit PHP): Kader verwalten, Spieler anlegen, PIN ändern ---------- */
+  // A.step: "auth" | "setup" | "setup2" | "kader" | "form" | "done" | "edit" | "pindone"
+  // A.from: "grid" (über das + in der Nummernwahl) | "kader"
+  const coachBar = () => Store.coach.active ? `<div class="coachbar"><span>Als Trainer angemeldet</span><span class="coachbar-links">${A.step !== "kader" ? `<button class="linkbtn" data-act="kaderOpen">Kader verwalten</button>` : ""}<button class="linkbtn" data-act="coachOut">Abmelden</button></span></div>` : "";
+  function coachView() {
+    const toGrid = `<button class="back" data-act="addBack">‹ Zur Nummernwahl</button>`;
+    const toKader = `<button class="back" data-act="kaderOpen">‹ Zum Kader</button>`;
+    const back = A.from === "kader" ? toKader : toGrid;
     const head = (t, sub) => `<section style="display:grid;justify-items:center;gap:8px;text-align:center"><div style="width:72px">${shirt("+", "add")}</div><h1>${t}</h1>${sub ? `<p class="lede">${sub}</p>` : ""}</section>`;
+    const pinField = (id, label) => `<div class="fld"><label for="${id}">${label}</label>
+      <div class="row"><input id="${id}" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="z. B. 4821" value="${esc(A.pin)}">
+      <button class="btn ghost" data-act="addRandom">Zufällig</button></div></div>`;
+    const pinCard = (nr, title) => `<div class="card stack" style="text-align:center"><p class="eyebrow">${title}</p><p class="pinshow">${esc(A.pin)}</p>
+      <p class="small">Notiere die PIN jetzt und gib sie dem Spieler. Sie wird verschlüsselt gespeichert und hier nicht noch einmal angezeigt.</p></div>`;
+
     if (A.step === "auth") {
-      if (!Store.coach.hasPin && !Store.coach.canSetup) return `${back}${head("Trainer-PIN fehlt", "Auf diesem Server ist noch keine Trainer-PIN eingerichtet. Richte sie mit <code>php tools/set_coach_pin.php</code> ein.")}`;
-      return `${back}${head("Trainer-PIN", "Neue Spieler kann nur der Trainer anlegen.")}${dots(A.cpin.length, 6)}<p class="err" role="alert">${esc(A.err)}</p>${pad("cpin")}`;
+      if (!Store.coach.hasPin && !Store.coach.canSetup) return `${toGrid}${head("Trainer-PIN fehlt", "Auf diesem Server ist noch keine Trainer-PIN eingerichtet. Richte sie mit <code>php tools/set_coach_pin.php</code> ein.")}`;
+      return `${toGrid}${head("Trainer-PIN", "Diesen Bereich kann nur der Trainer öffnen.")}${dots(A.cpin.length, 6)}<p class="err" role="alert">${esc(A.err)}</p>${pad("cpin")}`;
     }
     if (A.step === "setup" || A.step === "setup2") {
-      return `${back}${head(A.step === "setup" ? "Trainer-PIN festlegen" : "Trainer-PIN wiederholen", A.step === "setup" ? "Lege einmalig eine 6-stellige Trainer-PIN fest. Damit schützt du das Anlegen neuer Spieler." : "Gib dieselbe PIN noch einmal ein.")}${dots(A.cpin.length, 6)}<p class="err" role="alert">${esc(A.err)}</p>${pad("cpin")}`;
+      return `${toGrid}${head(A.step === "setup" ? "Trainer-PIN festlegen" : "Trainer-PIN wiederholen", A.step === "setup" ? "Lege einmalig eine 6-stellige Trainer-PIN fest. Damit schützt du den Kader." : "Gib dieselbe PIN noch einmal ein.")}${dots(A.cpin.length, 6)}<p class="err" role="alert">${esc(A.err)}</p>${pad("cpin")}`;
+    }
+    if (A.step === "kader") {
+      return `${toGrid}
+      <section><p class="eyebrow">Trainer</p><h1>Kader verwalten</h1><p class="lede">Tippe auf ein Trikot, um die PIN zu ändern. Mit dem grauen Trikot legst du einen neuen Spieler an.</p></section>
+      ${coachBar()}
+      <div class="nrgrid">${C.players.map(p => `<button class="nr" data-act="editNr" data-v="${p.nr}" aria-label="PIN von Nummer ${p.nr} ändern">${shirt(p.nr)}<span>${p.plan === "tw" ? "Tor" : "&nbsp;"}</span></button>`).join("")}
+      <button class="nr add" data-act="addFromKader" aria-label="Neuen Spieler anlegen">${shirt("+", "add")}<span>Neu</span></button></div>`;
+    }
+    if (A.step === "edit") {
+      const p = C.players.find(x => x.nr === A.editNr);
+      return `${toKader}
+      <section style="display:grid;justify-items:center;gap:8px;text-align:center"><div style="width:84px">${shirt(p.nr)}</div>
+      <p class="eyebrow">${p.plan === "tw" ? "Torwart" : "Feldspieler"}</p><h1>Nr. ${p.nr}</h1></section>
+      ${coachBar()}
+      ${pinField("edit-pin", "Neue PIN (4 Ziffern)")}
+      <p class="err" role="alert" style="text-align:left">${esc(A.err)}</p>
+      <button class="btn wide" data-act="pinSave" ${S.busy ? "disabled" : ""}>PIN speichern</button>
+      <p class="small">Die alte PIN gilt danach nicht mehr.</p>`;
+    }
+    if (A.step === "pindone") {
+      return `<section style="display:grid;justify-items:center;gap:10px;text-align:center"><div style="width:96px">${shirt(A.editNr)}</div>
+      <p class="eyebrow">PIN geändert</p><h1>Nr. ${A.editNr}</h1></section>
+      ${pinCard(A.editNr, `Neue PIN für Nr. ${A.editNr}`)}
+      <button class="btn wide" data-act="kaderOpen">Zum Kader</button>`;
     }
     if (A.step === "done") {
       const p = A.created;
       return `<section style="display:grid;justify-items:center;gap:10px;text-align:center"><div style="width:96px">${shirt(p.nr)}</div>
       <p class="eyebrow">${p.plan === "tw" ? "Torwart" : "Feldspieler"} angelegt</p><h1>Nr. ${p.nr}</h1></section>
-      <div class="card stack" style="text-align:center"><p class="eyebrow">PIN für Nr. ${p.nr}</p><p class="pinshow">${esc(A.pin)}</p>
-      <p class="small">Notiere die PIN jetzt und gib sie dem Spieler. Sie wird verschlüsselt gespeichert und hier nicht noch einmal angezeigt.</p></div>
+      ${pinCard(p.nr, `PIN für Nr. ${p.nr}`)}
       <button class="btn wide" data-act="addAgain">Weiteren Spieler anlegen</button>
-      <button class="btn ghost wide" data-act="addBack">Zur Nummernwahl</button>`;
+      <button class="btn ghost wide" data-act="kaderOpen">Zum Kader</button>`;
     }
-    // Formular
+    // Formular: neuer Spieler
     const typeBtn = (t, label) => `<button class="typebtn" data-act="addType" data-v="${t}" aria-pressed="${A.type === t}">${shirt(A.nr && /^\d{1,2}$/.test(A.nr) ? A.nr : (t === "tw" ? "TW" : "?"), t)}<span>${label}</span></button>`;
     return `${back}
     <section><p class="eyebrow">Kader</p><h1>Neuer Spieler</h1></section>
-    ${Store.coach.active ? `<div class="coachbar"><span>Als Trainer angemeldet</span><button class="linkbtn" data-act="coachOut">Trainer abmelden</button></div>` : ""}
+    ${coachBar()}
     <div class="stack"><p class="fldlabel">Trikot</p><div class="typepick">${typeBtn("tw", "Torwart")}${typeBtn("feld", "Feldspieler")}</div></div>
     <div class="fld"><label for="add-nr">Trikotnummer</label>
       <input id="add-nr" type="text" inputmode="numeric" maxlength="2" autocomplete="off" placeholder="z. B. 23" value="${esc(A.nr)}"></div>
-    <div class="fld"><label for="add-pin">PIN für den Spieler (4 Ziffern)</label>
-      <div class="row"><input id="add-pin" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="z. B. 4821" value="${esc(A.pin)}">
-      <button class="btn ghost" data-act="addRandom">Zufällig</button></div></div>
+    ${pinField("add-pin", "PIN für den Spieler (4 Ziffern)")}
     <p class="err" role="alert" style="text-align:left">${esc(A.err)}</p>
     <button class="btn wide" data-act="addSave" ${S.busy ? "disabled" : ""}>Spieler anlegen</button>`;
   }
-  function addStart() {
-    Object.assign(A, { cpin: "", first: "", err: "", type: "feld", nr: "", pin: "", created: null });
-    A.step = Store.coach.active ? "form" : (Store.coach.hasPin ? "auth" : (Store.coach.canSetup ? "setup" : "auth"));
+  // Einstieg: target = "form" (neuer Spieler) oder "kader"; from = woher man kam
+  function coachStart(target, from) {
+    Object.assign(A, { cpin: "", first: "", err: "", type: "feld", nr: "", pin: "", created: null, editNr: null, next: target, from });
+    A.step = Store.coach.active ? target : (Store.coach.hasPin ? "auth" : (Store.coach.canSetup ? "setup" : "auth"));
     S.view = "add"; render(); window.scrollTo(0, 0);
   }
+  function setStep(step, extra) { Object.assign(A, { err: "", pin: "" }, extra || {}); A.step = step; S.view = "add"; render(); window.scrollTo(0, 0); }
   async function coachPinComplete() {
     const pin = A.cpin; A.cpin = "";
     if (A.step === "setup") { A.first = pin; A.step = "setup2"; render(); return; }
@@ -219,8 +259,11 @@
       r = await Store.coachSetup(pin);
     } else r = await Store.coachLogin(pin);
     S.busy = false;
-    if (r.ok) { A.step = "form"; A.err = ""; } else A.err = r.error || "Das hat nicht geklappt.";
+    if (r.ok) { A.step = A.next || "kader"; A.err = ""; } else A.err = r.error || "Das hat nicht geklappt.";
     render();
+  }
+  function coachLost(r) {               // Server meldet: Trainer nicht (mehr) angemeldet
+    if (/Trainer/.test(r.error || "")) { Store.coach.active = false; A.next = A.step === "edit" ? "kader" : A.step; A.step = "auth"; }
   }
   async function addSave() {
     const nr = A.nr.trim(), pin = A.pin.trim();
@@ -230,14 +273,19 @@
     S.busy = true; A.err = ""; render();
     const r = await Store.addPlayer({ nr: +nr, type: A.type, pin });
     S.busy = false;
-    if (!r.ok) {
-      A.err = r.error || "Speichern hat nicht geklappt.";
-      if (/Trainer/.test(A.err)) { Store.coach.active = false; A.step = "auth"; }
-      render(); return;
-    }
+    if (!r.ok) { A.err = r.error || "Speichern hat nicht geklappt."; coachLost(r); render(); return; }
     C.players.push(r.player); C.players.sort((a, b) => a.nr - b.nr);
     window.LZPitch.setup(C.zones, C.team, gkNrs());
     A.created = r.player; A.pin = pin; A.step = "done"; render(); window.scrollTo(0, 0);
+  }
+  async function pinSave() {
+    const pin = A.pin.trim();
+    if (!/^\d{4}$/.test(pin)) { A.err = "Die PIN muss genau 4 Ziffern haben."; render(); return; }
+    S.busy = true; A.err = ""; render();
+    const r = await Store.setPin(A.editNr, pin);
+    S.busy = false;
+    if (!r.ok) { A.err = r.error || "Speichern hat nicht geklappt."; coachLost(r); render(); return; }
+    A.step = "pindone"; render(); window.scrollTo(0, 0);
   }
 
   /* ---------- Mein Bereich ---------- */
@@ -258,7 +306,7 @@
   /* ---------- Render & Events ---------- */
   function render() {
     document.getElementById("shirtBtn").innerHTML = shirt(S.user ? S.user.nr : "?");
-    app.innerHTML = S.view === "phase" ? phaseView() : S.view === "zonen" ? zonenView() : S.view === "me" ? meView() : S.view === "add" ? addView() : home();
+    app.innerHTML = S.view === "phase" ? phaseView() : S.view === "zonen" ? zonenView() : S.view === "me" ? meView() : S.view === "add" ? coachView() : home();
   }
   function go(v, arg) {
     S.view = v; S.arg = arg;
@@ -303,9 +351,13 @@
       S.pin += b.dataset.d; S.err = ""; render();
       if (S.pin.length === 4) tryLogin();
     }
-    else if (a === "addStart") addStart();
+    else if (a === "addStart") coachStart("form", "grid");
+    else if (a === "kaderStart") coachStart("kader", "grid");
+    else if (a === "kaderOpen") { if (Store.coach.active) setStep("kader", { from: "kader" }); else coachStart("kader", "grid"); }
+    else if (a === "addFromKader" || a === "addAgain") { setStep("form", { from: "kader", type: "feld", nr: "", created: null }); }
+    else if (a === "editNr") setStep("edit", { editNr: +v });
+    else if (a === "pinSave") { if (!S.busy) pinSave(); }
     else if (a === "addBack") { S.view = "me"; S.loginNr = null; S.pin = ""; S.err = ""; render(); window.scrollTo(0, 0); }
-    else if (a === "addAgain") addStart();
     else if (a === "addType") { A.type = v; render(); }
     else if (a === "addRandom") { A.pin = String(rand(10000)).padStart(4, "0"); render(); }
     else if (a === "addSave") { if (!S.busy) addSave(); }
@@ -324,7 +376,7 @@
       e.target.value = e.target.value.replace(/\D/g, "").slice(0, 2); A.nr = e.target.value;
       document.querySelectorAll(".typebtn").forEach(btn => { const t = btn.querySelector("text"); if (t) t.textContent = A.nr || (btn.dataset.v === "tw" ? "TW" : "?"); });
     }
-    if (e.target.id === "add-pin") { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4); A.pin = e.target.value; }
+    if (e.target.id === "add-pin" || e.target.id === "edit-pin") { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4); A.pin = e.target.value; }
   });
   document.addEventListener("change", e => {
     if (!e.target.classList.contains("taskbox")) return;
