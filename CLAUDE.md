@@ -50,7 +50,7 @@ Sprache: Deutsch. Antworten kurz und direkt.
 
 ## Stand und nächste Schritte
 
-- Aktuell: Version 0.18.0 (siehe `CHANGELOG.md`). 0.18.0 liegt lokal, noch nicht auf GitHub.
+- Aktuell: Version 0.18.1 (siehe `CHANGELOG.md`). 0.18.0–0.18.1 liegen lokal, noch nicht auf GitHub.
 - IEP (ab 0.16.0): Quelle sind die IEP-Dateien des Trainers im Google Drive (U13_IEP_v2.xlsx, Individueller Entwicklungsplan.pdf, Saison 25/26). Tabelle `iep` (data JSON: goals ind/tech/phys/off/def, plan short/mid/long, season, coach{…}), `iep_ratings` (Selbsteinschätzung 1–5 pro Spiel und Bereich, bis 3 Tage danach, nur mit Einwilligung). `coach`-Teil (inkl. psychologischer Einschätzung) nur für Trainer – `api/iep.php` gibt Spielern nur goals/plan/season. Zuordnung über Trikotnummer (Nr. 18 vom Trainer zu bestätigen); Nr. 20 und Nr. 23 haben noch keinen IEP.
 - IEP-Stände (ab 0.17.0): Tabelle `iep_versions` (jedes Speichern = neue Version, neueste gilt; alte Tabelle `iep` nur noch Altbestand). Trainer-Noten nach dem Training: Tabelle `grades` (training_id, nr, coach_id, area verhalten/umsetzung/einstellung/soziales, value 1–6), jeder Trainer einzeln, Vorgabe 1 (wird beim ersten Eintrag eines Trainers für alle Anwesenden gesetzt), **nur für Trainer** – nie an Spieler ausgeben.
 - Anwesenheit (ab 0.13.0): Wer nicht absagt, ist da. `trainings.att_done` 0 offen / 1 erfasst / 2 fällt aus; `att_autofill()` schreibt nach Trainingsende fest (nur Trainings ab `settings.auto_att_from`). Beteiligung zählt nur att_done = 1.

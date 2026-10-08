@@ -2,6 +2,9 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.18.1 – 2026-10-08
+- Neue Grundordnung 3-1-4-2 für Aufstellungen
+
 ## 0.18.0 – 2026-10-08
 - **Aufstellung:** nach der Spielauswahl zuerst die Grundordnung wählen (4-1-4-1, 4-4-2, 4-3-3, 4-2-3-1, 3-5-2, 3-4-3) – das Feld zeigt leere Positionen
 - Namen im Kader antippen → Position wählen (frei/belegt, passende Positionen grün markiert); „Vom Feld nehmen (Bank)“
