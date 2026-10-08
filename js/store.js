@@ -3,7 +3,7 @@
  *
  * Die App spricht NUR mit diesem Objekt. Beide Varianten haben dieselben Methoden:
  *   init()                 → { user }       Sitzung wiederherstellen
- *   loadContent()          → { team, zones, phases, plans, players }
+ *   loadContent()          → { team, zones, phases, modules, plans, players }
  *   login(nr, pin)         → { ok, user, error }        (nur Weg A; Weg B: signIn, siehe unten)
  *   logout()
  *   getProgress()          → { quiz:{}, tasks:{} }   (synchron, aus dem Zwischenspeicher)
@@ -30,7 +30,7 @@
     if (!r.ok) throw new Error(url + " → HTTP " + r.status);
     return r.json();
   }
-  async function loadStatic(names = ["team", "zones", "phases", "plans", "players"]) {
+  async function loadStatic(names = ["team", "zones", "phases", "modules", "plans", "players"]) {
     const parts = await Promise.all(names.map(n => getJSON(cfg.dataBase + n + ".json")));
     return Object.fromEntries(names.map((n, i) => [n, parts[i]]));
   }
@@ -109,7 +109,7 @@
         return "login";
       },
       async loadContent() {
-        content = await loadStatic(["team", "zones", "phases", "plans"]);
+        content = await loadStatic(["team", "zones", "phases", "modules", "plans"]);
         content.players = [];                                    // Kader kommt nach der Anmeldung aus der Datenbank
         return content;
       },

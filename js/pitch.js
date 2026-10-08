@@ -17,7 +17,8 @@
           board: { items:[{id, t:"own"|"opp"|"ball", x, y, lab, nr, me, sel}], lines:[{id, k:"pass"|"run"|"line", f:[x,y], t:[x,y]}] }  (Taktiktafel, ab 0.14.0) } */
   function field(o = {}) {
     const id = "f" + (++n);
-    let s = `<svg class="pitch" viewBox="-3 -5 74 115" role="img" aria-label="${esc(o.label || "Spielfeld")}">
+    const vb = o.view ? o.view.join(" ") : "-3 -5 74 115";        // o.view = [x, y, Breite, Höhe] – Ausschnitt
+    let s = `<svg class="pitch" viewBox="${vb}" role="img" aria-label="${esc(o.label || "Spielfeld")}">
   <defs><marker id="${id}p" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 10 5 0 10z" class="ah"/></marker>
   <marker id="${id}r" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 10 5 0 10z" class="ahr"/></marker></defs>
   <rect x="-3" y="-5" width="74" height="115" class="out"/>`;

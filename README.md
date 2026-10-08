@@ -21,6 +21,7 @@ js/spielzeiten.js     Spielzeiten: Kader, Wechsel, Minuten, Saison
 data/team.json        Teamname, Grundordnung, Trikotfarben, Positionskürzel (für Profile und Spielsituationen)
 data/zones.json       5 Spuren, 3 Drittel, Maße
 data/phases.json      Die Spielphasen 1–4 und Phase 5 „Standards“: Grundlagen, Prinzipien, Situation, Quiz
+data/modules.json     Weitere Lernmodule (z. B. 2v1): Grundlagen, Situationen mit Skizze, Übungen, Quiz
 data/plans.json       Trainingspläne und Ziele (Vorlagen "feld" und "tw")
 data/players.json     Kader: Nummer, Position, Plan – OHNE PINs
 data/demo-pins.json   Nur Weg A: PINs im Klartext

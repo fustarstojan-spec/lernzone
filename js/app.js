@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.18.1";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.19.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -83,8 +83,36 @@
     <span class="eyebrow">Phase ${PH.st.nr}</span><span class="t">${esc(PH.st.title)}</span>
     <span class="small">${p.quiz.st ? `Bestes Quiz: ${p.quiz.st.best}/${p.quiz.st.of}` : "Ecke, Freistoß, Einwurf, Strafstoß – Quiz noch offen"}</span>
     <span class="meter"><b style="width:${pc("st")}%"></b></span></button>` : ""}
+  ${(C.modules || []).map(m => `<button class="card mod0 modcard" data-act="modul" data-v="${m.id}"><span class="mini m2v1"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="12" cy="30" r="5" fill="${C.team.colors.shirt}"/><circle cx="29" cy="30" r="5" fill="${C.team.colors.shirt}"/><circle cx="20" cy="15" r="5" fill="#e9eef3" stroke="#23303b"/><path d="M14 27 L27 12" stroke="#fff" stroke-width="2"/></svg></span>
+    <span><span class="eyebrow">${esc(m.label)}</span><h2>${esc(m.title)}</h2><span class="small">${p.quiz[m.id] ? `Bestes Quiz: ${p.quiz[m.id].best}/${p.quiz[m.id].of}` : esc(m.short)}</span></span>
+    <span aria-hidden="true" style="font-size:1.4rem;color:var(--muted)">›</span></button>`).join("")}
   <p class="draft">Entwurf: Texte, Situationen und Fragen sind Vorschläge und werden durch die Inhalte des Trainerteams ersetzt.</p>
   <p class="small" style="text-align:center">Version ${APP_VERSION}</p>`;
+  }
+
+  /* ---------- Modul (z. B. 2v1): Grundlagen · Situationen · Übungen · Quiz ---------- */
+  function modulView() {
+    const m = PH[S.arg]; if (!m) return home();
+    const tabs = [["grundlagen", "Grundlagen"], ["situationen", "Situationen"], ["uebungen", "Übungen"], ["quiz", "Quiz"]];
+    const list = a => `<ul class="prin">${a.map(t => `<li><span>${esc(t)}</span></li>`).join("")}</ul>`;
+    let body = "";
+    if (S.tab === "grundlagen") body = `<div class="goal-box"><p class="eyebrow">Unser Ziel</p><p>${esc(m.ziel)}</p></div><p>${esc(m.intro)}</p>
+      <p class="merk">${esc(m.merk)}</p>
+      <h3>Darauf kommt es an</h3><ul class="prin">${m.prin.map(([t, x]) => `<li><b>${esc(t)}</b><span>${esc(x)}</span></li>`).join("")}</ul>`;
+    else if (S.tab === "situationen") body = `<p class="small">Die vier Grundsituationen. Du bist die <b>1</b> mit dem Ball, die <b>2</b> ist dein Mitspieler, der helle Kreis ist der Verteidiger.</p>
+      ${m.sits.map(s => `<section class="card stack sitcard"><h2>${esc(s.title)}</h2><p class="small">${esc(s.sub)}</p>
+        <div class="sitpitch">${field({ own: s.own, opp: s.opp, ball: s.ball, arrows: s.arrows, zones: false, view: s.view, label: s.title })}</div>
+        ${list(s.tips)}</section>`).join("")}
+      <section class="card stack"><h2>Wenn du der Verteidiger bist</h2>${list(m.defense)}</section>
+      ${legend(false)}`;
+    else if (S.tab === "uebungen") body = `<p class="small">Diese Übungen machen wir gerade im Training.</p>
+      ${m.drills.map(d => `<section class="card stack"><h2>${esc(d.title)}</h2><p>${esc(d.what)}</p>
+        <h3>Aufbau</h3>${list(d.org)}<h3>Ablauf</h3>${list(d.ablauf)}<h3>Worauf du achtest</h3>${list(d.coach)}</section>`).join("")}`;
+    else body = quizHTML(m);
+    return `<button class="back" data-act="home">‹ Übersicht</button>
+  <section><p class="eyebrow">${esc(m.label)}</p><h1>${esc(m.title)}</h1></section>
+  <div class="seg" role="tablist">${tabs.map(([k, l]) => `<button role="tab" aria-pressed="${S.tab === k}" data-act="tab" data-v="${k}">${l}</button>`).join("")}</div>
+  ${body}`;
   }
 
   /* ---------- Spielphase ---------- */
@@ -122,7 +150,7 @@
     if (Q.i >= Q.qs.length) {
       const n = Q.qs.length, msg = Q.score === n ? "Perfekt – alles richtig!" : Q.score >= n - 1 ? "Stark, fast alles richtig." : Q.score >= n / 2 ? "Gute Basis. Schau dir das Lernmaterial nochmal an." : "Lies die Grundlagen nochmal und versuch es erneut.";
       return `<div class="card stack" style="text-align:center"><p class="eyebrow">Ergebnis</p><p class="score">${Q.score}/${n}</p><p>${msg}</p>
-    <button class="btn wide" data-act="qstart">Nochmal</button><button class="btn ghost wide" data-act="tab" data-v="material">Zum Lernmaterial</button></div>`;
+    <button class="btn wide" data-act="qstart">Nochmal</button><button class="btn ghost wide" data-act="tab" data-v="${ph.kind === "modul" ? "situationen" : "material"}">Zum Lernmaterial</button></div>`;
     }
     const q = Q.qs[Q.i], done = Q.picked !== null;
     return `<div class="stack"><div class="qcount"><span>Frage ${Q.i + 1} von ${Q.qs.length}</span><span>${Q.score} richtig</span></div>
@@ -191,7 +219,7 @@
     if (!S.user) return Store.mode === "api" ? "" : loginView();
     const pl = S.user, plan = C.plans[pl.plan], p = prog(), wk = weekKey(), done = p.tasks[wk] || {};
     const nDone = plan.week.filter((_, i) => done[i]).length;
-    const mods = [["zonen", "Spielfeld & Zonen"], ...C.phases.map(x => [x.id, x.title])];
+    const mods = [["zonen", "Spielfeld & Zonen"], ...C.phases.map(x => [x.id, x.title]), ...(C.modules || []).map(x => [x.id, x.title])];
     return `<section class="me-head">${shirt(pl.nr)}<div><p class="eyebrow">Mein Bereich</p><h1>Nr. ${pl.nr}</h1><p class="small">${esc(C.team.name)}</p></div></section>
   <section class="poscards"><div class="poscard"><p class="eyebrow">Offensivere Position</p><p class="posid">${esc(pl.posOff || "–")}</p><p class="small">${pl.posOff ? esc(posName(pl.posOff)) : "legt dein Trainer fest"}</p></div>
   <div class="poscard"><p class="eyebrow">Defensivere Position</p><p class="posid">${esc(pl.posDef || "–")}</p><p class="small">${pl.posDef ? esc(posName(pl.posDef)) : "legt dein Trainer fest"}</p></div></section>
@@ -215,12 +243,12 @@
     const coachHome = S.view === "home" && LZ.coachMode() && LZ.views.coachHome;
     app.innerHTML = coachHome ? LZ.views.coachHome()
       : LZ.views[S.view] ? LZ.views[S.view]()
-      : S.view === "phase" ? phaseView() : S.view === "zonen" ? zonenView() : S.view === "me" ? meView() : home();   // "lernzone" = home()
+      : S.view === "phase" ? phaseView() : S.view === "modul" ? modulView() : S.view === "zonen" ? zonenView() : S.view === "me" ? meView() : home();   // "lernzone" = home()
   }
   const fire = (name, ...args) => (LZ.hooks[name] || []).forEach(f => f(...args));
   function go(v, arg) {
     S.view = v; S.arg = arg;
-    if (v === "phase") { S.tab = "grundlagen"; Q = null; }
+    if (v === "phase" || v === "modul") { S.tab = "grundlagen"; Q = null; }
     if (v === "zonen") newZ("entdecken");
     if (v === "me") { S.loginNr = null; S.pin = ""; S.err = ""; }
     render(); window.scrollTo(0, 0);
@@ -238,7 +266,7 @@
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-act]"); if (!b || !C) return;
     const a = b.dataset.act, v = b.dataset.v;
-    if (a === "home") go(LZ.coachMode() && ["phase", "zonen"].includes(S.view) ? "lernzone" : "home");   // Trainer: zurück in die Lernzone
+    if (a === "home") go(LZ.coachMode() && ["phase", "zonen", "modul"].includes(S.view) ? "lernzone" : "home");   // Trainer: zurück in die Lernzone
     else if (a === "lernzone") go("lernzone");
     else if (a === "me") {
       if (Store.mode === "api" && !S.user && Store.coach.active && LZ.actions.kaderStart) LZ.actions.kaderStart();
@@ -246,6 +274,7 @@
     }
     else if (a === "zonen") go("zonen");
     else if (a === "phase") go("phase", v);
+    else if (a === "modul") go("modul", v);
     else if (a === "tab") { S.tab = v; if (v === "quiz" && Q && Q.i >= Q.qs.length) Q = null; render(); }
     else if (a === "qstart") { startQuiz(S.arg); render(); }
     else if (a === "qpick") { if (Q.picked !== null) return; Q.picked = +b.dataset.i; if (Q.picked === Q.qs[Q.i].c) Q.score++; render(); }
@@ -294,7 +323,8 @@
     try {
       Store = await window.LZStoreReady;
       C = await Store.loadContent();
-      PH = Object.fromEntries(C.phases.map(p => [p.id, p]));
+      C.modules = C.modules || [];
+      PH = Object.fromEntries(C.phases.concat(C.modules).map(p => [p.id, p]));   // Module (z. B. 2v1) nutzen dasselbe Quiz
       window.LZPitch.setup(C.zones, C.team, gkNrs());
       const s = await Store.init();
       S.user = s.user;

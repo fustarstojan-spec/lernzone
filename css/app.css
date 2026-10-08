@@ -409,3 +409,8 @@ code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:
 .slotgrid button.taken{background:#f3e3e5}
 .slotgrid button.fit{border:2px solid #2f8a4f}
 .squad button.picked{outline:3px solid #ffe066}
+/* 0.19.0 Modul 2v1 */
+.modcard .mini.m2v1{background:var(--pitch);display:grid;place-items:center;height:56px;width:56px;border-radius:10px}
+.modcard .mini.m2v1 svg{width:100%;height:100%}
+.sitpitch .pitch{max-width:340px}
+.sitcard h2{margin:0}

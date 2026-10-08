@@ -1,0 +1,503 @@
+[
+ {
+  "id": "m2v1",
+  "kind": "modul",
+  "label": "Modul · Fokus November",
+  "title": "2v1 – Überzahl ausspielen",
+  "short": "Zu zweit gegen einen: binden, entscheiden, durch",
+  "ziel": "Jede 2-gegen-1-Situation so lösen, dass einer von uns frei durch ist – mit Pass oder Dribbling.",
+  "intro": "Im Spiel entstehen ständig kleine Überzahlsituationen: zwei von uns gegen einen Gegner. Wer sie sicher ausspielt, kommt durch die Kette, aufs Tor oder in die Tiefe. Dafür musst du wissen, wo dein Mitspieler steht, den Verteidiger festmachen und dich im richtigen Moment entscheiden.",
+  "merk": "Andribbeln – binden – entscheiden: Bleibt er bei mir, spiele ich ab. Geht er auf den Passweg, gehe ich selbst.",
+  "prin": [
+   [
+    "Verteidiger binden",
+    "Mit Ball auf den Verteidiger zudribbeln, bis er sich festlegt. Zu früh abspielen ist der häufigste Fehler."
+   ],
+   [
+    "Spät und flach abspielen",
+    "Den Pass kurz vor dem Verteidiger spielen – flach und in den Lauf des Mitspielers."
+   ],
+   [
+    "Abstand halten",
+    "Der Mitspieler bleibt 5–8 m weg und im Blickfeld des Ballführenden. Dann kann ein Verteidiger nicht beide decken."
+   ],
+   [
+    "Früh entscheiden",
+    "Vor dem Ballkontakt schauen, wo Mitspieler und Gegner stehen. Wer früh weiß, was er macht, ist schneller."
+   ],
+   [
+    "Laut fordern",
+    "Der Mitspieler ruft und zeigt, wo er den Ball haben will."
+   ],
+   [
+    "Nach dem Pass weiter",
+    "Nach dem Abspiel nicht stehen bleiben: nachsetzen und für das Rückspiel anbieten."
+   ]
+  ],
+  "sits": [
+   {
+    "title": "1 · Frontal",
+    "sub": "Dein Mitspieler läuft auf gleicher Höhe neben dir.",
+    "view": [
+     10,
+     6,
+     48,
+     42
+    ],
+    "own": [
+     [
+      "1",
+      29,
+      40
+     ],
+     [
+      "2",
+      43,
+      40
+     ]
+    ],
+    "opp": [
+     [
+      34,
+      25
+     ]
+    ],
+    "ball": [
+     30.6,
+     37.6
+    ],
+    "arrows": [
+     {
+      "f": [
+       29,
+       40
+      ],
+      "t": [
+       31,
+       31
+      ],
+      "k": "run"
+     },
+     {
+      "f": [
+       31,
+       31
+      ],
+      "t": [
+       45,
+       21
+      ],
+      "k": "pass"
+     },
+     {
+      "f": [
+       43,
+       40
+      ],
+      "t": [
+       45,
+       22
+      ],
+      "k": "run"
+     }
+    ],
+    "tips": [
+     "Dribble den Verteidiger direkt an, bis er sich festlegt.",
+     "Bleibt er in der Mitte: abspielen. Geht er auf den Passweg: selbst durchziehen.",
+     "Mitspieler hält 5–8 m Abstand.",
+     "Spät abspielen, kurz vor dem Verteidiger, flach in den Lauf."
+    ]
+   },
+   {
+    "title": "2 · Seitlich",
+    "sub": "Dein Mitspieler steht neben dem Verteidiger.",
+    "view": [
+     10,
+     6,
+     48,
+     42
+    ],
+    "own": [
+     [
+      "1",
+      30,
+      40
+     ],
+     [
+      "2",
+      44,
+      28
+     ]
+    ],
+    "opp": [
+     [
+      35,
+      28
+     ]
+    ],
+    "ball": [
+     31.6,
+     37.6
+    ],
+    "arrows": [
+     {
+      "f": [
+       30,
+       40
+      ],
+      "t": [
+       43,
+       29.5
+      ],
+      "k": "pass"
+     },
+     {
+      "f": [
+       30,
+       40
+      ],
+      "t": [
+       33,
+       16
+      ],
+      "k": "run"
+     },
+     {
+      "f": [
+       44,
+       28
+      ],
+      "t": [
+       34,
+       17
+      ],
+      "k": "pass"
+     }
+    ],
+    "tips": [
+     "Ideal ist der Doppelpass: abspielen und sofort hinter den Verteidiger starten.",
+     "Erst auf den Verteidiger zudribbeln, damit er gebunden ist.",
+     "Der Mitspieler legt direkt prallen – ohne Ballannahme.",
+     "Sperrt der Verteidiger den Doppelpass: Dribbeldurchbruch auf die andere Seite."
+    ]
+   },
+   {
+    "title": "3 · Dahinter",
+    "sub": "Dein Mitspieler steht hinter dem Verteidiger.",
+    "view": [
+     10,
+     6,
+     48,
+     42
+    ],
+    "own": [
+     [
+      "1",
+      30,
+      40
+     ],
+     [
+      "2",
+      40,
+      15
+     ]
+    ],
+    "opp": [
+     [
+      34,
+      27
+     ]
+    ],
+    "ball": [
+     31.6,
+     37.6
+    ],
+    "arrows": [
+     {
+      "f": [
+       30,
+       40
+      ],
+      "t": [
+       39.5,
+       16.5
+      ],
+      "k": "pass"
+     },
+     {
+      "f": [
+       30,
+       40
+      ],
+      "t": [
+       31,
+       24
+      ],
+      "k": "run"
+     }
+    ],
+    "tips": [
+     "Ziel ist der Pass durch die Linie, sobald der Verteidiger herausrückt.",
+     "Der Mitspieler bietet sich frei an – nicht direkt hinter dem Verteidiger (Deckungsschatten).",
+     "Mit einer kleinen Finte oder seitlichem Andribbeln den Passweg öffnen.",
+     "Nach dem Pass sofort nachsetzen und für das Rückspiel anbieten."
+    ]
+   },
+   {
+    "title": "4 · Gegner im Rücken",
+    "sub": "Du bekommst den Ball, der Verteidiger steht hinter dir.",
+    "view": [
+     10,
+     6,
+     48,
+     42
+    ],
+    "own": [
+     [
+      "1",
+      34,
+      32.5
+     ],
+     [
+      "2",
+      46,
+      38
+     ],
+     [
+      "3",
+      30,
+      45
+     ]
+    ],
+    "opp": [
+     [
+      34,
+      26.5
+     ]
+    ],
+    "ball": [
+     32.8,
+     35
+    ],
+    "arrows": [
+     {
+      "f": [
+       30,
+       45
+      ],
+      "t": [
+       33.4,
+       35
+      ],
+      "k": "pass"
+     },
+     {
+      "f": [
+       34,
+       32.5
+      ],
+      "t": [
+       44.5,
+       37.2
+      ],
+      "k": "pass"
+     },
+     {
+      "f": [
+       34,
+       32.5
+      ],
+      "t": [
+       40,
+       15
+      ],
+      "k": "run"
+     }
+    ],
+    "tips": [
+     "Vor der Annahme Schulterblick: Wie eng steht der Verteidiger?",
+     "Steht er eng: direkt auf den Mitspieler ablegen und in die Tiefe starten.",
+     "Steht er weit weg: offen annehmen und über die freie Seite aufdrehen.",
+     "Körper zwischen Gegner und Ball, den Ball mit dem abgewandten Fuß führen."
+    ]
+   }
+  ],
+  "defense": [
+   "Verzögern statt angreifen – auf einen Fehler warten.",
+   "Seitlich stehen und den Ballführenden auf eine Seite lenken.",
+   "Zuerst den Passweg schließen, das Dribbling eher zulassen."
+  ],
+  "drills": [
+   {
+    "title": "2v1 – Rundlauf",
+    "what": "Zwei 2v1 gleichzeitig in Korridoren, danach wird rotiert.",
+    "org": [
+     "Feld in Strafraumbreite bis zur Mittellinie, zwei Korridore (ca. 11 m breit) in den Halbräumen.",
+     "Je ein TW im Tor und vor der Mittellinie – Anspieler und Ziel.",
+     "Korridor A: Gegner frontal. Korridor B: Gegner im Rücken."
+    ],
+    "ablauf": [
+     "Beide TW passen gleichzeitig, zwei 2v1 laufen parallel in Gegenrichtung.",
+     "Wer das 2v1 löst, schließt ab und stellt sich diagonal auf der anderen Seite an.",
+     "Verteidiger und zweiter Angreifer tauschen die Rollen.",
+     "Ballgewinn: Pass zum tiefen TW – der Verteidiger wird Angreifer, wer den Ball verloren hat, verteidigt."
+    ],
+    "coach": [
+     "Ballführender: andribbeln und binden, dann entscheiden.",
+     "Zweiter Angreifer: Breite und Tiefe geben, Lauf timen.",
+     "Mit Gegner im Rücken: Schulterblick, Ball auf die abgewandte Seite mitnehmen.",
+     "Nach Ballverlust sofort in die Verteidigerrolle."
+    ]
+   },
+   {
+    "title": "Torabschluss-Stationen: 1v0 → 1v1 → 2v1",
+    "what": "Vom freien Abschluss über das Duell bis zur Entscheidung im 2v1.",
+    "org": [
+     "Stationen mit vorbereiteten Bällen, nach jedem Durchgang eine Station weiter."
+    ],
+    "ablauf": [
+     "1v0: freier Abschluss.",
+     "1v1: gegen Gegnerdruck, Tempo mitnehmen.",
+     "2v1: Entscheidung Abschluss oder Ablage."
+    ],
+    "coach": [
+     "Blick zum Tor vor der Ballannahme.",
+     "1v1: erster Kontakt Richtung Tor, keine unnötigen Tricks.",
+     "2v1: früh entscheiden, Mitspieler laut fordern.",
+     "Platziert abschließen – der TW soll auch trainieren können."
+    ]
+   },
+   {
+    "title": "Wellen-Spiel mit drei Teams",
+    "what": "Enge Situationen über ein 2v1 an der Seite lösen – und nach Ballgewinn sofort kontern.",
+    "org": [
+     "Drei Teams, ein Team greift an, eines verteidigt, das dritte wartet außerhalb.",
+     "Großtor plus Minitore außen auf Höhe der Drittellinien."
+    ],
+    "ablauf": [
+     "Ein Team greift an, das andere verteidigt.",
+     "Nach 2 Minuten oder einem Tor wird gewechselt – das wartende Team kommt rein.",
+     "Nach Ballgewinn schnell umschalten: Der Konter ist der nächste Angriff."
+    ],
+    "coach": [
+     "Angriff: das 2v1 neben dem Ball suchen – Doppelpass oder Durchdribbeln.",
+     "Ist das Zentrum zu, öffnet ein Seitenwechsel.",
+     "Verteidigung: kompakt, ins Zentrum schieben, den Ball auf die Seite lenken und dort zu zweit pressen.",
+     "Umschalten: erster Pass sofort nach vorne."
+    ]
+   }
+  ],
+  "quiz": [
+   {
+    "q": "Du hast den Ball, dein Mitspieler läuft neben dir, ein Verteidiger kommt frontal. Was machst du zuerst?",
+    "options": [
+     "Den Verteidiger andribbeln, bis er sich festlegt",
+     "Sofort zum Mitspieler passen",
+     "Stehen bleiben und warten",
+     "Den Ball weit nach vorne schießen"
+    ],
+    "correct": 0,
+    "why": "Erst binden: Wenn der Verteidiger sich für dich entscheidet, ist dein Mitspieler frei. Zu früh abspielen ist der häufigste Fehler."
+   },
+   {
+    "q": "Der Verteidiger bleibt bei dir und stellt dich. Was ist jetzt richtig?",
+    "options": [
+     "Abspielen zum freien Mitspieler",
+     "Trotzdem selbst dribbeln",
+     "Zurückspielen zum Torwart",
+     "Den Ball abschirmen und warten"
+    ],
+    "correct": 0,
+    "why": "Bleibt er bei dir, ist dein Mitspieler frei – jetzt spielst du ab, spät und flach in den Lauf."
+   },
+   {
+    "q": "Der Verteidiger geht auf den Passweg zu deinem Mitspieler. Was machst du?",
+    "options": [
+     "Selbst durchziehen und den freien Raum nutzen",
+     "Trotzdem passen",
+     "Abbrechen und zurücklaufen",
+     "Den Ball ins Aus spielen"
+    ],
+    "correct": 0,
+    "why": "Wer den Passweg zumacht, lässt den Weg für dein Dribbling frei. Dann gehst du selbst."
+   },
+   {
+    "q": "Wie viel Abstand hält der Mitspieler ohne Ball ungefähr?",
+    "options": [
+     "5–8 Meter",
+     "1 Meter",
+     "20 Meter",
+     "So nah wie möglich"
+    ],
+    "correct": 0,
+    "why": "Mit 5–8 m Abstand kann ein Verteidiger nicht beide gleichzeitig decken – aber der Pass ist trotzdem kurz und sicher."
+   },
+   {
+    "q": "Dein Mitspieler steht seitlich neben dem Verteidiger. Was ist die beste Lösung?",
+    "options": [
+     "Doppelpass: abspielen und sofort hinter den Verteidiger starten",
+     "Ein langer Ball über alle",
+     "Rückpass zum Torwart",
+     "Den Mitspieler anschreien, dass er wegläuft"
+    ],
+    "correct": 0,
+    "why": "Der Mitspieler legt direkt prallen, du bist schon hinter dem Verteidiger – klassischer Doppelpass."
+   },
+   {
+    "q": "Dein Mitspieler steht hinter dem Verteidiger. Wo soll er sich anbieten?",
+    "options": [
+     "Frei, nicht direkt hinter dem Verteidiger",
+     "Genau hinter dem Verteidiger",
+     "Neben dir",
+     "Im eigenen Strafraum"
+    ],
+    "correct": 0,
+    "why": "Direkt hinter dem Verteidiger steht er im Deckungsschatten – da kommt kein Pass an."
+   },
+   {
+    "q": "Du bekommst den Ball mit dem Verteidiger im Rücken. Was machst du vor der Annahme?",
+    "options": [
+     "Schulterblick: Wie eng steht er?",
+     "Augen zu und annehmen",
+     "Sofort hinfallen",
+     "Rückwärts laufen"
+    ],
+    "correct": 0,
+    "why": "Der Schulterblick sagt dir, ob du aufdrehen kannst oder direkt ablegen musst."
+   },
+   {
+    "q": "Der Verteidiger steht eng hinter dir. Was ist die beste Lösung?",
+    "options": [
+     "Direkt auf den Mitspieler ablegen und in die Tiefe starten",
+     "Mit dem Rücken zum Tor aufdrehen",
+     "Den Ball lange halten",
+     "Zurück ins Mittelfeld dribbeln"
+    ],
+    "correct": 0,
+    "why": "Eng gedeckt kannst du nicht aufdrehen – ablegen und loslaufen bringt euch hinter den Verteidiger."
+   },
+   {
+    "q": "Du bist der Verteidiger im 1-gegen-2. Was machst du?",
+    "options": [
+     "Verzögern, seitlich stehen, zuerst den Passweg schließen",
+     "Sofort mit Vollgas in den Zweikampf",
+     "Den Mitspieler ohne Ball decken und den Ballführenden laufen lassen",
+     "Stehen bleiben und zuschauen"
+    ],
+    "correct": 0,
+    "why": "Allein gegen zwei gewinnst du Zeit: verzögern, auf eine Seite lenken, Passweg zu – bis Hilfe kommt oder sie einen Fehler machen."
+   },
+   {
+    "q": "Du hast abgespielt. Was jetzt?",
+    "options": [
+     "Nachsetzen und für das Rückspiel anbieten",
+     "Stehen bleiben und zuschauen",
+     "Zur Bank laufen",
+     "Den Ball zurückfordern, egal wo du stehst"
+    ],
+    "correct": 0,
+    "why": "Nach dem Pass weiterlaufen – so entsteht das nächste 2v1 oder ein Doppelpass."
+   }
+  ]
+ }
+]

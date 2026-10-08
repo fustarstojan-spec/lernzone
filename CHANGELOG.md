@@ -2,6 +2,14 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.19.0 – 2026-10-08
+- **Neues Modul „2v1 – Überzahl ausspielen“** (Fokus November) auf der Startseite und in der Lernzone:
+  - Grundlagen: Ziel, Merksatz, Prinzipien (binden, spät und flach abspielen, Abstand, früh entscheiden, fordern, nachsetzen)
+  - Situationen: die vier Grundsituationen (frontal, seitlich, dahinter, Gegner im Rücken) mit Spielfeld-Skizze und Tipps, dazu „Wenn du der Verteidiger bist“
+  - Übungen aus dem Training: 2v1-Rundlauf, Torabschluss-Stationen 1v0 → 1v1 → 2v1, Wellen-Spiel mit drei Teams
+  - Quiz mit 10 Fragen; Lernfortschritt in „Mein Bereich“
+- Inhalte in `data/modules.json` (weitere Module nach demselben Muster), Spielfeld-Ausschnitte (`view`) in `js/pitch.js`
+
 ## 0.18.1 – 2026-10-08
 - Neue Grundordnung 3-1-4-2 für Aufstellungen
 
