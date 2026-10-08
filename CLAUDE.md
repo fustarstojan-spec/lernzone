@@ -47,7 +47,7 @@ Sprache: Deutsch. Antworten kurz und direkt.
 
 ## Stand und nächste Schritte
 
-- Aktuell: Version 0.10.0 (siehe `CHANGELOG.md`). 0.4.0–0.10.0 liegen lokal, noch nicht auf GitHub.
+- Aktuell: Version 0.10.0 (siehe `CHANGELOG.md`), Stand auf GitHub.
 - Mannschaftskalender ist ein öffentlicher Google-Kalender; die Adresse steht nur in der Datenbank (nicht im Repo).
 - Entschieden: Benutzernamen vergibt der Trainer (Vorschlag `vorname.n`), ganze App hinter Login, Eltern-Zugang und 2FA später.
 - Nächste Schritte Weg B:
