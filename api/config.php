@@ -63,6 +63,13 @@ function migrate(PDO $pdo): void {
         if (!in_array($c, $tcols, true)) $pdo->exec("ALTER TABLE trainings ADD COLUMN $c $def");
     }
     $pdo->exec('CREATE INDEX IF NOT EXISTS trainings_cal ON trainings (cal_key)');
+    // 0.13.0: Anwesenheit „wer nicht absagt, ist da“ – bisher erfasste Trainings gelten als erledigt
+    if (!in_array('att_done', $tcols, true)) {
+        $pdo->exec("ALTER TABLE trainings ADD COLUMN att_done INTEGER NOT NULL DEFAULT 0");
+        $pdo->exec('UPDATE trainings SET att_done = 1 WHERE id IN (SELECT DISTINCT training_id FROM attendance)');
+    }
+    // Automatisch „da“ erst für Trainings ab dem Tag dieser Umstellung (ältere ohne Eintrag zählen nicht)
+    $pdo->exec("INSERT OR IGNORE INTO settings (name, value) VALUES ('auto_att_from', '" . date('Y-m-d') . "')");
     // Bis 0.6.0 gab es nur eine Trainer-PIN → wird zum ersten Admin-Konto „Trainer“
     $old = $pdo->query("SELECT value FROM settings WHERE name = 'coach_pin_hash'")->fetchColumn();
     if ($old !== false) {
@@ -230,21 +237,58 @@ function account_ok(string $table, string $key, int $id): void {
 /* Trainingsbeteiligung: alle Trainings (nur Art „training“) seit der Aufnahme in den Kader bis heute; last = die letzten 20 (alt → neu) */
 function attendance_summary(int $nr): array {
     // Gezählt wird ab Saisonbeginn (Einstellung) bzw. ab dem Tag, an dem das Konto angelegt wurde – das spätere Datum.
-    // Nur Trainings, bei denen der Trainer die Anwesenheit eingetragen hat (mindestens einer da), zählen.
+    // Nur Trainings mit erfasster Anwesenheit zählen (att_done = 1; automatisch nach Trainingsende, siehe att_autofill).
     $since = substr((string)(account_for('player', $nr)['created_at'] ?? '2000-01-01'), 0, 10);
     $season = (string)(db()->query("SELECT value FROM settings WHERE name = 'season_start'")->fetchColumn() ?: '');
     if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $season) && $season > $since) $since = $season;
     $st = db()->prepare('SELECT t.id, t.date, CASE WHEN a.nr IS NULL THEN 0 ELSE 1 END AS present
                          FROM trainings t LEFT JOIN attendance a ON a.training_id = t.id AND a.nr = ?
                          WHERE t.date <= ? AND t.date >= ? AND t.kind = \'training\'
-                           AND EXISTS (SELECT 1 FROM attendance x WHERE x.training_id = t.id)
+                           AND t.att_done = 1
                          ORDER BY t.date DESC, t.time DESC');
+    att_autofill();
     $st->execute([$nr, today(), $since]);
     $rows = $st->fetchAll(PDO::FETCH_ASSOC);
     $attended = count(array_filter($rows, fn($r) => (int)$r['present'] === 1));
     $last = array_reverse(array_slice($rows, 0, 20));
     return ['total' => count($rows), 'attended' => $attended,
             'last' => array_map(fn($r) => ['date' => $r['date'], 'present' => (bool)$r['present']], $last)];
+}
+
+/* ---------- Anwesenheit: wer nicht abgesagt hat, ist da ---------- */
+/* Trainingsende als Zeitstempel (ohne Ende: Beginn + 90 Min., ohne Uhrzeit: Tagesende) */
+function training_end(array $t): int {
+    if (($t['end_time'] ?? '') !== '') return strtotime($t['date'] . ' ' . $t['end_time']);
+    if ($t['time'] !== '') return strtotime($t['date'] . ' ' . $t['time']) + 5400;
+    return strtotime($t['date'] . ' 23:59');
+}
+/* Wer laut Absagen kommt: alle aktiven Spieler ohne Absage */
+function expected_players(int $id): array {
+    $st = db()->prepare('SELECT nr FROM players WHERE active = 1 AND nr NOT IN (SELECT nr FROM absences WHERE training_id = ?) ORDER BY nr');
+    $st->execute([$id]);
+    return array_map('intval', $st->fetchAll(PDO::FETCH_COLUMN));
+}
+/* Anwesenheit festschreiben: alle ohne Absage = da (Trainer korrigiert danach einzelne) */
+function att_materialize(int $id): void {
+    db()->prepare('DELETE FROM attendance WHERE training_id = ?')->execute([$id]);
+    $ins = db()->prepare('INSERT INTO attendance (training_id, nr) VALUES (?, ?)');
+    foreach (expected_players($id) as $nr) $ins->execute([$id, $nr]);
+    db()->prepare('UPDATE trainings SET att_done = 1 WHERE id = ?')->execute([$id]);
+}
+function att_auto_from(): string {
+    return (string)(db()->query("SELECT value FROM settings WHERE name = 'auto_att_from'")->fetchColumn() ?: today());
+}
+/* Gilt für dieses Training „wer nicht absagt, ist da“ (noch nicht erfasst, ab der Umstellung)? */
+function att_expected(array $t): bool {
+    return (int)$t['att_done'] === 0 && $t['kind'] === 'training' && $t['date'] >= att_auto_from();
+}
+/* Nach Trainingsende automatisch festschreiben (nur Trainings ab der Umstellung, siehe migrate) */
+function att_autofill(): void {
+    static $done = false; if ($done) return; $done = true;
+    $from = att_auto_from();
+    $st = db()->prepare("SELECT id, date, time, end_time FROM trainings WHERE kind = 'training' AND att_done = 0 AND date >= ? AND date <= ?");
+    $st->execute([$from, today()]);
+    foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $t) if (training_end($t) <= time()) att_materialize((int)$t['id']);
 }
 
 /* ---------- Absagen ---------- */
@@ -259,7 +303,7 @@ function absence_deadline(array $t): int {
 
 /* Die nächsten Trainings eines Spielers mit seinem Absage-Stand */
 function upcoming_for(int $nr, int $days = 14, int $limit = 6): array {
-    $st = db()->prepare("SELECT t.id, t.date, t.time, t.end_time, t.title, t.location, b.reason,
+    $st = db()->prepare("SELECT t.id, t.date, t.time, t.end_time, t.title, t.location, t.att_done, b.reason,
                                 (SELECT COUNT(*) FROM attendance a WHERE a.training_id = t.id AND a.nr = ?) AS present
                          FROM trainings t LEFT JOIN absences b ON b.training_id = t.id AND b.nr = ?
                          WHERE t.kind = 'training' AND t.date >= ? AND t.date <= ? ORDER BY t.date, t.time LIMIT $limit");
@@ -271,7 +315,8 @@ function upcoming_for(int $nr, int $days = 14, int $limit = 6): array {
         $dl = absence_deadline($t);
         $out[] = ['id' => (int)$t['id'], 'date' => $t['date'], 'time' => $t['time'], 'endTime' => $t['end_time'],
                   'title' => $t['title'] !== '' ? $t['title'] : 'Training', 'location' => $t['location'],
-                  'absent' => $t['reason'], 'canChange' => time() < $dl, 'deadline' => date('Y-m-d H:i', $dl)];
+                  'absent' => $t['reason'], 'cancelled' => (int)$t['att_done'] === 2,
+                  'canChange' => time() < $dl && (int)$t['att_done'] !== 2, 'deadline' => date('Y-m-d H:i', $dl)];
     }
     return $out;
 }

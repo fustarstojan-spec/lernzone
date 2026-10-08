@@ -14,6 +14,7 @@ $st = db()->prepare("SELECT * FROM trainings WHERE id = ? AND kind = 'training'"
 $st->execute([$id]);
 $t = $st->fetch(PDO::FETCH_ASSOC);
 if (!$t) json_out(['ok' => false, 'error' => 'Dieses Training gibt es nicht.'], 404);
+if ((int)$t['att_done'] === 2) json_out(['ok' => false, 'error' => 'Dieses Training fällt aus.'], 400);
 if (time() >= absence_deadline($t))
     json_out(['ok' => false, 'error' => 'Absagen geht nur bis ' . ABSENCE_HOURS . ' Stunden vor dem Training. Sag bitte deinem Trainer direkt Bescheid.'], 400);
 
@@ -27,6 +28,7 @@ switch ($in['action'] ?? '') {
         break;
     case 'withdraw':
         db()->prepare('DELETE FROM absences WHERE training_id = ? AND nr = ?')->execute([$id, $u['nr']]);
+        if ((int)$t['att_done'] === 1) db()->prepare('INSERT OR IGNORE INTO attendance (training_id, nr) VALUES (?, ?)')->execute([$id, $u['nr']]);
         break;
     default:
         json_out(['ok' => false, 'error' => 'Unbekannte Aktion'], 400);

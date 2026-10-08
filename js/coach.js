@@ -142,7 +142,7 @@
       <section class="stack">${T.trainings === null ? `<p class="small">Lade …</p>` : T.trainings.length ? T.trainings.map(t => `
         <button class="trow ${t.date < todayIso() ? "" : "future"}" data-act="tOpen" data-v="${t.id}">
           <span class="tdate">${esc(fmtDate(t.date))}${t.time ? ` · ${esc(t.time)}` : ""} · ${esc(t.title)}</span>
-          <span class="small">${LZ.calendar ? LZ.calendar.chip(t.kind) + " " : ""}${t.note ? esc(t.note) + " · " : ""}${t.present} da${t.absent ? ` · ${t.absent} abgesagt` : ""}${t.avgLaune !== null ? ` · Laune Ø ${String(t.avgLaune).replace(".", ",")}` : ""}${t.avgRpe !== null ? ` · Belastung Ø ${String(t.avgRpe).replace(".", ",")}` : ""}</span>
+          <span class="small">${LZ.calendar ? LZ.calendar.chip(t.kind) + " " : ""}${t.note ? esc(t.note) + " · " : ""}${t.state === 2 ? "fällt aus" : `${t.present} ${t.expected ? "erwartet" : "da"}`}${t.absent && t.state !== 2 ? ` · ${t.absent} abgesagt` : ""}${t.avgLaune !== null ? ` · Laune Ø ${String(t.avgLaune).replace(".", ",")}` : ""}${t.avgRpe !== null ? ` · Belastung Ø ${String(t.avgRpe).replace(".", ",")}` : ""}</span>
           ${t.alerts ? `<span class="tbadge">${t.alerts} ansprechen</span>` : ""}</button>`).join("") : `<p class="small">Noch keine Trainings angelegt.</p>`}</section>`;
     }
 
@@ -155,11 +155,17 @@
       return `<button class="back" data-act="ctab" data-v="trainings">‹ Trainings</button>${tabs()}
       <section><p class="eyebrow">${LZ.calendar ? esc(LZ.calendar.kindLabel(t.kind)) : "Training"}${t.fromCalendar ? " · aus dem Kalender" : ""}</p><h1>${esc(t.title)}</h1>
         <p class="lede">${esc(fmtDate(t.date))}${t.time ? " · " + esc(t.time) + (t.endTime ? "–" + esc(t.endTime) : "") : ""}${t.location ? " · " + esc(t.location) : ""}${t.note ? " · " + esc(t.note) : ""}</p></section>
-      <section class="card stack"><div class="rowspread"><h2>Anwesenheit</h2><span class="bignum">${pres.size}</span></div>
-        <p class="small">Tippe auf ein Trikot, um „da“ oder „nicht da“ zu setzen. Das Training zählt für die Trainingsbeteiligung, sobald mindestens einer eingetragen ist.</p>
-        <div class="row"><button class="btn ghost" data-act="tAll" data-v="1">Alle da</button><button class="btn ghost" data-act="tAll" data-v="0">Alle zurücksetzen</button></div>
+      ${(d.coachesOut || []).length ? `<p class="alert">Trainer nicht dabei: ${d.coachesOut.map(esc).join(", ")}</p>` : ""}
+      ${t.kind !== "training" ? "" : t.state === 2 ? `<section class="card stack"><div class="rowspread"><h2>Fällt aus</h2></div>
+        <p class="small">Dieses Training zählt nicht für die Trainingsbeteiligung. Die Spieler sehen „fällt aus“.</p>
+        <div class="row"><button class="btn" data-act="tReopen">Findet doch statt</button></div></section>` : `
+      <section class="card stack"><div class="rowspread"><h2>${t.expected ? "Erwartet" : "Anwesenheit"}</h2><span class="bignum">${pres.size}</span></div>
+        <p class="small">${t.expected ? "Alle, die nicht abgesagt haben, gelten als da – nach dem Training wird das automatisch eingetragen. Tippe auf ein Trikot, wenn jemand ohne Absage fehlt." : "Tippe auf ein Trikot, um „da“ oder „nicht da“ zu setzen."}</p>
+        <div class="row"><button class="btn ghost" data-act="tAll" data-v="1">Alle ohne Absage da</button><button class="btn ghost" data-act="tCancelAsk">Training fällt aus</button></div>
+        ${T.confirm === "tCancel" ? `<div class="card stack danger"><p><b>Training als ausgefallen markieren?</b> Es zählt dann nicht für die Beteiligung.</p>
+          <div class="row"><button class="btn danger-btn" data-act="tCancel">Ja, fällt aus</button><button class="btn ghost" data-act="cCancel">Abbrechen</button></div></div>` : ""}
         <div class="nrgrid">${LZ.C.players.map(p => { const m = moods[p.nr]; return `<button class="nr ${pres.has(p.nr) ? "" : "absent"}" data-act="tAtt" data-v="${p.nr}" aria-pressed="${pres.has(p.nr)}" aria-label="Nummer ${p.nr} ${pres.has(p.nr) ? "da" : "nicht da"}">${LZ.shirt(p.nr)}<span>${abs[p.nr] && !pres.has(p.nr) ? `<em class="abstag">abgesagt</em>` : `${m && m.vor ? LAUNE[(m.vor.laune || 3) - 1] : "&nbsp;"}${m && m.nach ? " " + m.nach.rpe : ""}`}</span></button>`; }).join("")}</div>
-        ${(d.absences || []).length ? `<div class="abslist"><b>Abgesagt (${d.absences.length})</b>${d.absences.map(a => `<span>Nr. ${a.nr} · ${esc(a.label)}</span>`).join("")}</div>` : ""}</section>
+        ${(d.absences || []).length ? `<div class="abslist"><b>Abgesagt (${d.absences.length})</b>${d.absences.map(a => `<span>Nr. ${a.nr} · ${esc(a.label)}</span>`).join("")}</div>` : ""}</section>`}
       <section class="card stack"><h2>Befinden</h2>${sorted.length ? sorted.map(m => { const p = LZ.C.players.find(x => x.nr === m.nr) || {}; return `
         <div class="moodrow ${alert(m) ? "hot" : ""}"><b>Nr. ${m.nr}${p.name ? " · " + esc(p.name.split(" ")[0]) : ""}</b><span>${moodLine(m.vor, m.nach) || "–"}</span>${comments(m.vor, m.nach)}</div>`; }).join("") : `<p class="small">Noch keine Rückmeldungen. Die Spieler sehen die Abfrage am Trainingstag in „Mein Bereich“.</p>`}</section>
       ${errP()}
@@ -288,10 +294,22 @@
     openTraining(r.id);
   };
   LZ.actions.tOpen = (b, v) => openTraining(+v);
+  const trState = r => { T.tr.present = r.present; T.tr.training.state = r.state; T.tr.training.expected = false; T.confirm = null; LZ.render(); };
   LZ.actions.tAll = async (b, v) => {
     const r = await St().send("trainings.php", { action: "attendall", id: T.tr.training.id, present: v === "1" });
     if (!r.ok) return fail(r);
-    T.tr.present = r.present; LZ.render();
+    trState(r);
+  };
+  LZ.actions.tCancelAsk = () => { T.confirm = "tCancel"; LZ.render(); };
+  LZ.actions.tCancel = async () => {
+    const r = await St().send("trainings.php", { action: "cancel", id: T.tr.training.id });
+    if (!r.ok) return fail(r);
+    trState(r);
+  };
+  LZ.actions.tReopen = async () => {
+    const r = await St().send("trainings.php", { action: "reopen", id: T.tr.training.id });
+    if (!r.ok) return fail(r);
+    trState(r); T.tr.training.expected = true; LZ.render();
   };
   LZ.actions.tAtt = async (b, v) => {
     const nr = +v, set = new Set(T.tr.present), on = !set.has(nr);
@@ -299,7 +317,8 @@
     if (on && T.tr.absences) T.tr.absences = T.tr.absences.filter(a => a.nr !== nr);   // doch gekommen
     LZ.render();     // sofort anzeigen
     const r = await St().send("trainings.php", { action: "attend", id: T.tr.training.id, nr, present: on });
-    if (!r.ok) { on ? set.delete(nr) : set.add(nr); T.tr.present = [...set]; fail(r); }
+    if (!r.ok) { on ? set.delete(nr) : set.add(nr); T.tr.present = [...set]; return fail(r); }
+    trState(r);
   };
   LZ.actions.tDelete = async () => {
     const r = await St().send("trainings.php", { action: "delete", id: T.tr.training.id });

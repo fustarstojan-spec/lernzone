@@ -51,6 +51,7 @@ foreach ($byDate as $date => $list) {
     if (!$id) { $new->execute([$date]); $id = (int)db()->lastInsertId(); $created++; }
     $del->execute([$id]);
     foreach ($list as $nr => $p) if ($p) { $add->execute([$id, $nr]); $marks++; }
+    db()->prepare('UPDATE trainings SET att_done = 1 WHERE id = ?')->execute([$id]);
 }
 if ($season !== '') db()->prepare("INSERT INTO settings (name, value) VALUES ('season_start', ?) ON CONFLICT(name) DO UPDATE SET value = excluded.value")->execute([$season]);
 db()->commit();

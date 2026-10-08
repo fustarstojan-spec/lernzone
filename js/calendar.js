@@ -41,6 +41,7 @@
   /* ---------- Startseite ---------- */
   LZ.on("homeTop", () => {
     const St = LZ.Store;
+    if (LZ.coachMode()) return "";               // Trainer: Termine stehen auf der Trainer-Startseite
     if (!St || St.mode !== "api" || !K.data || !K.data.status.configured) return "";
     const n = K.data.next, rest = K.data.upcoming.slice(1, 5);
     if (!n) return `<section class="card nextcard"><p class="eyebrow">Nächster Termin</p><p class="small">In den nächsten zwei Wochen steht nichts im Kalender.</p></section>`;

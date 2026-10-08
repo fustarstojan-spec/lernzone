@@ -15,6 +15,7 @@ js/auth.js            Anmeldung (Weg B): Anmelden, eigenes Passwort festlegen, P
 js/me.js              Spieler mit Server: Trainingsbeteiligung, Befindens-Barometer, Profil
 js/coach.js           Trainer-Bereich: Kader, Trainings, Trainer-Konten, Kalender-Einstellung
 js/calendar.js        Termine aus dem Google-Kalender: Nächster Termin, alle Termine
+js/dashboard.js       Trainer-Startseite: nächste Termine, Trainer-Verfügbarkeit, Beteiligung aller Spieler
 data/team.json        Teamname, Grundordnung, Trikotfarben, Positionskürzel (für Profile und Spielsituationen)
 data/zones.json       5 Spuren, 3 Drittel, Maße
 data/phases.json      Die Spielphasen 1–4 und Phase 5 „Standards“: Grundlagen, Prinzipien, Situation, Quiz
@@ -134,6 +135,7 @@ Voraussetzung: Webspace mit PHP 8 und PDO/SQLite (bei fast allen Hostern Standar
 | `api/profile.php` | POST (Spieler) | `{ profile }` | `{ ok, profile }` |
 | `api/mood.php` | POST (Spieler) | `{ training, phase: "vor"\|"nach", data }` | `{ ok, data }` |
 | `api/trainings.php` | GET / POST (Trainer) | `?id=` / `{ action: "create"\|"delete"\|"attend"\|"attendall", … }` | |
+| `api/dashboard.php` | GET / POST (Trainer) | – / `{ action: "out"\|"in", id }` | `{ events, coaches, players }` |
 | `api/absence.php` | POST (Spieler) | `{ action: "set", id, reason }` / `{ action: "withdraw", id }` | `{ ok, upcoming }` |
 | `api/calendar.php` | GET (angemeldet) | `?days=14` | `{ next, upcoming, status }` |
 | `api/calendar.php` | POST | `{ action: "seturl", url }` (Admin) / `{ action: "refresh" }` (Trainer) | `{ ok, status }` |

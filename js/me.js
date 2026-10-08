@@ -49,12 +49,13 @@
       const when = `${esc(fmtDate(t.date))}${t.time ? " · " + esc(t.time) : ""}`;
       const dl = `${fmtDate(t.deadline.slice(0, 10))} ${hm(t.deadline)}`;
       let right;
-      if (K.abs === t.id) right = `<div class="reasons">${Object.entries(R).map(([k, l]) => `<button class="btn ghost small-btn" data-act="absSet" data-t="${t.id}" data-v="${k}">${esc(l)}</button>`).join("")}
+      if (t.cancelled) right = `<span class="abschip">Fällt aus</span>`;
+      else if (K.abs === t.id) right = `<div class="reasons">${Object.entries(R).map(([k, l]) => `<button class="btn ghost small-btn" data-act="absSet" data-t="${t.id}" data-v="${k}">${esc(l)}</button>`).join("")}
           <button class="linkbtn" data-act="absCancel">Abbrechen</button></div>`;
       else if (t.absent) right = `<span class="abschip">Abgesagt · ${esc(R[t.absent] || t.absent)}</span>${t.canChange ? `<button class="linkbtn" data-act="absBack" data-t="${t.id}">Ich bin doch dabei</button>` : ""}`;
       else right = t.canChange ? `<button class="btn ghost small-btn" data-act="absOpen" data-t="${t.id}">Absagen</button>` : `<span class="small">Absagen nur noch beim Trainer</span>`;
       return `<li class="trrow${t.absent ? " off" : ""}"><div><b>${when}</b><span class="small">${esc(t.title)}${t.location ? " · " + esc(t.location) : ""}</span>
-        ${!t.absent && t.canChange && K.abs !== t.id ? `<span class="small">absagen bis ${esc(dl)} Uhr</span>` : ""}</div><div class="trright">${right}</div></li>`;
+        ${!t.absent && !t.cancelled && t.canChange && K.abs !== t.id ? `<span class="small">absagen bis ${esc(dl)} Uhr</span>` : ""}</div><div class="trright">${right}</div></li>`;
     };
     return `<section class="card stack"><h2>Meine Trainings</h2>
       ${K.abs ? `<p class="small"><b>Warum kannst du nicht kommen?</b> Dein Trainer sieht nur den Grund.</p>` : ""}

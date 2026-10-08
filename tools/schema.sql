@@ -50,7 +50,8 @@ CREATE TABLE IF NOT EXISTS trainings (
   title     TEXT NOT NULL DEFAULT '',                -- Titel aus dem Kalender
   kind      TEXT NOT NULL DEFAULT 'training',        -- 'training' | 'spiel' | 'turnier' | 'termin'
   location  TEXT NOT NULL DEFAULT '',
-  cal_key   TEXT NOT NULL DEFAULT ''                 -- '' = von Hand angelegt, sonst Termin-Schlüssel aus dem Google-Kalender
+  cal_key   TEXT NOT NULL DEFAULT '',                -- '' = von Hand angelegt, sonst Termin-Schlüssel aus dem Google-Kalender
+  att_done  INTEGER NOT NULL DEFAULT 0               -- ab 0.13.0: 0 = Anwesenheit offen, 1 = erfasst, 2 = Training fällt aus
 );
 
 CREATE TABLE IF NOT EXISTS attendance (
@@ -66,6 +67,14 @@ CREATE TABLE IF NOT EXISTS absences (
   reason       TEXT    NOT NULL,                     -- schule | krank | urlaub | sonst
   created_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (training_id, nr)
+);
+
+-- Trainer, die bei einem Termin nicht können (ab 0.13.0)
+CREATE TABLE IF NOT EXISTS coach_absences (
+  training_id  INTEGER NOT NULL,
+  coach_id     INTEGER NOT NULL,
+  created_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (training_id, coach_id)
 );
 
 CREATE TABLE IF NOT EXISTS moods (

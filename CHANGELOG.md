@@ -2,6 +2,14 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.13.0 – 2026-10-08
+- **Trainer-Startseite** mit Reitern Übersicht · Lernzone · Taktik · Spielzeiten (Lerninhalte jetzt unter „Lernzone“; Taktik und Spielzeiten folgen)
+- Übersicht: die nächsten 4 Termine mit Spielerzahl (alle minus Absagen) und welche Trainer dabei sind; „Ich kann nicht“ / „Ich bin doch dabei“ für Trainer
+- Übersicht: Trainingsbeteiligung aller Spieler (Prozent, Balken, Absagen der letzten 4 Wochen), sortierbar nach Nummer oder Beteiligung, Ø der Mannschaft
+- **Wer nicht absagt, ist da:** Nach Trainingsende wird die Anwesenheit automatisch eingetragen (alle ohne Absage); der Trainer tippt nur noch die an, die ohne Absage gefehlt haben. Gilt für Trainings ab dem Tag der Umstellung.
+- „Training fällt aus“ (zählt nicht, Spieler sehen „Fällt aus“) und „Findet doch statt“
+- Neu: `api/dashboard.php`, `js/dashboard.js`, Tabelle `coach_absences`, Spalte `trainings.att_done`
+
 ## 0.12.0 – 2026-10-08
 - **Training absagen:** Spieler sagen auf der Startseite oder in „Mein Bereich“ ab – mit festem Grund (Schule / Lernen, Krank, Urlaub / Familie, Sonstiges, kein Freitext), bis 2 Stunden vor Beginn (ohne Uhrzeit: bis zum Vortag); zurücknehmen mit „Ich bin doch dabei“
 - Absage = „nicht da“ in der Anwesenheit (wie in der Excel); hakt der Trainer den Spieler doch ab, ist die Absage aufgehoben

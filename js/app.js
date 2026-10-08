@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.12.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.13.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -68,7 +68,7 @@
     <span class="eyebrow">Phase ${ph.nr}</span><span class="t">${esc(ph.title)}</span>
     <span class="small">${p.quiz[ph.id] ? `Bestes Quiz: ${p.quiz[ph.id].best}/${p.quiz[ph.id].of}` : "Quiz noch offen"}</span>
     <span class="meter"><b style="width:${pc(ph.id)}%"></b></span></button>`;
-    return `<section><p class="eyebrow">${S.user ? `Angemeldet als Nr. ${S.user.nr}` : "Spielphasenmodell"}</p>
+    return `${LZ.coachMode() && LZ.coachNav ? LZ.coachNav("lernzone") : ""}<section><p class="eyebrow">${S.user ? `Angemeldet als Nr. ${S.user.nr}` : "Spielphasenmodell"}</p>
     <h1>${S.user ? "Weiter geht's" : "Lernen, wie wir spielen"}</h1>
     <p class="lede">Das Spiel hat vier Phasen, die sich immer wieder abwechseln. Dazu kommen die Standards, wenn das Spiel ruht. Für jede Phase gibt es Grundlagen, Lernmaterial und ein Quiz.</p></section>
   ${(LZ.hooks.homeTop || []).map(f => f()).join("")}
@@ -211,8 +211,11 @@
     document.getElementById("shirtBtn").innerHTML = gate ? "" : shirt(S.user ? S.user.nr : Store.coach.active ? "T" : "?");
     document.getElementById("shirtBtn").hidden = !!gate;
     if (gate && LZ.views[gate]) { app.innerHTML = LZ.views[gate](); return; }
-    app.innerHTML = LZ.views[S.view] ? LZ.views[S.view]()
-      : S.view === "phase" ? phaseView() : S.view === "zonen" ? zonenView() : S.view === "me" ? meView() : home();
+    // Trainer ohne Spieler-Anmeldung: eigene Startseite (js/dashboard.js), Lerninhalte unter „Lernzone“
+    const coachHome = S.view === "home" && LZ.coachMode() && LZ.views.coachHome;
+    app.innerHTML = coachHome ? LZ.views.coachHome()
+      : LZ.views[S.view] ? LZ.views[S.view]()
+      : S.view === "phase" ? phaseView() : S.view === "zonen" ? zonenView() : S.view === "me" ? meView() : home();   // "lernzone" = home()
   }
   const fire = (name, ...args) => (LZ.hooks[name] || []).forEach(f => f(...args));
   function go(v, arg) {
@@ -235,7 +238,8 @@
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-act]"); if (!b || !C) return;
     const a = b.dataset.act, v = b.dataset.v;
-    if (a === "home") go("home");
+    if (a === "home") go(LZ.coachMode() && ["phase", "zonen"].includes(S.view) ? "lernzone" : "home");   // Trainer: zurück in die Lernzone
+    else if (a === "lernzone") go("lernzone");
     else if (a === "me") {
       if (Store.mode === "api" && !S.user && Store.coach.active && LZ.actions.kaderStart) LZ.actions.kaderStart();
       else go("me");
@@ -281,6 +285,7 @@
     get C() { return C; }, get Store() { return Store; },
     esc, rand, shirt, pad, dots, posName, posSelect, gkNrs, render, go, weekKey,
     on(name, fn) { (this.hooks[name] = this.hooks[name] || []).push(fn); },
+    coachMode() { return !!(Store && Store.mode === "api" && !S.user && Store.coach && Store.coach.active); },
     top() { window.scrollTo(0, 0); }
   };
 

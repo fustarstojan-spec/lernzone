@@ -19,6 +19,7 @@ Sprache: Deutsch. Antworten kurz und direkt.
   - `js/app.js` – Kern: Startseite, Phasen, Quiz, Zonen, Anmeldung, Mein Bereich; Erweiterungs-Schnittstelle `window.LZ` (views, actions, inputs, hooks).
   - `js/me.js` – Spieler: Trainingsbeteiligung, Befindens-Barometer, Profil.
   - `js/coach.js` – Trainer-Bereich: Kader, Trainings, Trainer-Konten.
+  - `js/dashboard.js` – Trainer-Startseite (Übersicht) und Reiter-Navigation `LZ.coachNav()`.
   - `js/pitch.js` – Spielfeld-SVG (68 × 105 m, Angriff nach oben, 5 Spuren × 3 Drittel).
 - Inhalte in `data/*.json` (Phasen, Quiz, Pläne, Positionen, Kader ohne PINs). Quizfrage: `{ q, options, correct, why }`.
 - Backend: PHP 8.1+ in `api/`, SQLite in `storage/lernzone.sqlite` (nie ins Repo), Schema `tools/schema.sql`, Migration in `api/config.php → migrate()`.
@@ -47,7 +48,10 @@ Sprache: Deutsch. Antworten kurz und direkt.
 
 ## Stand und nächste Schritte
 
-- Aktuell: Version 0.12.0 (siehe `CHANGELOG.md`). 0.11.0–0.12.0 liegen lokal, noch nicht auf GitHub.
+- Aktuell: Version 0.13.0 (siehe `CHANGELOG.md`). 0.11.0–0.13.0 liegen lokal, noch nicht auf GitHub.
+- Anwesenheit (ab 0.13.0): Wer nicht absagt, ist da. `trainings.att_done` 0 offen / 1 erfasst / 2 fällt aus; `att_autofill()` schreibt nach Trainingsende fest (nur Trainings ab `settings.auto_att_from`). Beteiligung zählt nur att_done = 1.
+- Trainer-Startseite (ab 0.13.0): `js/dashboard.js` + `api/dashboard.php`, Reiter Übersicht · Lernzone · Taktik · Spielzeiten. Trainer sagen Termine ab (`coach_absences`).
+- In Arbeit: 0.14.0 Taktiktafel (frei: eigene, Gegner, Ball, Pfeile/Linien; Aufstellung pro Spiel; für Kinder freigeben), 0.15.0 Spielzeiten (Startelf, Wechsel mit Minute, Minuten pro Spieler, Saison).
 - Absagen (ab 0.12.0): Spieler sagen Trainings ab (nur kind = training), fester Grund ohne Freitext, bis 2 Std. vorher; Tabelle `absences`; Absage zählt als „nicht da“.
 - Trainingsbeteiligung: bis 07.10.2026 aus der Excel des Trainers übernommen (nur „ja“ zählt), Saisonbeginn 30.06.2026; ab jetzt wird in der App abgehakt. Zählt nur Trainings mit eingetragener Anwesenheit.
 - Mannschaftskalender ist ein öffentlicher Google-Kalender; die Adresse steht nur in der Datenbank (nicht im Repo).
