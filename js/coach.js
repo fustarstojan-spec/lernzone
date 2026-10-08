@@ -244,7 +244,7 @@
     const g = d.grades; if (!g) return "";
     const f = v => v == null ? "–" : String(v).replace(".", ",");
     return `<section class="card stack"><h2>Bewertung im Training</h2><p class="small">Nur für Trainer · Schulnoten, Ø aller Trainer</p>
-      ${g.list.length ? `<table class="ieptable"><tr><th></th>${GRADE_AREAS.map(([, l]) => `<th>${l.slice(0, 4)}.</th>`).join("")}</tr>
+      ${g.list.length ? `<table class="ieptable gradetable"><tr><th></th>${GRADE_AREAS.map(([, l]) => `<th>${l}</th>`).join("")}</tr>
         <tr><td>Ø 4 Wochen</td>${GRADE_AREAS.map(([k]) => `<td class="${gradeTone(g.avg4[k])}">${f(g.avg4[k])}</td>`).join("")}</tr>
         <tr><td>Ø Saison</td>${GRADE_AREAS.map(([k]) => `<td class="${gradeTone(g.season[k])}">${f(g.season[k])}</td>`).join("")}</tr>
         ${g.list.slice(0, 6).map(r => `<tr><td>${esc(fmtDate(r.date))}</td>${GRADE_AREAS.map(([k]) => `<td>${f(r.values[k])}</td>`).join("")}</tr>`).join("")}</table>`
@@ -382,20 +382,22 @@
     const G = d.grades, list = LZ.C.players.filter(p => pres.has(p.nr));
     const done = list.filter(p => G.mine[p.nr] && Object.keys(G.mine[p.nr]).length === 4).length;
     return `<section class="card stack"><div class="rowspread"><h2>Bewertung</h2><span class="small">${done}/${list.length} bewertet</span></div>
-      <p class="small">Nur für Trainer · Schulnoten 1 (sehr gut) bis 6 · jeder Trainer bewertet für sich. In Klammern: Ø der anderen Trainer.</p>
-      ${list.length ? `<div class="gradegrid"><span></span>${GRADE_AREAS.map(([, l]) => `<b>${l.slice(0, 4)}.</b>`).join("")}
+      <p class="small">Nur für Trainer · Schulnoten 1 (sehr gut) bis 6 · jeder Trainer bewertet für sich. Vorgabe ist 1 – sobald du eine Note änderst, gilt für alle anderen Anwesenden die 1. In Klammern: Ø der anderen Trainer.</p>
+      ${list.length ? `<div class="gradegrid"><span></span>${GRADE_AREAS.map(([, l]) => `<b>${l}</b>`).join("")}
         ${list.map(p => { const m = G.mine[p.nr] || {}, o = G.others[p.nr] || {};
-          return `<span class="gnr">${LZ.shirt(p.nr)}</span>${GRADE_AREAS.map(([k, l]) => `<label class="gcell"><select id="gr-${p.nr}-${k}" class="${gradeTone(m[k])}" aria-label="Nr. ${p.nr} ${l}">
-            <option value="">–</option>${[1, 2, 3, 4, 5, 6].map(v => `<option value="${v}" ${m[k] === v ? "selected" : ""}>${v}</option>`).join("")}</select>
+          return `<span class="gnr">${LZ.shirt(p.nr)}</span>${GRADE_AREAS.map(([k, l]) => `<label class="gcell"><select id="gr-${p.nr}-${k}" class="${gradeTone(m[k] ?? 1)}" aria-label="Nr. ${p.nr} ${l}">
+            ${[1, 2, 3, 4, 5, 6].map(v => `<option value="${v}" ${(m[k] ?? 1) === v ? "selected" : ""}>${v}</option>`).join("")}</select>
             ${o[k] != null ? `<span class="small">(${String(o[k]).replace(".", ",")})</span>` : ""}</label>`).join("")}`; }).join("")}</div>`
         : `<p class="small">Niemand als „da“ eingetragen.</p>`}</section>`;
   }
   async function setGrade(nr, area, value) {
-    const G = T.tr.grades; G.mine[nr] = G.mine[nr] || {};
-    if (value) G.mine[nr][area] = value; else delete G.mine[nr][area];
-    const r = await St().send("grades.php", { action: "set", id: T.tr.training.id, nr, area, value: value || null });
+    const G = T.tr.grades, present = [...new Set(T.tr.present)];
+    // Vorgabe 1: beim ersten Eintrag bekommen alle Anwesenden ohne eigene Note eine 1 (Server und Anzeige)
+    present.forEach(n => { G.mine[n] = G.mine[n] || {}; GRADE_AREAS.forEach(([k]) => { if (G.mine[n][k] == null) G.mine[n][k] = 1; }); });
+    G.mine[nr] = G.mine[nr] || {}; G.mine[nr][area] = value || 1;
+    const r = await St().send("grades.php", { action: "set", id: T.tr.training.id, nr, area, value: value || 1, fill: present });
     if (!r.ok) return fail(r);
-    const el = document.getElementById(`gr-${nr}-${area}`); if (el) el.className = gradeTone(value || null);
+    LZ.render();
   }
   const trState = r => { T.tr.present = r.present; T.tr.training.state = r.state; T.tr.training.expected = false; T.confirm = null; LZ.render(); };
   LZ.actions.tAll = async (b, v) => {

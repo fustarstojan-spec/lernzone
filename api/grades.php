@@ -3,7 +3,8 @@
  * Trainer-Bewertung nach dem Training – Schulnoten 1 (sehr gut) bis 6 (ungenügend), jeder Trainer einzeln, nur für Trainer
  * GET ?training=5  → {ok, mine:{nr:{area:note}}, others:{nr:{area:Ø}}, count:{nr: Anzahl anderer Trainer}}
  * GET ?nr=7        → {ok, avg4:{area:Ø}, season:{area:Ø}, list:[{date, title, values:{area:Ø}, coaches}]}   (Ø über alle Trainer)
- * POST {action:"set", id, nr, area, value}   value 1–6 oder null (löschen)
+ * POST {action:"set", id, nr, area, value, fill:[nr]}   value 1–6 oder null (löschen); fill = Anwesende: wer von diesem Trainer
+ *                                                    noch keine Note hat, bekommt in allen Bereichen die Vorgabe 1
  * Bereiche: verhalten · umsetzung · einstellung · soziales
  */
 require __DIR__ . '/config.php';
@@ -47,6 +48,10 @@ $st = db()->prepare("SELECT COUNT(*) FROM trainings WHERE id = ? AND kind = 'tra
 if ((int)$st->fetchColumn() === 0) json_out(['ok' => false, 'error' => 'Dieses Training gibt es nicht.'], 404);
 $nr = int_in($in['nr'] ?? null, 1, 99); $area = (string)($in['area'] ?? '');
 if ($nr === null || !in_array($area, GRADE_AREAS, true)) json_out(['ok' => false, 'error' => 'Ungültige Eingabe.'], 400);
+$def = db()->prepare('INSERT OR IGNORE INTO grades (training_id, nr, coach_id, area, value) VALUES (?, ?, ?, ?, 1)');
+$known = array_map('intval', db()->query('SELECT nr FROM players')->fetchAll(PDO::FETCH_COLUMN));
+foreach (array_slice(is_array($in['fill'] ?? null) ? $in['fill'] : [], 0, 60) as $f)
+    if (in_array((int)$f, $known, true)) foreach (GRADE_AREAS as $a) $def->execute([$id, (int)$f, $me['id'], $a]);
 if (($in['value'] ?? null) === null || $in['value'] === '') {
     db()->prepare('DELETE FROM grades WHERE training_id = ? AND nr = ? AND coach_id = ? AND area = ?')->execute([$id, $nr, $me['id'], $area]);
 } else {

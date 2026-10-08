@@ -2,6 +2,10 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.17.1 – 2026-10-08
+- Noten: Bezeichnungen ausgeschrieben (Verhalten, Umsetzung, Einstellung, Soziales)
+- Vorgabe 1: Sobald ein Trainer im Training die erste Note ändert, bekommen alle Anwesenden in allen Bereichen eine 1, die übrigen Noten passt er nur noch bei Abweichungen an
+
 ## 0.17.0 – 2026-10-08
 - **IEP-Stände statt Überschreiben:** „Neuer Stand“ legt eine neue Version an, frühere bleiben erhalten und lassen sich ansehen (und bei Bedarf löschen); Spieler sehen immer den neuesten Stand. Der übernommene U13-Stand bleibt als erster Stand erhalten.
 - **Bewertung nach dem Training** (nur Trainer): Schulnoten 1–6 für Verhalten, Umsetzung, Einstellung und Soziales für alle, die da waren; jeder Trainer bewertet für sich, in Klammern der Ø der anderen

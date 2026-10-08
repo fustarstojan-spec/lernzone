@@ -394,3 +394,5 @@ code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:
 .g-mid{background:#fbf3df;color:#7a5a12}
 .g-low{background:#f6e1e3;color:#8a2a35}
 .vlist{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
+.gradegrid>b{font-size:.72rem;letter-spacing:-.01em;overflow-wrap:anywhere;line-height:1.1}
+.gradetable th{font-size:.78rem}
