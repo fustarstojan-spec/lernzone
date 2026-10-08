@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.15.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.16.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -198,7 +198,7 @@
   ${(LZ.hooks.meTop || []).map(f => f(pl)).join("")}
   <section class="stack"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><h2>Diese Woche</h2><span class="small" style="font-variant-numeric:tabular-nums">${nDone}/${plan.week.length} erledigt</span></div>
   ${plan.week.map(([d, t], i) => `<label class="task ${done[i] ? "done" : ""}"><input type="checkbox" class="taskbox" id="task-${i}" data-i="${i}" ${done[i] ? "checked" : ""}><span class="day">${esc(d)}</span><span class="txt">${esc(t)}</span></label>`).join("")}</section>
-  <section class="stack"><h2>Meine Ziele</h2>${plan.goals.map(g => `<div class="goal"><b>${esc(g.t)}</b><span class="small">Zeitraum: ${esc(g.when)}</span></div>`).join("")}</section>
+  ${Store.mode === "api" ? "" : `<section class="stack"><h2>Meine Ziele</h2>${plan.goals.map(g => `<div class="goal"><b>${esc(g.t)}</b><span class="small">Zeitraum: ${esc(g.when)}</span></div>`).join("")}</section>`}
   <section class="card stack"><h2>Lernfortschritt</h2>${mods.map(([id, t]) => { const q = p.quiz[id]; const pc = q ? Math.round(q.best / q.of * 100) : 0; return `<div class="prow"><b>${esc(t)}</b><span>${q ? `${q.best}/${q.of}` : "–"}</span><span class="meter"><b style="width:${pc}%"></b></span></div>`; }).join("")}</section>
   ${(LZ.hooks.meBottom || []).map(f => f(pl)).join("")}
   <button class="btn ghost" data-act="logout">Abmelden</button>

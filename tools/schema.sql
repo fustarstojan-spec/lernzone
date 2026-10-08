@@ -111,6 +111,24 @@ CREATE TABLE IF NOT EXISTS match_subs (
   nr_in        INTEGER
 );
 
+-- Individueller Entwicklungsplan (ab 0.16.0)
+-- data: {goals:{ind,tech,phys,off,def:[…]}, plan:{short,mid,long}, season, coach:{…nur Trainer…}}
+CREATE TABLE IF NOT EXISTS iep (
+  nr           INTEGER PRIMARY KEY,
+  data         TEXT    NOT NULL DEFAULT '{}',
+  updated_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_by   INTEGER
+);
+-- Selbsteinschätzung nach Spielen: 1–5 pro Zielbereich
+CREATE TABLE IF NOT EXISTS iep_ratings (
+  nr           INTEGER NOT NULL,
+  training_id  INTEGER NOT NULL,
+  area         TEXT    NOT NULL,                     -- ind | tech | phys | off | def
+  value        INTEGER NOT NULL,
+  created_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (nr, training_id, area)
+);
+
 CREATE TABLE IF NOT EXISTS moods (
   training_id  INTEGER NOT NULL,
   nr           INTEGER NOT NULL,

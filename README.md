@@ -111,6 +111,7 @@ Voraussetzung: Webspace mit PHP 8 und PDO/SQLite (bei fast allen Hostern Standar
 2. In `js/config.js` auf `mode: "api"` umstellen.
 3. Auf dem Server (SSH) im Projektordner: `php tools/create_coach.php "Vorname" benutzername` → erstes Admin-Konto mit Einmal-Code.
 4. Spieler im Trainer-Bereich anlegen – oder `php tools/import_players.php` übernimmt `data/players.json` und gibt eine Liste mit Benutzernamen und Einmal-Codes aus.
+   IEP übernehmen: JSON `{ "7": {goals, plan, season, coach} }` (Trikotnummern, keine Namen) → `php tools/import_iep.php storage/iep.json`.
    Bisherige Trainingsbeteiligung (z. B. aus einer Excel): als CSV `nr;datum;anwesend` (1/0) speichern, dann `php tools/import_attendance.php storage/anwesenheit.csv --saison=JJJJ-MM-TT`. Keine Namen, keine Gründe.
 5. Prüfen, dass `storage/` und `tools/` von außen nicht erreichbar sind (`.htaccess` liegt bei; bei Nginx entsprechend sperren). Besser: `storage/` außerhalb des Web-Ordners ablegen und den Pfad in `api/config.php` anpassen.
 6. Nur über HTTPS betreiben und die HSTS-Zeile in `.htaccess` einschalten.
@@ -140,6 +141,7 @@ Voraussetzung: Webspace mit PHP 8 und PDO/SQLite (bei fast allen Hostern Standar
 | `api/dashboard.php` | GET / POST (Trainer) | – / `{ action: "out"\|"in", id }` | `{ events, coaches, players }` |
 | `api/boards.php` | GET / POST | `?id=` / `{ action: "save"\|"delete", … }` (Trainer) | Tafeln; Spieler nur freigegebene |
 | `api/matches.php` | GET / POST (Trainer) | `?id=` / `{ action: "save"\|"clear", id, … }` | Spiele, Saison-Minuten |
+| `api/iep.php` | GET / POST | Spieler: Ziele + `{ action: "rate" }` · Trainer: `?nr=` + `{ action: "save" }` | Entwicklungsplan |
 | `api/absence.php` | POST (Spieler) | `{ action: "set", id, reason }` / `{ action: "withdraw", id }` | `{ ok, upcoming }` |
 | `api/calendar.php` | GET (angemeldet) | `?days=14` | `{ next, upcoming, status }` |
 | `api/calendar.php` | POST | `{ action: "seturl", url }` (Admin) / `{ action: "refresh" }` (Trainer) | `{ ok, status }` |

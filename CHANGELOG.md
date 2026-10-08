@@ -2,6 +2,13 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.16.0 – 2026-10-08
+- **Meine Ziele aus dem IEP** (Individueller Entwicklungsplan): Spieler sehen in „Mein Bereich“ ihr persönliches Ziel sowie Technik-, Physis-, Offensiv- und Defensivziele und den Zeitplan (ersetzt die Beispielziele)
+- **Selbsteinschätzung:** bis 3 Tage nach einem Spiel bewertet der Spieler jeden Zielbereich mit 1–5 (nach Einwilligung der Eltern); der Trainer sieht Verlauf und Durchschnitt
+- Trainer: Entwicklungsplan im Spielerprofil ansehen und bearbeiten; Stärken, Hauptentwicklungsfeld, psychologische Einschätzung, Gesprächsnotizen, Gruppe und Trainingshinweise **nur für Trainer** (der Server gibt sie Spielern nie heraus)
+- Startstand: IEP U13 25/26 aus der Trainer-Excel übernommen (`tools/import_iep.php`, JSON ohne Namen – nicht im Repository)
+- Neu: `api/iep.php`, Tabellen `iep`, `iep_ratings`
+
 ## 0.15.0 – 2026-10-08
 - **Spielzeiten** (Reiter „Spielzeiten“): alle Spiele und Turniere seit Saisonbeginn aus dem Kalender
 - Pro Spiel: Spielzeit (Standard 70 Min.), Ergebnis, Kader per Antippen (nicht dabei → Startelf → Bank), Startelf aus der gespeicherten Aufstellung übernehmen, Wechsel mit Minute (raus/rein, auch fliegende Wechsel mehrfach) → Minuten pro Spieler

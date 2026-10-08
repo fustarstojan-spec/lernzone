@@ -25,7 +25,8 @@
     if (!active()) return;
     const nr = LZ.S.user.nr;
     if (K.forNr !== nr) { K.data = null; K.edit = {}; K.M = {}; }
-    const r = await LZ.Store.get("my.php");
+    const [r, ie] = await Promise.all([LZ.Store.get("my.php"), LZ.Store.get("iep.php")]);
+    K.iep = ie && ie.ok ? ie : null;
     if (r.ok) { K.data = r; K.forNr = nr; K.err = ""; K.at = Date.now(); } else K.err = r.error || "Konnte deine Daten nicht laden.";
     if (["me", "home"].includes(LZ.S.view)) LZ.render();
   }
@@ -40,6 +41,31 @@
   });
 
   /* ---------- Bausteine für Mein Bereich ---------- */
+  /* ---------- Meine Ziele (IEP) + Selbsteinschätzung nach dem Spiel ---------- */
+  const AREAS = [["ind", "Mein persönliches Ziel"], ["tech", "Technik"], ["phys", "Körper & Fitness"], ["off", "Mit Ball (offensiv)"], ["def", "Gegen den Ball (defensiv)"]];
+  const STARS = ["gar nicht", "wenig", "teils", "gut", "super"];
+  function iepCard() {
+    const ie = K.iep;
+    if (!ie || !ie.iep) return `<section class="card stack"><h2>Meine Ziele</h2><p class="small">Deine Ziele legst du mit deinem Trainer im Gespräch fest. Danach stehen sie hier.</p></section>`;
+    const g = ie.iep.goals || {}, p = ie.iep.plan || {}, rate = ie.rate;
+    const plan = [["short", "Bald"], ["mid", "In ein paar Monaten"], ["long", "Bis Saisonende"]].filter(([k]) => p[k]);
+    return `<section class="card stack"><div class="rowspread"><h2>Meine Ziele</h2>${ie.iep.season ? `<span class="small">${esc(ie.iep.season)}</span>` : ""}</div>
+      ${rate && ie.consent ? `<div class="rateblock"><b>Nach dem Spiel: ${esc(rate.game.title)}</b><span class="small">Wie gut hast du deine Ziele umgesetzt? 1 = gar nicht · 5 = super</span>
+        ${AREAS.filter(([k]) => (g[k] || []).length).map(([k, l]) => `<div class="raterow"><span>${l}</span><div class="scale scale-5">${[1, 2, 3, 4, 5].map(v =>
+          `<button class="sbtn ${rate.values[k] === v ? "on" : ""}" data-act="iepRate" data-k="${k}" data-v="${v}" aria-pressed="${rate.values[k] === v}" title="${STARS[v - 1]}">${v}</button>`).join("")}</div></div>`).join("")}
+        ${Object.keys(rate.values).length ? `<p class="okmsg">Gespeichert – dein Trainer sieht es.</p>` : ""}</div>` : ""}
+      ${AREAS.filter(([k]) => (g[k] || []).length).map(([k, l]) => `<div class="goalarea"><b>${l}</b><ul>${g[k].map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>`).join("")}
+      ${plan.length ? `<div class="goalarea"><b>Mein Zeitplan</b><ul>${plan.map(([k, l]) => `<li><b>${l}:</b> ${esc(p[k])}</li>`).join("")}</ul></div>` : ""}
+      <p class="small">Deine Ziele sehen nur du und deine Trainer.</p></section>`;
+  }
+  LZ.actions.iepRate = async b => {
+    const rate = K.iep.rate, k = b.dataset.k, v = +b.dataset.v;
+    rate.values[k] = v; LZ.render();
+    const r = await LZ.Store.send("iep.php", { action: "rate", id: rate.game.id, area: k, value: v });
+    if (r.ok) rate.values = r.values; else K.err = r.error || "Speichern hat nicht geklappt.";
+    LZ.render();
+  };
+
   /* Nächste Trainings mit „Absagen“ */
   const hm = s => s.slice(11, 16);
   function trainingsCard(d, home) {
@@ -144,7 +170,7 @@
     if (!active()) return "";
     if (K.err) return `<section class="card"><p class="err" style="text-align:left">${esc(K.err)}</p></section>`;
     if (!K.data || K.forNr !== LZ.S.user.nr) return `<section class="card"><p class="small">Lade deine Daten …</p></section>`;
-    return attendanceCard(K.data.attendance) + trainingsCard(K.data) + moodCard(K.data) + profileCard(K.data);
+    return attendanceCard(K.data.attendance) + trainingsCard(K.data) + iepCard() + moodCard(K.data) + profileCard(K.data);
   });
 
   /* ---------- Profil bearbeiten ---------- */

@@ -371,3 +371,16 @@ code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:
 .wrow{flex-wrap:wrap}
 .score{display:flex;align-items:center;gap:6px}
 .score input{width:4em}
+/* 0.16.0 Meine Ziele (IEP) */
+.goalarea{display:grid;gap:4px}
+.goalarea ul{margin:0;padding-left:1.1em;display:grid;gap:3px}
+.goalarea b{color:var(--shirt)}
+.rateblock{display:grid;gap:8px;padding:10px;border-radius:12px;background:rgba(94,33,41,.06)}
+.raterow{display:grid;gap:4px}
+.ieptable{width:100%;border-collapse:collapse;font-size:.88rem}
+.ieptable th,.ieptable td{padding:4px 6px;border-bottom:1px solid var(--rule);text-align:center}
+.ieptable td:first-child,.ieptable th:first-child{text-align:left}
+.iepcoach{display:grid;gap:6px;padding:10px;border-radius:12px;background:#f6f1f2;border:1px dashed #d9b9be}
+.iepcoach dl{margin:0;display:grid;gap:2px;font-size:.92rem}
+.iepcoach dt{font-weight:700;color:var(--muted);font-size:.8rem;margin-top:6px}
+.iepcoach dd{margin:0}
