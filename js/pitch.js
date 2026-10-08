@@ -13,7 +13,8 @@
   }
 
   /* o: { own:[[pos,x,y]], me:[pos], opp:[[x,y]], ball:[x,y], arrows:[{f,t,k:"pass"|"run"}],
-          hl:[{l,t,c}], tap:bool, zones:bool, label } */
+          hl:[{l,t,c}], tap:bool, zones:bool, label,
+          board: { items:[{id, t:"own"|"opp"|"ball", x, y, lab, nr, me, sel}], lines:[{id, k:"pass"|"run"|"line", f:[x,y], t:[x,y]}] }  (Taktiktafel, ab 0.14.0) } */
   function field(o = {}) {
     const id = "f" + (++n);
     let s = `<svg class="pitch" viewBox="-3 -5 74 115" role="img" aria-label="${esc(o.label || "Spielfeld")}">
@@ -44,9 +45,34 @@
       s += `<g class="own${me.includes(lab) ? " me" : ""}"><circle cx="${x}" cy="${y}" r="2.6"${gk ? ` style="fill:${GKC}"` : ""}/><text x="${x}" y="${y + .15}"${String(lab).length > 1 ? ' style="font-size:2.3px"' : ""}>${esc(lab)}</text></g>`;
     });
     if (o.ball) s += `<circle cx="${o.ball[0]}" cy="${o.ball[1]}" r="1.1" class="ballc"/>`;
+    if (o.board) s += board(o.board, id);
     if (o.tap) for (let t = 0; t < 3; t++) for (let l = 0; l < 5; l++)
       s += `<rect x="${LX[l]}" y="${TY[t]}" width="${(LX[l + 1] - LX[l]).toFixed(2)}" height="35" class="ztap" data-act="zone" data-l="${l}" data-t="${t}"><title>Zone antippen</title></rect>`;
     return s + "</svg>";
+  }
+
+  /* Taktiktafel: Linien und verschiebbare Figuren (Gruppen mit data-tok / data-line, Position per transform) */
+  function board(b, id) {
+    let s = `<g class="blines">`;
+    (b.lines || []).forEach(l => {
+      const [x1, y1] = l.f, [x2, y2] = l.t, dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1, sh = l.k === "line" ? 0 : l.k === "pass" ? 1.2 : 0.4;
+      const ex = x2 - dx / L * sh, ey = y2 - dy / L * sh;
+      const mk = l.k === "line" ? "" : ` marker-end="url(#${id}${l.k === "pass" ? "p" : "r"})"`;
+      s += `<g data-line="${esc(l.id)}"><line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" class="hit"/>
+        <line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${ex.toFixed(2)}" y2="${ey.toFixed(2)}" class="${l.k}"${mk}/></g>`;
+    });
+    s += `</g><g class="btoks">`;
+    (b.items || []).forEach(it => {
+      const tr = `transform="translate(${(+it.x).toFixed(2)} ${(+it.y).toFixed(2)})"`;
+      if (it.t === "ball") { s += `<g class="tok bball" data-tok="${esc(it.id)}" ${tr}><circle r="2.2" class="hit"/><circle r="1.2" class="ballc"/></g>`; return; }
+      const gk = it.t === "own" && (it.lab === "TW" || (it.nr && GK.includes(it.nr)));
+      const main = it.nr ? String(it.nr) : (it.lab || "");
+      s += `<g class="tok ${it.t}${it.me ? " me" : ""}${it.sel ? " sel" : ""}" data-tok="${esc(it.id)}" ${tr}>
+        <circle r="3.4" class="hit"/><circle r="2.6"${gk ? ` style="fill:${GKC}"` : ""}/>
+        <text y=".15"${main.length > 1 ? ' style="font-size:2.3px"' : ""}>${esc(main)}</text>
+        ${it.nr && it.lab ? `<text y="4.6" class="sub">${esc(it.lab)}</text>` : ""}</g>`;
+    });
+    return s + `</g>`;
   }
 
   window.LZPitch = { setup, field };

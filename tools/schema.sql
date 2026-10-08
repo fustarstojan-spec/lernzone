@@ -77,6 +77,18 @@ CREATE TABLE IF NOT EXISTS coach_absences (
   PRIMARY KEY (training_id, coach_id)
 );
 
+-- Taktiktafel und Aufstellungen (ab 0.14.0)
+CREATE TABLE IF NOT EXISTS boards (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  title        TEXT    NOT NULL DEFAULT '',
+  kind         TEXT    NOT NULL DEFAULT 'board',     -- 'board' = freie Taktiktafel, 'lineup' = Aufstellung für ein Spiel
+  training_id  INTEGER,                              -- Spiel (trainings.id) bei Aufstellungen
+  shared       INTEGER NOT NULL DEFAULT 0,           -- 1 = für Spieler sichtbar
+  data         TEXT    NOT NULL DEFAULT '{}',        -- {items:[…], lines:[…]}  Maße in Metern
+  updated_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_by   INTEGER
+);
+
 CREATE TABLE IF NOT EXISTS moods (
   training_id  INTEGER NOT NULL,
   nr           INTEGER NOT NULL,

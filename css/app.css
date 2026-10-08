@@ -331,3 +331,29 @@ code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:
 .pbar{display:flex;flex-direction:column;gap:3px}
 .ppct{font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
 .meter.hi b{background:#2f8a4f}.meter.mid b{background:#c9962b}.meter.lo b{background:#b23a48}
+/* 0.14.0 Taktiktafel */
+.pitch .line{stroke:#fff;stroke-width:.45;fill:none;stroke-dasharray:.1 0}
+.pitch .hit{stroke:transparent;stroke-width:3;fill:transparent}
+.pitch .tok{cursor:grab}
+.pitch .tok.own circle:not(.hit){fill:var(--shirt);stroke:#fff;stroke-width:.35}
+.pitch .tok.opp circle:not(.hit){fill:#e9eef3;stroke:#23303b;stroke-width:.35}
+.pitch .tok text{text-anchor:middle;dominant-baseline:middle;font-size:2.7px;font-weight:800;fill:#fff;pointer-events:none}
+.pitch .tok.opp text{fill:#23303b}
+.pitch .tok text.sub{font-size:2px;fill:#fff;paint-order:stroke;stroke:rgba(0,0,0,.55);stroke-width:.5px}
+.pitch .tok.sel circle:not(.hit){stroke:#ffe066;stroke-width:.8}
+.pitch .tok.me circle:not(.hit){stroke:#ffe066;stroke-width:.9}
+.pitch .ballc{fill:#fff;stroke:#111;stroke-width:.3}
+.tboard .pitch{max-width:520px;touch-action:none;user-select:none;-webkit-user-select:none}
+.tbar{display:flex;flex-wrap:wrap;gap:6px}
+.tbar button{border:1px solid var(--rule);background:var(--surface);border-radius:10px;padding:7px 10px;font:inherit;font-size:.86rem;font-weight:700;cursor:pointer;color:inherit}
+.tbar button[aria-pressed="true"]{background:var(--shirt);color:#fff;border-color:var(--shirt)}
+.squad{display:flex;flex-wrap:wrap;gap:6px}
+.squad button{all:unset;cursor:pointer;width:44px;text-align:center;font-size:.72rem;border-radius:8px;padding:2px 0;border:1px solid var(--rule)}
+.squad button svg{width:30px;height:30px;display:block;margin:0 auto}
+.squad button.used{opacity:.35}
+.squad button.out{opacity:.35;text-decoration:line-through}
+.blist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.blist button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;justify-content:space-between;gap:8px;width:100%;padding:10px 12px;border:1px solid var(--rule);border-radius:12px;background:var(--surface)}
+.blist .small{display:block}
+.thumb{width:72px;flex:none}
+.thumb .pitch{max-width:72px;border-radius:5px}

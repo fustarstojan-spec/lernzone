@@ -2,6 +2,12 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.14.0 – 2026-10-08
+- **Taktiktafel** (Reiter „Taktik“): eigene Spieler, Gegner und Ball mit Finger oder Maus verschieben; Pässe (→), Laufwege (⇢) und Linien zeichnen; Löschen-Werkzeug; Grundordnungen „Wir 4-1-4-1“, „Gegner 4-4-2 / 4-3-3“; Beschriftung pro Figur
+- **Aufstellung pro Spiel:** Spiel aus dem Kalender wählen, Spieler den Positionen zuordnen (antippen → Nummer), „nach Positionen füllen“, Startelf und Bank
+- Speichern, Kopie, Löschen; **für Spieler freigeben**: Spieler sehen die Tafel auf ihrer Startseite („Vom Trainer“) – mit Positionen, aber nur ihrer eigenen Nummer (gelber Ring, „Du spielst hier: …“)
+- Neu: `api/boards.php`, `js/taktik.js`, Tabelle `boards`
+
 ## 0.13.0 – 2026-10-08
 - **Trainer-Startseite** mit Reitern Übersicht · Lernzone · Taktik · Spielzeiten (Lerninhalte jetzt unter „Lernzone“; Taktik und Spielzeiten folgen)
 - Übersicht: die nächsten 4 Termine mit Spielerzahl (alle minus Absagen) und welche Trainer dabei sind; „Ich kann nicht“ / „Ich bin doch dabei“ für Trainer
