@@ -35,6 +35,7 @@ $st = db()->prepare('SELECT t.*, (SELECT COUNT(*) FROM absences b WHERE b.traini
                      FROM trainings t WHERE t.date >= ? ORDER BY t.date, t.time LIMIT 12');
 $st->execute([today()]);
 $co = db()->prepare('SELECT coach_id FROM coach_absences WHERE training_id = ?');
+$pl = db()->prepare('SELECT id, title FROM sessions WHERE training_id = ? ORDER BY id DESC LIMIT 1');   // Trainingsplan (ab 0.24.0)
 $events = [];
 foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $t) {
     if (training_end($t) < time()) continue;
@@ -45,7 +46,8 @@ foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $t) {
         'state' => (int)$t['att_done'],
         'players' => $isTr ? ['coming' => match ((int)$t['att_done']) { 2 => 0, 1 => (int)$t['present'], default => $total - (int)$t['absent'] },
                               'recorded' => (int)$t['att_done'] === 1, 'total' => $total, 'absent' => (int)$t['absent']] : null,
-        'coachesOut' => array_map('intval', $co->fetchAll(PDO::FETCH_COLUMN))];
+        'coachesOut' => array_map('intval', $co->fetchAll(PDO::FETCH_COLUMN)),
+        'plan' => $isTr ? (function () use ($pl, $t) { $pl->execute([$t['id']]); $p = $pl->fetch(PDO::FETCH_ASSOC); return $p ? ['id' => (int)$p['id'], 'title' => $p['title']] : null; })() : null];
     if (count($events) === 4) break;
 }
 

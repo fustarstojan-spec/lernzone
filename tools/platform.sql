@@ -68,6 +68,32 @@ CREATE TABLE IF NOT EXISTS club_admins (
   PRIMARY KEY (account_id, club_id)
 );
 
+-- Übungsbibliothek des Vereins (ab 0.24.0). Textfelder: ein Punkt pro Zeile. sketch: Taktiktafel-Daten (JSON) oder ''
+CREATE TABLE IF NOT EXISTS drills (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  club_id      INTEGER NOT NULL,
+  title        TEXT    NOT NULL,
+  topic        TEXT    NOT NULL DEFAULT '',          -- Thema, z. B. „2v1“, „Koordination“
+  phase        TEXT    NOT NULL DEFAULT '',          -- Spielphase 1–5
+  block        TEXT    NOT NULL DEFAULT 'uebung',    -- einstimmung | uebung | spiel | ausklang
+  minutes      INTEGER NOT NULL DEFAULT 0,
+  players      TEXT    NOT NULL DEFAULT '',
+  organisation TEXT    NOT NULL DEFAULT '',
+  ablauf       TEXT    NOT NULL DEFAULT '',
+  coaching     TEXT    NOT NULL DEFAULT '',
+  easier       TEXT    NOT NULL DEFAULT '',
+  harder       TEXT    NOT NULL DEFAULT '',
+  load         TEXT    NOT NULL DEFAULT '',          -- Belastung / Umfang
+  material     TEXT    NOT NULL DEFAULT '',
+  sketch       TEXT    NOT NULL DEFAULT '',
+  draft        INTEGER NOT NULL DEFAULT 0,           -- 1 = Entwurf, noch zu prüfen
+  active       INTEGER NOT NULL DEFAULT 1,
+  created_by   INTEGER,
+  updated_by   INTEGER,
+  updated_at   TEXT    NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS drills_club ON drills (club_id, active);
+
 CREATE TABLE IF NOT EXISTS platform_settings (
   name   TEXT PRIMARY KEY,
   value  TEXT NOT NULL

@@ -150,3 +150,21 @@ CREATE TABLE IF NOT EXISTS moods (
 );
 
 -- Zugänge (ab 0.8.0): Anmeldung mit Benutzername + Passwort für Spieler und Trainer
+
+-- 0.24.0: Trainingseinheiten (Plan pro Training). data JSON: {blocks:{einstimmung:[{drill, min, note}], uebung:[…], spiel:[…], ausklang:[…]}}
+CREATE TABLE IF NOT EXISTS sessions (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  training_id  INTEGER,                              -- Termin aus dem Kalender (optional)
+  date         TEXT    NOT NULL DEFAULT '',          -- 'YYYY-MM-DD'
+  title        TEXT    NOT NULL DEFAULT '',
+  focus        TEXT    NOT NULL DEFAULT '',          -- Fokus des Monats, z. B. „2v1“
+  phase        TEXT    NOT NULL DEFAULT '',          -- Spielphase 1–5
+  goal         TEXT    NOT NULL DEFAULT '',
+  players      TEXT    NOT NULL DEFAULT '',          -- z. B. „18 Spieler + 2 TW“
+  notes        TEXT    NOT NULL DEFAULT '',
+  data         TEXT    NOT NULL DEFAULT '{}',
+  created_by   INTEGER,
+  updated_by   INTEGER,
+  updated_at   TEXT    NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS sessions_training ON sessions (training_id);

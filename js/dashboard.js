@@ -9,7 +9,7 @@
   const D = { data: null, at: 0, sort: "nr", busy: false, err: "" };
 
   /* ---------- Reiter für Trainer ---------- */
-  const TABS = [["home", "Übersicht"], ["lernzone", "Lernzone"], ["taktik", "Taktik"], ["spielzeiten", "Spielzeiten"]];
+  const TABS = [["home", "Übersicht"], ["training", "Training"], ["lernzone", "Lernzone"], ["taktik", "Taktik"], ["spielzeiten", "Spielzeiten"]];
   LZ.coachNav = active => `<nav class="seg coachnav" aria-label="Trainer-Bereich">${TABS.concat(LZ.isAdmin() ? [["verwaltung", "Verwaltung"]] : []).map(([k, l]) =>
     `<button aria-pressed="${active === k}" data-act="${k === "home" ? "home" : "cnav"}" data-v="${k}">${l}</button>`).join("")}</nav>`;
   LZ.actions.cnav = (b, v) => LZ.go(v);
@@ -37,6 +37,7 @@
         <div class="rowspread"><span><b>${esc(cal().dayName(e.date))}</b> · ${esc(cal().timeText(e))}</span>${cal().chip(e.kind)}</div>
         <button class="evtitle-btn" data-act="tOpen" data-v="${e.id}">${esc(e.title)}${e.location ? ` <span class="small">· ${esc(e.location)}</span>` : ""}</button>
         ${pl}
+        ${e.kind === "training" ? `<button class="linkbtn planlink" data-act="trOpenTraining" data-v="${e.id}">${e.plan ? "📋 Plan: " + esc(e.plan.title) : "+ Trainingsplan anlegen"}</button>` : ""}
         <div class="cchips">${coaches}</div>
         <button class="linkbtn" data-act="dOut" data-v="${e.id}" data-o="${meOut ? "in" : "out"}" ${D.busy ? "disabled" : ""}>${meOut ? "Ich bin doch dabei" : "Ich kann nicht"}</button>
       </li>`;

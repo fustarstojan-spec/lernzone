@@ -2,6 +2,14 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.24.0 – 2026-10-09
+- **Neuer Reiter „Training“** (Trainer): Trainingsplanung mit einheitlichem Aufbau
+  - **Einheiten** pro Termin aus dem Kalender: Kopf (Titel, Fokus des Monats, Spielphase, Ziel, Spieler) und feste Blöcke Einstimmung · Übungsform · Spielform · Ausklang, Gesamtdauer automatisch, Druckansicht
+  - **Übungsbibliothek des Vereins**: jede Übung einmal, immer gleich gegliedert – Organisation · Ablauf · Coachingpunkte · Leichter · Schwerer · Belastung · Material · Skizze (aus einer Taktiktafel übernommen); Entwürfe markiert; Suche nach Name/Thema
+  - Übersicht: bei jedem Training „📋 Plan: …“ bzw. „+ Trainingsplan anlegen“
+- Werkzeug `tools/import_training.php` übernimmt Übungen und Einheiten aus einer JSON-Datei (die Inhalte liegen nur in `storage/`, nicht im Repository)
+- Trainer-Reiter lassen sich auf schmalen Bildschirmen seitlich schieben
+
 ## 0.23.0 – 2026-10-09
 - **Impressum, Datenschutzerklärung, Regeln für Kinder** – unten auf jeder Seite verlinkt, auch ohne Anmeldung erreichbar
   - Datenschutzerklärung beschreibt genau, was die App speichert (Konten, Kader, Beteiligung, Barometer, IEP, Noten …), wer was sieht, Rechtsgrundlagen, Cookie, Speicherdauer, Rechte
