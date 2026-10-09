@@ -110,7 +110,7 @@ Voraussetzung: Webspace mit PHP 8 und PDO/SQLite (bei fast allen Hostern Standar
 
 1. Alle Dateien hochladen, **außer** `data/demo-pins.json` und `storage/*.sqlite`.
 2. In `js/config.js` auf `mode: "api"` umstellen.
-3. Auf dem Server (SSH) im Projektordner: `php tools/create_club.php "Verein" "Mannschaft" "Vorname" benutzername` → Verein, erste Mannschaft und Admin-Konto mit Einmal-Code. Weitere Vereine genauso; `php tools/create_club.php --liste` zeigt alle Mannschaften mit Nummer.
+3. Auf dem Server (SSH) im Projektordner: `php tools/create_club.php "Verein" "Vorname Vereinsadmin" benutzername [--mannschaft=U14]` → Verein und Vereinsadmin mit Einmal-Code. Der Vereinsadmin legt Mannschaften an und lädt Trainer ein (App → Verwaltung). Weitere Vereine legt der Superadmin auch in der App an; `php tools/create_club.php --liste` zeigt alle Vereine und Mannschaften mit Nummer.
 4. Spieler im Trainer-Bereich anlegen – oder `php tools/import_players.php --team=N` übernimmt `data/players.json` und gibt eine Liste mit Benutzernamen und Einmal-Codes aus.
    IEP übernehmen: JSON `{ "7": {goals, plan, season, coach} }` (Trikotnummern, keine Namen) → `php tools/import_iep.php storage/iep.json`.
    Bisherige Trainingsbeteiligung (z. B. aus einer Excel): als CSV `nr;datum;anwesend` (1/0) speichern, dann `php tools/import_attendance.php storage/anwesenheit.csv --saison=JJJJ-MM-TT`. Keine Namen, keine Gründe.

@@ -103,7 +103,7 @@
       pending: null,
       get currentUser() { return user; },
       gate() {
-        if (user || api_.coach.active) return null;
+        if (user || api_.coach.active || api_.coach.platformAdmin || (api_.coach.clubs || []).length) return null;   // Admins auch ohne Mannschaft
         if (api_.pending) return "setpw";
         if (!api_.coach.hasCoaches && api_.coach.canSetup) return "setup";
         return "login";
@@ -164,7 +164,7 @@
       async logout() {
         await safe("auth.php", { action: "logout" });
         user = null; progress = emptyProgress(); api_.account = null; api_.pending = null;
-        api_.coach = Object.assign({}, api_.coach, { active: false, id: null, name: null, isAdmin: false, team: null, teams: [] });
+        api_.coach = Object.assign({}, api_.coach, { active: false, id: null, name: null, isAdmin: false, team: null, teams: [], clubs: [], platformAdmin: false });
         if (content) content.players.splice(0);
       },
       async coachLogout() { return api_.logout(); },

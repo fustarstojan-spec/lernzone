@@ -100,7 +100,7 @@
     </form>`;
 
   LZ.actions.pwStart = () => { reset(); F.back = LZ.S.view; LZ.go("pwchange"); };
-  LZ.actions.pwBack = () => { reset(); if (F.back === "coach" && LZ.actions.kaderStart) LZ.actions.kaderStart(); else LZ.go("me"); };
+  LZ.actions.pwBack = () => { reset(); if (F.back === "coach" && LZ.actions.kaderStart) LZ.actions.kaderStart(); else if (F.back === "verwaltung") LZ.go("verwaltung"); else LZ.go("me"); };
   LZ.actions.doPwChange = async () => {
     if (F.busy) return;
     if (F.p !== F.p2) { F.err = "Die beiden neuen Passwörter sind nicht gleich."; LZ.render(); return; }

@@ -6,7 +6,7 @@
  * POST {action:"setpw",  password, password2}        → eigenes Passwort festlegen (nach Einmal-Code / erster Anmeldung)
  * POST {action:"change", old, password, password2}   → Passwort ändern (angemeldet; andere Geräte werden abgemeldet)
  * POST {action:"setup",  club, team, name, username, password, password2} → erster Verein + Mannschaft + Admin-Konto
- *        (nur solange es noch keine Mannschaft gibt und nur auf localhost; das Konto wird Plattform-Admin)
+ *        (nur solange es noch keine Mannschaft gibt und nur auf localhost; das Konto wird Superadmin, Vereinsadmin und Cheftrainer)
  * POST {action:"logout"}
  * Alle Antworten bei Erfolg enthalten das neue CSRF-Token.
  */
@@ -26,6 +26,7 @@ $entityActive = function (array $a): bool {
     if ($a['kind'] === 'coach') {
         $st = pdb()->prepare('SELECT active FROM coaches WHERE id = ?'); $st->execute([(int)$a['ref']]);
         if ((int)$st->fetchColumn() !== 1) return false;
+        if (!empty($a['platform_admin']) || admin_clubs($a)) return true;                                     // Superadmin / Vereinsadmin (auch ohne Mannschaft)
     }
     $st = pdb()->prepare('SELECT team_id, ref FROM memberships WHERE account_id = ?'); $st->execute([(int)$a['id']]);
     foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $m) {
@@ -125,6 +126,7 @@ if ($action === 'setup') {
     $cid = create_coach($name);
     $aid = create_account($u, 'coach', $cid, true, $team);
     pdb()->prepare('UPDATE accounts SET pw_hash = ?, must_set_pw = 0, platform_admin = 1 WHERE id = ?')->execute([hash_pw($pw), $aid]);
+    pdb()->prepare('INSERT INTO club_admins (account_id, club_id) VALUES (?, (SELECT club_id FROM teams WHERE id = ?))')->execute([$aid, $team]);
     $st = pdb()->prepare('SELECT * FROM accounts WHERE id = ?'); $st->execute([$aid]);
     start_session_for($st->fetch(PDO::FETCH_ASSOC), $team);
     $done();

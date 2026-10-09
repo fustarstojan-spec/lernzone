@@ -48,6 +48,7 @@ function pdb(): PDO {
         $pdo->exec('PRAGMA foreign_keys = OFF');
         $pdo->exec(file_get_contents(__DIR__ . '/../tools/platform.sql'));
         platform_bootstrap($pdo);
+        platform_migrate($pdo);
     }
     return $pdo;
 }
@@ -121,6 +122,19 @@ function platform_bootstrap(PDO $p): void {
     // Alte Tabellen in der Mannschafts-Datei umbenennen (bleiben als Sicherung erhalten, werden nicht mehr benutzt)
     foreach (['accounts', 'coaches'] as $t) if ($has($t)) $old->exec("ALTER TABLE $t RENAME TO _legacy_$t");
     $old->exec('DROP INDEX IF EXISTS accounts_ref');
+}
+
+/* Plattform-Ergänzungen: 0.22.0 Vereinsadmins – der Superadmin wird Vereinsadmin der Vereine, in denen er Trainer ist */
+function platform_migrate(PDO $p): void {
+    if ($p->query("SELECT 1 FROM platform_settings WHERE name = 'club_admins_done'")->fetchColumn()) return;
+    $p->exec("INSERT OR IGNORE INTO club_admins (account_id, club_id)
+              SELECT DISTINCT a.id, t.club_id FROM accounts a JOIN memberships m ON m.account_id = a.id AND m.role = 'coach'
+              JOIN teams t ON t.id = m.team_id WHERE a.platform_admin = 1");
+    // Vereine ohne Vereinsadmin (z. B. mit 0.21.0 angelegt): deren Mannschafts-Admins übernehmen
+    $p->exec("INSERT OR IGNORE INTO club_admins (account_id, club_id)
+              SELECT DISTINCT m.account_id, t.club_id FROM memberships m JOIN teams t ON t.id = m.team_id
+              WHERE m.role = 'coach' AND m.is_admin = 1 AND t.club_id NOT IN (SELECT club_id FROM club_admins)");
+    $p->exec("INSERT INTO platform_settings (name, value) VALUES ('club_admins_done', '1')");
 }
 
 /* Ergänzt, was in älteren Datenbanken noch fehlt */
@@ -241,14 +255,36 @@ function require_consent(array $u): void {
 
 /* ---------- Trainer ---------- */
 
-/* Trainer der gewählten Mannschaft; isAdmin = Admin dieser Mannschaft (Mitgliedschaft) */
+/*
+ * Trainer der gewählten Mannschaft. isAdmin = Cheftrainer (memberships.is_admin) oder Vereinsadmin des Vereins.
+ * Vereinsadmins dürfen jede Mannschaft ihres Vereins öffnen, auch ohne dort Trainer zu sein (clubAdmin = true).
+ */
 function current_coach(): ?array {
     if (empty($_SESSION['coach']) || !team_id()) return null;
-    $st = pdb()->prepare("SELECT c.id, c.name, m.is_admin FROM coaches c JOIN memberships m ON m.ref = c.id AND m.role = 'coach' AND m.team_id = ?
-                          WHERE c.id = ? AND c.active = 1");
-    $st->execute([team_id(), (int)$_SESSION['coach']]);
+    $st = pdb()->prepare('SELECT id, name FROM coaches WHERE id = ? AND active = 1'); $st->execute([(int)$_SESSION['coach']]);
     $c = $st->fetch(PDO::FETCH_ASSOC);
-    return $c ? ['id' => (int)$c['id'], 'name' => $c['name'], 'isAdmin' => (bool)$c['is_admin']] : null;
+    if (!$c) return null;
+    $st = pdb()->prepare("SELECT is_admin FROM memberships WHERE team_id = ? AND role = 'coach' AND ref = ?"); $st->execute([team_id(), (int)$c['id']]);
+    $head = $st->fetchColumn();
+    $club = !empty($_SESSION['acc']) && is_club_admin((int)$_SESSION['acc'], (int)team_row(team_id())['club_id']);
+    if ($head === false && !$club) return null;
+    return ['id' => (int)$c['id'], 'name' => $c['name'], 'isAdmin' => (bool)$head || $club, 'head' => (bool)$head, 'clubAdmin' => $club];
+}
+
+/* ---------- Vereinsadmins und Superadmin (ab 0.22.0) ---------- */
+
+function is_club_admin(int $accountId, int $clubId): bool {
+    $st = pdb()->prepare('SELECT COUNT(*) FROM club_admins WHERE account_id = ? AND club_id = ?'); $st->execute([$accountId, $clubId]);
+    return (int)$st->fetchColumn() > 0;
+}
+/* Vereine, die ein Konto verwalten darf (Superadmin: alle) */
+function admin_clubs(array $acc): array {
+    $sql = !empty($acc['platform_admin'])
+        ? 'SELECT id, name, active FROM clubs ORDER BY name'
+        : 'SELECT c.id, c.name, c.active FROM clubs c JOIN club_admins x ON x.club_id = c.id AND x.account_id = ? WHERE c.active = 1 ORDER BY c.name';
+    $st = pdb()->prepare($sql); $st->execute(!empty($acc['platform_admin']) ? [] : [(int)$acc['id']]);
+    return array_map(fn($r) => ['id' => (int)$r['id'], 'name' => $r['name'], 'active' => (bool)$r['active'],
+                                'own' => is_club_admin((int)$acc['id'], (int)$r['id'])], $st->fetchAll(PDO::FETCH_ASSOC));
 }
 
 /* Mannschaften, zu denen ein Konto gehört (für die Auswahl oben) */
@@ -257,8 +293,21 @@ function account_teams(int $accountId): array {
                           JOIN teams t ON t.id = m.team_id AND t.active = 1 JOIN clubs c ON c.id = t.club_id AND c.active = 1
                           WHERE m.account_id = ? ORDER BY c.name, t.name');
     $st->execute([$accountId]);
-    return array_map(fn($r) => ['id' => (int)$r['id'], 'name' => $r['name'], 'season' => $r['season'], 'clubId' => (int)$r['club_id'],
-                                'club' => $r['club'], 'role' => $r['role'], 'isAdmin' => (bool)$r['is_admin']], $st->fetchAll(PDO::FETCH_ASSOC));
+    $out = [];
+    foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r)
+        $out[(int)$r['id']] = ['id' => (int)$r['id'], 'name' => $r['name'], 'season' => $r['season'], 'clubId' => (int)$r['club_id'],
+                               'club' => $r['club'], 'role' => $r['role'], 'isAdmin' => (bool)$r['is_admin']];
+    // Vereinsadmin: alle aktiven Mannschaften seiner Vereine
+    $st = pdb()->prepare('SELECT t.id, t.name, t.season, c.id AS club_id, c.name AS club FROM club_admins x JOIN clubs c ON c.id = x.club_id AND c.active = 1
+                          JOIN teams t ON t.club_id = c.id AND t.active = 1 WHERE x.account_id = ? ORDER BY c.name, t.name');
+    $st->execute([$accountId]);
+    foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        if (isset($out[(int)$r['id']])) { $out[(int)$r['id']]['isAdmin'] = true; continue; }
+        $out[(int)$r['id']] = ['id' => (int)$r['id'], 'name' => $r['name'], 'season' => $r['season'], 'clubId' => (int)$r['club_id'],
+                               'club' => $r['club'], 'role' => 'clubadmin', 'isAdmin' => true];
+    }
+    usort($out, fn($a, $b) => [$a['club'], $a['name']] <=> [$b['club'], $b['name']]);
+    return array_values($out);
 }
 
 function team_info(): ?array {
@@ -275,9 +324,13 @@ function coach_state(): array {
         'id'         => $c['id'] ?? null,
         'name'       => $c['name'] ?? null,
         'isAdmin'    => $c['isAdmin'] ?? false,
+        'head'       => $c['head'] ?? false,              // Cheftrainer dieser Mannschaft
+        'clubAdmin'  => $c['clubAdmin'] ?? false,         // Vereinsadmin des Vereins dieser Mannschaft
         'team'       => team_info(),
-        'teams'      => $c && $acc ? array_values(array_filter(account_teams((int)$acc['id']), fn($t) => $t['role'] === 'coach')) : [],
+        'teams'      => $acc && $acc['kind'] === 'coach' ? array_values(array_filter(account_teams((int)$acc['id']), fn($t) => $t['role'] !== 'player')) : [],
         'platformAdmin' => (bool)($acc['platform_admin'] ?? false),
+        'accountId'  => $acc ? (int)$acc['id'] : null,
+        'clubs'      => $acc && $acc['kind'] === 'coach' ? admin_clubs($acc) : [],   // Vereine, die dieses Konto verwalten darf
         'hasCoaches' => $has,
         'canSetup'   => !$has && is_local_request(),   // erster Verein + erstes Admin-Konto nur auf localhost
     ];
@@ -558,7 +611,9 @@ function create_account(string $username, string $kind, int $ref, bool $isAdmin 
 function remove_membership(int $accountId, ?int $team = null): void {
     pdb()->prepare('DELETE FROM memberships WHERE account_id = ? AND team_id = ?')->execute([$accountId, (int)($team ?? team_id())]);
     $st = pdb()->prepare('SELECT COUNT(*) FROM memberships WHERE account_id = ?'); $st->execute([$accountId]);
-    if ((int)$st->fetchColumn() === 0) pdb()->prepare('DELETE FROM accounts WHERE id = ?')->execute([$accountId]);
+    if ((int)$st->fetchColumn() > 0) return;
+    $st = pdb()->prepare('SELECT (SELECT COUNT(*) FROM club_admins WHERE account_id = a.id) + a.platform_admin FROM accounts a WHERE a.id = ?'); $st->execute([$accountId]);
+    if ((int)$st->fetchColumn() === 0) pdb()->prepare('DELETE FROM accounts WHERE id = ?')->execute([$accountId]);   // Admins behalten ihr Konto
 }
 
 
@@ -591,7 +646,10 @@ function select_team(int $team, array $acc): bool {
     $st = pdb()->prepare('SELECT role, ref FROM memberships WHERE account_id = ? AND team_id = ?');
     $st->execute([(int)$acc['id'], $team]);
     $m = $st->fetch(PDO::FETCH_ASSOC);
-    if (!$m || !team_row($team)) return false;
+    $t = team_row($team);
+    if (!$t) return false;
+    if (!$m && $acc['kind'] === 'coach' && is_club_admin((int)$acc['id'], (int)$t['club_id'])) $m = ['role' => 'coach', 'ref' => (int)$acc['ref']];
+    if (!$m) return false;
     unset($_SESSION['nr'], $_SESSION['coach']);
     $_SESSION['team'] = $team;
     if ($m['role'] === 'player') $_SESSION['nr'] = (int)$m['ref']; else $_SESSION['coach'] = (int)$m['ref'];
@@ -615,11 +673,13 @@ function validate_session(): void {
     if ($a['kind'] === 'coach' && time() - (int)($_SESSION['last'] ?? 0) > COACH_IDLE) { logout_session(); return; }
     // Mitgliedschaft in der gewählten Mannschaft muss noch bestehen
     if (team_id()) {
-        $st = pdb()->prepare('SELECT COUNT(*) FROM memberships WHERE account_id = ? AND team_id = ?');
-        $st->execute([(int)$a['id'], team_id()]);
-        if ((int)$st->fetchColumn() === 0 || !team_row(team_id())) {          // entfernt → andere Mannschaft wählen, sonst abmelden
+        $ok = in_array(team_id(), array_column(account_teams((int)$a['id']), 'id'), true);
+        if (!$ok) {          // entfernt → andere Mannschaft wählen, sonst abmelden
             $other = array_values(array_filter(account_teams((int)$a['id']), fn($t) => $t['id'] !== team_id()))[0] ?? null;
-            if (!$other || !select_team($other['id'], $a)) { logout_session(); return; }
+            if (!$other || !select_team($other['id'], $a)) {
+                if (empty($a['platform_admin']) && !admin_clubs($a)) { logout_session(); return; }
+                unset($_SESSION['team'], $_SESSION['coach'], $_SESSION['nr']);    // Admin ohne Mannschaft → Verwaltung
+            }
         }
     }
     $_SESSION['last'] = time();

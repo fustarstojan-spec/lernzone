@@ -65,9 +65,9 @@ if ($action === 'update') {
         pdb()->prepare('UPDATE coaches SET name = ? WHERE id = ?')->execute([$name, $id]);
     }
     if (array_key_exists('isAdmin', $in)) {
-        if (!$me['isAdmin']) json_out(['ok' => false, 'error' => 'Nur Admins vergeben Admin-Rechte.'], 403);
+        if (!$me['isAdmin']) json_out(['ok' => false, 'error' => 'Nur Cheftrainer bestimmen Cheftrainer.'], 403);
         $make = !empty($in['isAdmin']);
-        if (!$make && $target['isAdmin'] && $admins() <= 1) json_out(['ok' => false, 'error' => 'Es muss mindestens einen Admin geben.'], 400);
+        if (!$make && $target['isAdmin'] && $admins() <= 1) json_out(['ok' => false, 'error' => 'Es muss mindestens einen Cheftrainer geben.'], 400);
         pdb()->prepare('UPDATE memberships SET is_admin = ? WHERE account_id = ? AND team_id = ?')->execute([$make ? 1 : 0, $acc['id'], team_id()]);
     }
     json_out(['ok' => true, 'coach' => $coach($id), 'me' => coach_state()]);
@@ -76,7 +76,7 @@ if ($action === 'update') {
 if ($action === 'delete') {
     if (!$me['isAdmin'])                        json_out(['ok' => false, 'error' => 'Nur für Admins.'], 403);
     if ($id === $me['id'])                      json_out(['ok' => false, 'error' => 'Du kannst dich nicht selbst entfernen.'], 400);
-    if ($target['isAdmin'] && $admins() <= 1)   json_out(['ok' => false, 'error' => 'Es muss mindestens einen Admin geben.'], 400);
+    if ($target['isAdmin'] && $admins() <= 1)   json_out(['ok' => false, 'error' => 'Es muss mindestens einen Cheftrainer geben.'], 400);
     remove_membership((int)$acc['id']);
     $st = pdb()->prepare('SELECT COUNT(*) FROM accounts WHERE kind = ? AND ref = ?'); $st->execute(['coach', $id]);
     if ((int)$st->fetchColumn() === 0) pdb()->prepare('DELETE FROM coaches WHERE id = ?')->execute([$id]);   // nirgends mehr dabei

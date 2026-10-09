@@ -417,3 +417,13 @@ code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:
 /* 0.21.0 Mannschaft wechseln */
 .chiprow{display:flex;flex-wrap:wrap;gap:.5rem}
 .btn.small{padding:.45rem .8rem;font-size:.85rem}
+/* 0.22.0 Verwaltung */
+.badge.muted{background:var(--rule);color:var(--fg)}
+.codebox .code{font-family:var(--display);font-size:2rem;letter-spacing:.08em;margin:0}
+.admlist,.admcoaches{list-style:none;margin:0;padding:0;display:grid;gap:.6rem}
+.admlist>li{min-width:0}
+.admteam{border:1px solid var(--rule);border-radius:12px;padding:.7rem;display:grid;gap:.5rem}
+.admcoaches>li{gap:.5rem;flex-wrap:wrap;font-size:.92rem}
+.admcoaches .chiprow{gap:.6rem}
+.subform{border-left:3px solid var(--accent);padding-left:.7rem}
+.rowspread>span{min-width:0;overflow-wrap:anywhere}

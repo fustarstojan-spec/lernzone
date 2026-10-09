@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.21.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.22.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -236,13 +236,14 @@
   /* ---------- Render & Events ---------- */
   function render() {
     const gate = Store.gate ? Store.gate() : null;          // Weg B: erst anmelden
-    document.getElementById("shirtBtn").innerHTML = gate ? "" : shirt(S.user ? S.user.nr : Store.coach.active ? "T" : "?");
+    document.getElementById("shirtBtn").innerHTML = gate ? "" : shirt(S.user ? S.user.nr : Store.coach.active ? "T" : LZ.adminOnly() ? "A" : "?");
     document.getElementById("shirtBtn").hidden = !!gate;
     const brand = document.querySelector(".brand span"); if (brand) brand.textContent = teamLabel();
     if (gate && LZ.views[gate]) { app.innerHTML = LZ.views[gate](); return; }
     // Trainer ohne Spieler-Anmeldung: eigene Startseite (js/dashboard.js), Lerninhalte unter „Lernzone“
     const coachHome = S.view === "home" && LZ.coachMode() && LZ.views.coachHome;
-    app.innerHTML = coachHome ? LZ.views.coachHome()
+    const adminHome = ["home", "me"].includes(S.view) && LZ.adminOnly() && LZ.views.verwaltung;   // Vereins-/Superadmin ohne Mannschaft
+    app.innerHTML = adminHome ? LZ.views.verwaltung() : coachHome ? LZ.views.coachHome()
       : LZ.views[S.view] ? LZ.views[S.view]()
       : S.view === "phase" ? phaseView() : S.view === "modul" ? modulView() : S.view === "zonen" ? zonenView() : S.view === "me" ? meView() : home();   // "lernzone" = home()
   }
@@ -250,6 +251,11 @@
   function teamLabel() {
     const t = Store.coach && Store.coach.team;
     if (t) return `${t.club} · ${t.name}`;
+    if (Store.mode === "api" && Store.coach && Store.coach.accountId) {             // Admin ohne Mannschaft
+      const own = (Store.coach.clubs || []).filter(c => c.own);
+      if (own.length === 1) return `${own[0].name} · Verwaltung`;
+      if (Store.coach.platformAdmin) return "Plattform · Verwaltung";
+    }
     const n = (C && C.team && C.team.name) || "";
     const m = n.match(/^(.*\S)\s+(U\d+\S*|[^\s]+)$/);
     return m ? `${m[1]} · ${m[2]}` : n;
@@ -324,6 +330,9 @@
     esc, rand, shirt, pad, dots, posName, posSelect, gkNrs, render, go, weekKey,
     on(name, fn) { (this.hooks[name] = this.hooks[name] || []).push(fn); },
     coachMode() { return !!(Store && Store.mode === "api" && !S.user && Store.coach && Store.coach.active); },
+    // Superadmin oder Vereinsadmin (Weg B)
+    isAdmin() { return !!(Store && Store.mode === "api" && !S.user && Store.coach && (Store.coach.platformAdmin || (Store.coach.clubs || []).length)); },
+    adminOnly() { return this.isAdmin() && !Store.coach.active; },
     top() { window.scrollTo(0, 0); }
   };
 

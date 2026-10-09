@@ -54,7 +54,7 @@
 
   /* ---------- Kopf mit Reitern ---------- */
   const tabs = () => Co().active ? `
-    <div class="coachbar"><span>Trainer: <b>${esc(Co().name || "")}</b>${Co().isAdmin ? ` <span class="badge">Admin</span>` : ""}</span><span class="coachbar-links"><button class="linkbtn" data-act="pwStart">Passwort ändern</button><button class="linkbtn" data-act="logout">Abmelden</button></span></div>
+    <div class="coachbar"><span>Trainer: <b>${esc(Co().name || "")}</b>${Co().clubAdmin ? ` <span class="badge">Vereinsadmin</span>` : Co().isAdmin ? ` <span class="badge">Cheftrainer</span>` : ""}</span><span class="coachbar-links"><button class="linkbtn" data-act="pwStart">Passwort ändern</button><button class="linkbtn" data-act="logout">Abmelden</button></span></div>
     <div class="seg">${[["kader", "Kader"], ["trainings", "Trainings"], ["coaches", Co().isAdmin ? "Trainer" : "Mein Konto"]].map(([k, l]) =>
       `<button aria-pressed="${T.tab === k}" data-act="ctab" data-v="${k}">${l}</button>`).join("")}</div>` : "";
   LZ.actions.ctab = (b, v) => open(v);
@@ -194,12 +194,12 @@
     if (s === "coaches") {
       const me = Co();
       const list = me.isAdmin ? T.coaches : T.coaches.filter(c => c.id === me.id);
-      return `${backGrid}<section><p class="eyebrow">Trainer-Bereich</p><h1>${me.isAdmin ? "Trainer" : "Mein Konto"}</h1>${me.isAdmin ? `<p class="lede">Admins legen Trainer an, vergeben Admin-Rechte und dürfen Spieler löschen.</p>` : ""}</section>${tabs()}
-      <section class="stack">${list.map(c => `<button class="trow" data-act="cEdit" data-v="${c.id}"><span class="tdate">${esc(c.name)}${c.id === me.id ? " (du)" : ""}</span><span class="small">${esc(c.username || "")}</span>${c.isAdmin ? `<span class="badge">Admin</span>` : ""}</button>`).join("")}</section>
+      return `${backGrid}<section><p class="eyebrow">Trainer-Bereich</p><h1>${me.isAdmin ? "Trainer" : "Mein Konto"}</h1>${me.isAdmin ? `<p class="lede">Cheftrainer legen Co-Trainer an und dürfen Spieler löschen. Neue Mannschaften legt der Vereinsadmin an.</p>` : ""}</section>${tabs()}
+      <section class="stack">${list.map(c => `<button class="trow" data-act="cEdit" data-v="${c.id}"><span class="tdate">${esc(c.name)}${c.id === me.id ? " (du)" : ""}</span><span class="small">${esc(c.username || "")}</span>${c.isAdmin ? `<span class="badge">Cheftrainer</span>` : ""}</button>`).join("")}</section>
       ${me.isAdmin ? `<section class="card stack"><h2>Trainer hinzufügen</h2>
         <div class="fld"><label for="cf-name">Vorname</label><input id="cf-name" maxlength="30" value="${esc(T.cf.name)}"></div>
         ${userField("cf-user", "Benutzername", T.cf.user, "Leer lassen = Vorname.")}
-        <label class="check"><input type="checkbox" id="cf-admin" ${T.cf.isAdmin ? "checked" : ""}> Admin</label>
+        <label class="check"><input type="checkbox" id="cf-admin" ${T.cf.isAdmin ? "checked" : ""}> Cheftrainer</label>
         ${errP()}${okP()}<button class="btn wide" data-act="coachAdd" ${T.busy ? "disabled" : ""}>Trainer hinzufügen</button></section>
       ${calCard()}${seasonCard()}` : ""}`;
     }
@@ -211,7 +211,7 @@
       <section class="card stack">
         <div class="fld"><label for="ce-name">Vorname</label><input id="ce-name" maxlength="30" value="${esc(T.cf.name)}"></div>
         ${userField("ce-user", "Benutzername", T.cf.user)}
-        ${me.isAdmin ? `<label class="check"><input type="checkbox" id="ce-admin" ${T.cf.isAdmin ? "checked" : ""}> Admin</label>` : ""}
+        ${me.isAdmin ? `<label class="check"><input type="checkbox" id="ce-admin" ${T.cf.isAdmin ? "checked" : ""}> Cheftrainer</label>` : ""}
         ${errP()}${okP()}<button class="btn wide" data-act="coachSave" ${T.busy ? "disabled" : ""}>Speichern</button></section>
       ${self ? `<button class="btn ghost wide" data-act="pwStart">Mein Passwort ändern</button>`
         : me.isAdmin ? `<section class="card stack"><h2>Zugang</h2><button class="btn wide" data-act="coachCode">Neuen Einmal-Code erzeugen</button>

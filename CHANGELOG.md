@@ -2,6 +2,17 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.22.0 – 2026-10-09
+- **Rollen Superadmin · Vereinsadmin · Cheftrainer · Trainer**
+  - **Superadmin** (Plattform-Betreiber): legt Vereine an, setzt Vereinsadmins ein, sperrt/entsperrt Vereine, gibt neue Codes aus. Sieht keine Mannschaftsdaten (Kader, IEP, Noten, Befinden).
+  - **Vereinsadmin** (z. B. Jugendleiter): legt Mannschaften an, benennt sie um, archiviert sie (Daten bleiben), lädt Trainer ein, bestimmt Cheftrainer, öffnet jede Mannschaft seines Vereins mit allen Rechten
+  - **Cheftrainer** (bisher „Admin“ der Mannschaft): legt Co-Trainer an, löscht Spieler
+  - Neue Mannschaften nur noch durch den Vereinsadmin
+- Neuer Reiter **Verwaltung** (nur für Vereins- und Superadmins); Admins ohne eigene Mannschaft landen nach der Anmeldung direkt dort
+- Einmal-Codes für Konten, die auch in einem anderen Verein sind, gibt nur der Superadmin aus; sich selbst kann man nicht als Vereinsadmin entfernen
+- Übernahme: der bisherige Superadmin wird Vereinsadmin des SV Heimstetten
+- `tools/create_club.php` legt jetzt Verein + Vereinsadmin an (Mannschaft optional mit `--mannschaft=`)
+
 ## 0.21.0 – 2026-10-09
 - **Mehrere Vereine und Mannschaften (Schritt 1):** Aufbau Verein → Mannschaft → Mitglieder mit Rolle (Spieler/Trainer, Admin pro Mannschaft)
   - Neue Plattform-Datenbank `storage/platform.sqlite` (Vereine, Mannschaften, Konten, Trainer, Mitgliedschaften); jede Mannschaft hat ihre eigene Datei (`storage/team-N.sqlite`), die Daten bleiben sauber getrennt
