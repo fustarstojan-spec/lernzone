@@ -13,7 +13,9 @@ const DB_PASS = null;
 const MAX_LOGIN_TRIES = 5;      // Fehlversuche pro Konto (und pro Sitzung) …
 const LOCK_SECONDS    = 300;    // … danach 5 Minuten Sperre
 const COACH_IDLE      = 8 * 3600;   // Trainer nach 8 Stunden ohne Aktivität abmelden
-const CODE_DAYS       = 7;          // Einmal-Codes sind 7 Tage gültig
+const CODE_HOURS      = 72;         // Einmal-Codes sind 72 Stunden gültig
+const PW_MIN_PLAYER   = 12;         // Mindestlänge Passwort Spieler
+const PW_MIN_COACH    = 14;         // Mindestlänge Passwort Trainer/Admin
 const PENDING_SECONDS = 900;        // 15 Minuten Zeit, um nach dem Einmal-Code das eigene Passwort festzulegen
 
 date_default_timezone_set('Europe/Berlin');
@@ -383,9 +385,11 @@ function unique_username(PDO $pdo, string $base): string {
     while (true) { $st->execute([$u]); if ((int)$st->fetchColumn() === 0) return $u; $u = $base . $i++; }
 }
 
-/* Passwort-Regeln: mindestens 8 Zeichen, nicht der Benutzername, keine Allerwelts-Passwörter */
-function pw_problem(string $pw, string $username): ?string {
-    if (mb_strlen($pw) < 8)   return 'Das Passwort muss mindestens 8 Zeichen haben.';
+/* Passwort-Regeln: mindestens 12 Zeichen (Trainer/Admin 14), nicht der Benutzername, keine Allerwelts-Passwörter */
+function pw_min(string $kind): int { return $kind === 'coach' ? PW_MIN_COACH : PW_MIN_PLAYER; }
+function pw_problem(string $pw, string $username, string $kind = 'player'): ?string {
+    $min = pw_min($kind);
+    if (mb_strlen($pw) < $min) return "Das Passwort muss mindestens $min Zeichen haben. Tipp: drei Wörter mit Bindestrich.";
     if (mb_strlen($pw) > 200) return 'Das Passwort ist zu lang.';
     $l = mb_strtolower($pw);
     $weak = ['12345678', '123456789', '1234567890', 'passwort', 'password', 'qwertz123', 'qwertzui', 'fussball', 'fußball',
@@ -407,7 +411,7 @@ function issue_code(int $accountId): string {
     $code = gen_code();
     db()->prepare('UPDATE accounts SET code_hash = ?, code_expires = ?, pw_hash = \'\', must_set_pw = 1, sess_ver = sess_ver + 1,
                    fail_count = 0, locked_until = 0 WHERE id = ?')
-        ->execute([hash_pw(norm_code($code)), time() + CODE_DAYS * 86400, $accountId]);
+        ->execute([hash_pw(norm_code($code)), time() + CODE_HOURS * 3600, $accountId]);
     return $code;
 }
 

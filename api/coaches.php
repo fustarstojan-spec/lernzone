@@ -40,7 +40,7 @@ if ($action === 'add') {
     $cid = (int)db()->lastInsertId();
     db()->prepare("INSERT INTO accounts (username, kind, ref, must_set_pw) VALUES (?, 'coach', ?, 1)")->execute([$u, $cid]);
     $code = issue_code((int)account_for('coach', $cid)['id']);
-    json_out(['ok' => true, 'coach' => $coach($cid), 'username' => $u, 'code' => $code, 'expires' => date('d.m.Y', time() + CODE_DAYS * 86400)]);
+    json_out(['ok' => true, 'coach' => $coach($cid), 'username' => $u, 'code' => $code, 'expires' => date('d.m.Y H:i', time() + CODE_HOURS * 3600)]);
 }
 
 $id     = (int)($in['id'] ?? 0);

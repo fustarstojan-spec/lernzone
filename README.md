@@ -49,11 +49,11 @@ Spielsituation (`sit`): Koordinaten in Metern auf einem 68 × 105 m-Feld, `x` vo
 
 Mit PHP ist die App erst nach Anmeldung sichtbar: **Benutzername + Passwort**.
 
-- **Neues Konto:** Trainer legt Spieler bzw. Trainer an → bekommt Benutzername + **Einmal-Code** (7 Tage gültig) → persönlich weitergeben.
+- **Neues Konto:** Trainer legt Spieler bzw. Trainer an → bekommt Benutzername + **Einmal-Code** (72 Stunden gültig) → persönlich weitergeben.
   Erste Anmeldung mit Benutzername + Code → sofort eigenes Passwort festlegen. Der Trainer kennt das Passwort nie.
 - **Passwort vergessen:** Kader → Spieler → „Neuen Einmal-Code erzeugen“ (Trainer-Konten: Trainer → antippen, nur Admins).
 - **Passwort ändern:** Mein Bereich bzw. Trainer-Bereich → „Passwort ändern“. Andere Geräte werden dabei abgemeldet.
-- **Passwort-Regeln:** mindestens 8 Zeichen, nicht der Benutzername, keine Allerwelts-Passwörter. Tipp für Kinder: drei Wörter mit Bindestrich.
+- **Passwort-Regeln:** mindestens 12 Zeichen (Trainer 14), nicht der Benutzername, keine Allerwelts-Passwörter. Tipp für Kinder: drei Wörter mit Bindestrich.
 - **Umstieg von 0.7.0:** Spieler melden sich einmal mit `spielerNN` (z. B. `spieler8`) und der alten PIN an, Trainer mit ihrem Vornamen (klein, z. B. `trainer`) und der alten Trainer-PIN – danach eigenes Passwort festlegen.
 
 Erstes Trainer-Konto:

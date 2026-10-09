@@ -140,7 +140,7 @@
       async signIn(username, password) {
         const r = await safe("auth.php", { action: "login", username, password });
         if (!r.ok) return r;
-        if (r.state === "setpw") { api_.pending = { username: r.username }; return r; }
+        if (r.state === "setpw") { api_.pending = { username: r.username, minLen: r.minLen }; return r; }
         await api_.afterLogin(r);
         return { ok: true, state: "ok", user };
       },

@@ -18,7 +18,7 @@ const DUMMY_HASH = '$2y$10$qDT3H.8TpDKmxurdx.PDo.1RqLj1.RwhVLH5mmnU9xqBB.XhVU/c6
 
 $done = function (): never {
     json_out(['ok' => true, 'state' => 'ok', 'user' => current_user(), 'coach' => coach_state(), 'csrf' => csrf_token(),
-              'account' => ['username' => current_account()['username'] ?? '']]);
+              'account' => ['username' => current_account()['username'] ?? '', 'minLen' => pw_min(current_account()['kind'] ?? 'player')]]);
 };
 $entityActive = function (array $a): bool {
     $t = $a['kind'] === 'player' ? 'SELECT active FROM players WHERE nr = ?' : 'SELECT active FROM coaches WHERE id = ?';
@@ -27,7 +27,7 @@ $entityActive = function (array $a): bool {
 };
 $setPassword = function (array $a, string $pw, string $pw2) {
     if ($pw !== $pw2) json_out(['ok' => false, 'error' => 'Die beiden Passwörter sind nicht gleich.'], 400);
-    if ($p = pw_problem($pw, $a['username'])) json_out(['ok' => false, 'error' => $p], 400);
+    if ($p = pw_problem($pw, $a['username'], $a['kind'])) json_out(['ok' => false, 'error' => $p], 400);
     db()->prepare("UPDATE accounts SET pw_hash = ?, must_set_pw = 0, code_hash = '', code_expires = 0, sess_ver = sess_ver + 1 WHERE id = ?")
         ->execute([hash_pw($pw), $a['id']]);
     $st = db()->prepare('SELECT * FROM accounts WHERE id = ?'); $st->execute([$a['id']]);
@@ -60,7 +60,7 @@ if ($action === 'login') {
     if ($via === 'code' || (int)$a['must_set_pw'] === 1) {
         session_regenerate_id(true);
         $_SESSION = ['csrf' => bin2hex(random_bytes(32)), 'pending' => (int)$a['id'], 'pending_at' => time()];
-        json_out(['ok' => true, 'state' => 'setpw', 'username' => $a['username'], 'csrf' => csrf_token()]);
+        json_out(['ok' => true, 'state' => 'setpw', 'username' => $a['username'], 'minLen' => pw_min($a['kind']), 'csrf' => csrf_token()]);
     }
     if (password_needs_rehash($a['pw_hash'], defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT)) {
         db()->prepare('UPDATE accounts SET pw_hash = ? WHERE id = ?')->execute([hash_pw($pw), $a['id']]);
@@ -104,7 +104,7 @@ if ($action === 'setup') {
     if (username_taken($u)) json_out(['ok' => false, 'error' => 'Dieser Benutzername ist schon vergeben.'], 409);
     $pw = (string)($in['password'] ?? '');
     if ($pw !== (string)($in['password2'] ?? '')) json_out(['ok' => false, 'error' => 'Die beiden Passwörter sind nicht gleich.'], 400);
-    if ($p = pw_problem($pw, $u)) json_out(['ok' => false, 'error' => $p], 400);
+    if ($p = pw_problem($pw, $u, 'coach')) json_out(['ok' => false, 'error' => $p], 400);
     db()->prepare("INSERT INTO coaches (name, pin_hash, is_admin) VALUES (?, '', 1)")->execute([$name]);
     $cid = (int)db()->lastInsertId();
     db()->prepare("INSERT INTO accounts (username, kind, ref, pw_hash, must_set_pw) VALUES (?, 'coach', ?, ?, 0)")->execute([$u, $cid, hash_pw($pw)]);

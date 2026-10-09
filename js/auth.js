@@ -13,7 +13,8 @@
     <input id="${id}" type="${F.show ? "text" : "password"}" autocomplete="${ac}" maxlength="200" value="${esc(val)}" required></div>`;
   const showToggle = `<label class="check small-check"><input type="checkbox" id="auth-show" ${F.show ? "checked" : ""}> Passwort anzeigen</label>`;
   const errP = () => F.err ? `<p class="err" role="alert" style="text-align:left">${esc(F.err)}</p>` : "";
-  const rules = `<ul class="rules"><li>mindestens 8 Zeichen</li><li>nicht dein Benutzername und nichts wie „12345678“</li><li>Tipp: drei Wörter mit Bindestrich, z. B. <i>Ball-Wiese-Sonne</i></li></ul>`;
+  const minLen = () => ((LZ.Store.pending || LZ.Store.account || {}).minLen) || (LZ.Store.gate && LZ.Store.gate() === "setup" ? 14 : 12);
+  const rules = () => `<ul class="rules"><li>mindestens ${minLen()} Zeichen – lieber lang als kompliziert</li><li>nicht dein Benutzername und nichts wie „123456789012“</li><li>Tipp: drei Wörter mit Bindestrich, z. B. <i>Ball-Wiese-Sonne</i></li></ul>`;
   const head = (eyebrow, title, lede) => `<section class="authhead"><div class="authshirt">${LZ.shirt("")}</div>
     <p class="eyebrow">${eyebrow}</p><h1>${title}</h1>${lede ? `<p class="lede">${lede}</p>` : ""}</section>`;
 
@@ -46,7 +47,7 @@
       <input type="text" autocomplete="username" value="${esc((LZ.Store.pending || {}).username || "")}" hidden>
       ${pwInput("auth-p", "Neues Passwort", "new-password", F.p)}
       ${pwInput("auth-p2", "Passwort wiederholen", "new-password", F.p2)}
-      ${showToggle}${rules}${errP()}
+      ${showToggle}${rules()}${errP()}
       <button class="btn wide" type="submit" ${F.busy ? "disabled" : ""}>Passwort speichern</button>
     </form>
     <p class="authnote"><button class="linkbtn" data-act="authCancel">Abbrechen</button></p>`;
@@ -69,7 +70,7 @@
       <div class="fld"><label for="auth-u">Benutzername</label><input id="auth-u" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="30" placeholder="z. B. stojan" value="${esc(F.u)}" required></div>
       ${pwInput("auth-p", "Passwort", "new-password", F.p)}
       ${pwInput("auth-p2", "Passwort wiederholen", "new-password", F.p2)}
-      ${showToggle}${rules}${errP()}
+      ${showToggle}${rules()}${errP()}
       <button class="btn wide" type="submit" ${F.busy ? "disabled" : ""}>Konto anlegen</button>
     </form>`;
 
@@ -92,7 +93,7 @@
       ${pwInput("auth-old", "Bisheriges Passwort", "current-password", F.old)}
       ${pwInput("auth-p", "Neues Passwort", "new-password", F.p)}
       ${pwInput("auth-p2", "Neues Passwort wiederholen", "new-password", F.p2)}
-      ${showToggle}${rules}${errP()}${F.msg ? `<p class="okmsg" role="status">${esc(F.msg)}</p>` : ""}
+      ${showToggle}${rules()}${errP()}${F.msg ? `<p class="okmsg" role="status">${esc(F.msg)}</p>` : ""}
       <button class="btn wide" type="submit" ${F.busy ? "disabled" : ""}>Passwort ändern</button>
     </form>`;
 

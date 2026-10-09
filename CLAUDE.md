@@ -25,10 +25,10 @@ Sprache: Deutsch. Antworten kurz und direkt.
   - `js/pitch.js` – Spielfeld-SVG (68 × 105 m, Angriff nach oben, 5 Spuren × 3 Drittel).
 - Inhalte in `data/*.json` (Phasen, Quiz, Pläne, Positionen, Kader ohne PINs). Quizfrage: `{ q, options, correct, why }`.
 - Backend: PHP 8.1+ in `api/`, SQLite in `storage/lernzone.sqlite` (nie ins Repo), Schema `tools/schema.sql`, Migration in `api/config.php → migrate()`.
-- Anmeldung (Weg B, ab 0.8.0): Benutzername + Passwort für alle, Tabelle `accounts` (kind player/coach, ref = Trikotnummer bzw. Trainer-ID). Neue Konten bekommen einen Einmal-Code (7 Tage), danach eigenes Passwort. `js/auth.js` + `api/auth.php`, Zugänge verwalten in `api/accounts.php`.
+- Anmeldung (Weg B, ab 0.8.0): Benutzername + Passwort für alle, Tabelle `accounts` (kind player/coach, ref = Trikotnummer bzw. Trainer-ID). Neue Konten bekommen einen Einmal-Code (72 Stunden), danach eigenes Passwort. `js/auth.js` + `api/auth.php`, Zugänge verwalten in `api/accounts.php`.
 - Rollen: Spieler, Trainer, Admin (verwaltet Trainer, erzeugt Trainer-Codes, löscht Spieler). Weg A (ohne PHP, z. B. Claude-Vorschau) nutzt weiterhin Trikot + Demo-PIN.
 - Google-Kalender (ab 0.9.0): Admin speichert Einbettungs-Link/iCal-Adresse (Tabelle settings), `api/lib/calendar.php` liest iCal (Cache 15 Min) und legt alle Termine als Zeilen in `trainings` an (Spalten kind, title, location, end_time, cal_key). Art per Stichwort aus `data/team.json → calendar.types`. Trainingsbeteiligung zählt nur kind = training.
-- Sicherheit: Argon2id, CSRF-Token (Header `X-CSRF-Token`), SameSite=Strict, Sperre pro Konto, Trainer-Timeout 8 h, Sitzungs-Version pro Konto, Sicherheits-Header in `.htaccess`.
+- Sicherheit: Passwort mind. 12 Zeichen (Trainer/Admin 14, `PW_MIN_*` in `api/config.php`), Einmal-Code 72 Std. (`CODE_HOURS`), Argon2id, CSRF-Token (Header `X-CSRF-Token`), SameSite=Strict, Sperre pro Konto, Trainer-Timeout 8 h, Sitzungs-Version pro Konto, Sicherheits-Header in `.htaccess`.
 
 ## Fachliches
 
@@ -50,7 +50,7 @@ Sprache: Deutsch. Antworten kurz und direkt.
 
 ## Stand und nächste Schritte
 
-- Aktuell: Version 0.19.1 (siehe `CHANGELOG.md`). 0.19.0–0.19.1 liegen lokal, noch nicht auf GitHub.
+- Aktuell: Version 0.20.0 (siehe `CHANGELOG.md`). 0.19.0–0.20.0 liegen lokal, noch nicht auf GitHub.
 - Module (ab 0.19.0): `data/modules.json` – eigene Lerneinheiten neben den Phasen (Tabs Grundlagen · Situationen · Übungen · Quiz, Ansicht `modul` in `js/app.js`). Erstes Modul: 2v1 (Inhalte aus den Trainer-Chats „2v1 Rundlauf“ und Stationen-Training). Buch-Übungen (2v1 Doppelaktion, Aus Passformen ins 2v1, 2v1 Rolle) fehlen noch – nur mit eigenen Worten des Trainers einbauen.
 - IEP (ab 0.16.0): Quelle sind die IEP-Dateien des Trainers im Google Drive (U13_IEP_v2.xlsx, Individueller Entwicklungsplan.pdf, Saison 25/26). Tabelle `iep` (data JSON: goals ind/tech/phys/off/def, plan short/mid/long, season, coach{…}), `iep_ratings` (Selbsteinschätzung 1–5 pro Spiel und Bereich, bis 3 Tage danach, nur mit Einwilligung). `coach`-Teil (inkl. psychologischer Einschätzung) nur für Trainer – `api/iep.php` gibt Spielern nur goals/plan/season. Zuordnung über Trikotnummer (Nr. 18 vom Trainer zu bestätigen); Nr. 20 und Nr. 23 haben noch keinen IEP.
 - IEP-Stände (ab 0.17.0): Tabelle `iep_versions` (jedes Speichern = neue Version, neueste gilt; alte Tabelle `iep` nur noch Altbestand). Trainer-Noten nach dem Training: Tabelle `grades` (training_id, nr, coach_id, area verhalten/umsetzung/einstellung/soziales, value 1–6), jeder Trainer einzeln, Vorgabe 1 (wird beim ersten Eintrag eines Trainers für alle Anwesenden gesetzt), **nur für Trainer** – nie an Spieler ausgeben.

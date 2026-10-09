@@ -105,4 +105,4 @@ $username = $username !== '' ? $username : unique_username(db(), 'spieler' . $nr
 db()->prepare("INSERT INTO accounts (username, kind, ref, must_set_pw) VALUES (?, 'player', ?, 1)")->execute([$username, $nr]);
 $code = issue_code((int)account_for('player', $nr)['id']);
 
-json_out(['ok' => true, 'player' => $row($nr), 'username' => $username, 'code' => $code, 'expires' => date('d.m.Y', time() + CODE_DAYS * 86400)]);
+json_out(['ok' => true, 'player' => $row($nr), 'username' => $username, 'code' => $code, 'expires' => date('d.m.Y H:i', time() + CODE_HOURS * 3600)]);

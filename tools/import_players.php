@@ -2,7 +2,7 @@
 /*
  * Kader aus data/players.json in die Datenbank übernehmen (echter Server).
  *   php tools/import_players.php        → alle Spieler aus der Datei, die noch fehlen
- * Jeder neue Spieler bekommt den Benutzernamen spielerNN und einen Einmal-Code (7 Tage gültig).
+ * Jeder neue Spieler bekommt den Benutzernamen spielerNN und einen Einmal-Code (72 Stunden gültig).
  * Die Liste wird EINMAL ausgegeben – ausdrucken, verteilen, nicht speichern.
  * Benutzernamen kannst du danach im Trainer-Bereich ändern.
  */

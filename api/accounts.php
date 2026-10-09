@@ -1,7 +1,7 @@
 <?php
 /*
  * Zugänge verwalten (Trainer)
- * POST {action:"code",   kind:"player"|"coach", ref}            → neuer Einmal-Code (7 Tage gültig); altes Passwort ungültig
+ * POST {action:"code",   kind:"player"|"coach", ref}            → neuer Einmal-Code (72 Stunden gültig); altes Passwort ungültig
  * POST {action:"rename", kind:"player"|"coach", ref, username}  → Benutzernamen ändern
  * Spieler: jeder Trainer. Trainer-Konten: Admin, den eigenen Benutzernamen auch man selbst.
  */
@@ -22,7 +22,7 @@ if (!$a) json_out(['ok' => false, 'error' => 'Dieses Konto gibt es nicht.'], 404
 switch ($in['action'] ?? '') {
     case 'code':
         $code = issue_code((int)$a['id']);
-        json_out(['ok' => true, 'username' => $a['username'], 'code' => $code, 'expires' => date('d.m.Y', time() + CODE_DAYS * 86400)]);
+        json_out(['ok' => true, 'username' => $a['username'], 'code' => $code, 'expires' => date('d.m.Y H:i', time() + CODE_HOURS * 3600)]);
     case 'rename':
         $u = clean_username((string)($in['username'] ?? ''));
         if (!username_ok($u))                  json_out(['ok' => false, 'error' => 'Benutzername: 3–30 Zeichen, nur a–z, 0–9, Punkt, Bindestrich.'], 400);
