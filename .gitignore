@@ -8,3 +8,6 @@ Thumbs.db
 storage/calendar-cache*.ics
 storage/*.csv
 storage/*.json
+# Inhalte des Trainers (Übungen, Bilder) – nur lokal / auf dem Server
+storage/drills/
+storage/training-import-img/

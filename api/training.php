@@ -7,13 +7,14 @@
  * GET ?drills=1       → {ok, drills:[{…alle Felder}]}
  * GET ?session=5      → {ok, session:{…, blocks}, drills:{id: {…}}}
  * GET ?training=7     → wie ?session, für den Plan dieses Termins (session null, wenn keiner)
- * POST {action:"drill_save", id?, title, topic, phase, block, minutes, players, organisation, ablauf, coaching, easier, harder, load, material, sketch|boardId, draft}
+ * POST {action:"drill_save", id?, image?(Daten-URL), imageClear?, title, topic, phase, block, minutes, players, organisation, ablauf, coaching, easier, harder, load, material, sketch|boardId, draft}
  * POST {action:"drill_delete", id}
  * POST {action:"session_save", id?, trainingId, date, title, focus, phase, goal, players, notes, blocks}
  * POST {action:"session_delete", id}
  */
 require __DIR__ . '/config.php';
 require_once __DIR__ . '/lib/board.php';
+require_once __DIR__ . '/lib/drill_image.php';
 $me   = require_coach();
 $club = (int)team_info()['clubId'];
 
@@ -34,7 +35,8 @@ $lines = function ($v, int $max): string {
 $drillOut = fn(array $d) => ['id' => (int)$d['id'], 'title' => $d['title'], 'topic' => $d['topic'], 'phase' => $d['phase'], 'block' => $d['block'],
     'minutes' => (int)$d['minutes'], 'players' => $d['players'], 'organisation' => $d['organisation'], 'ablauf' => $d['ablauf'], 'coaching' => $d['coaching'],
     'easier' => $d['easier'], 'harder' => $d['harder'], 'load' => $d['load'], 'material' => $d['material'],
-    'sketch' => $d['sketch'] !== '' ? json_decode($d['sketch'], true) : null, 'draft' => (bool)$d['draft'], 'updated' => $d['updated_at'], 'by' => (string)($d['by_name'] ?? '')];
+    'sketch' => $d['sketch'] !== '' ? json_decode($d['sketch'], true) : null,
+    'image' => ($d['image'] ?? '') !== '' ? 'api/drill_image.php?id=' . (int)$d['id'] . '&v=' . substr(md5($d['image']), 0, 8) : null, 'draft' => (bool)$d['draft'], 'updated' => $d['updated_at'], 'by' => (string)($d['by_name'] ?? '')];
 $drills = function (?array $ids = null) use ($club, $drillOut): array {
     $sql = 'SELECT d.*, c.name AS by_name FROM drills d LEFT JOIN coaches c ON c.id = d.updated_by WHERE d.club_id = ?';
     $args = [$club];
@@ -117,7 +119,15 @@ switch ($in['action'] ?? '') {
             pdb()->prepare("INSERT INTO drills (club_id, $cols, created_by, updated_by, updated_at) VALUES (:club, $ph, :by, :by, :at)")->execute($vals + ['club' => $club, 'by' => $me['id'], 'at' => $now]);
             $id = (int)pdb()->lastInsertId();
         }
-        json_out(['ok' => true, 'drill' => $drills([$id])[0]]);
+        // Bild: neu hochladen (Daten-URL) oder entfernen
+        if (!empty($in['image']) || !empty($in['imageClear'])) {
+            $st = pdb()->prepare('SELECT image FROM drills WHERE id = ?'); $st->execute([$id]); $old = (string)$st->fetchColumn();
+            $new = '';
+            if (!empty($in['image'])) $new = drill_image_store($club, $id, (string)$in['image']);
+            if (str_starts_with($new, '!')) $warn = substr($new, 1) . ' Die Übung selbst ist gespeichert.';
+            else { pdb()->prepare('UPDATE drills SET image = ? WHERE id = ?')->execute([$new, $id]); drill_image_delete($old); }
+        }
+        json_out(['ok' => true, 'drill' => $drills([$id])[0], 'warning' => $warn ?? null]);
 
     case 'drill_delete':
         // Nur ausblenden: Einheiten, die die Übung nutzen, zeigen sie weiter an

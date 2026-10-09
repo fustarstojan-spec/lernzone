@@ -40,6 +40,7 @@
       <div class="rowspread"><h3>${esc(d.title)}</h3>${d.draft ? `<span class="badge muted">Entwurf</span>` : ""}</div>
       <p class="small">${drillMeta(d, min)}</p>
       ${note ? `<p class="drillnote">${esc(note)}</p>` : ""}
+      ${d.image ? `<a class="drillimg" href="${esc(d.image)}" target="_blank" rel="noopener"><img src="${esc(d.image)}" alt="Skizze: ${esc(d.title)}" loading="lazy"></a>` : ""}
       ${d.sketch && window.LZPitch ? `<div class="drillsketch">${window.LZPitch.field({ zones: true, board: d.sketch, label: d.title })}</div>` : ""}
       ${SECTIONS.map(([k, l]) => d[k] ? `<div class="dsec"><h4>${l}</h4>${bullets(d[k])}</div>` : "").join("")}
       ${d.material ? `<div class="dsec"><h4>Material</h4><p>${esc(d.material)}</p></div>` : ""}
@@ -187,7 +188,7 @@
     return `<button class="back noprint" data-act="trBackDrills">‹ Übungen</button>
       <section><p class="eyebrow">${esc((BLOCKS.find(([k]) => k === d.block) || [, ""])[1])}${d.phase ? ` · Spielphase ${d.phase}` : ""}</p></section>
       <section class="card stack">${drillHtml(d)}</section>
-      <p class="small">${d.by ? `Zuletzt geändert von ${esc(d.by)}` : ""}${d.updated ? ` · ${esc(d.updated)}` : ""}</p>
+      ${errBox()}<p class="small">${d.by ? `Zuletzt geändert von ${esc(d.by)}` : ""}${d.updated ? ` · ${esc(d.updated)}` : ""}</p>
       <div class="chiprow noprint"><button class="btn" data-act="trDrillEdit">Bearbeiten</button><button class="btn ghost" data-act="trPrint">Drucken</button></div>`;
   };
   LZ.actions.trBackDrills = () => { P.tab = "uebungen"; LZ.go("training"); };
@@ -218,6 +219,10 @@
         ${ta("easier", "Leichter", "", 2)}${ta("harder", "Schwerer", "", 2)}
         ${ta("load", "Belastung", "(Dauer, Durchgänge, Pausen)", 2)}
         <div class="fld"><label for="de-material">Material</label><input id="de-material" maxlength="300" value="${esc(d.material)}" placeholder="z. B. 4 Leitern, 8 Minihürden, 8 Hütchen"></div>
+        <div class="fld"><label for="de-image">Bild der Übung <span class="small">(JPG, PNG oder WebP, höchstens 6 MB)</span></label>
+          ${d.imageData ? `<img class="drillimg-prev" src="${d.imageData}" alt="Neues Bild">` : d.image && !d.imageClear ? `<img class="drillimg-prev" src="${esc(d.image)}" alt="Bild">` : ""}
+          <input id="de-image" type="file" accept="image/jpeg,image/png,image/webp">
+          ${(d.image && !d.imageClear) || d.imageData ? `<button class="linkbtn" data-act="trImgDel">Bild entfernen</button>` : ""}</div>
         <div class="fld"><label for="de-board">Skizze aus Taktiktafel übernehmen</label><select id="de-board"><option value="">${d.sketch ? "– Skizze behalten –" : "– keine –"}</option>${(P.boards || []).filter(b => b.kind === "board").map(b => `<option value="${b.id}">${esc(b.title || "Tafel")}</option>`).join("")}</select>
           <span class="small">Skizze zuerst unter „Taktik“ zeichnen und speichern.</span></div>
         ${d.sketch ? `<div class="drillsketch">${window.LZPitch.field({ zones: true, board: d.sketch, label: "Skizze" })}</div><button class="linkbtn" data-act="trSketchDel">Skizze entfernen</button>` : ""}
@@ -227,6 +232,15 @@
         ${d.id ? (P.confirm ? `<button class="btn danger-btn" data-act="trDrillDel">Wirklich löschen?</button><button class="linkbtn" data-act="trDConfirm" data-v="0">Nein</button>` : `<button class="linkbtn" data-act="trDConfirm" data-v="1">Löschen</button>`) : ""}</div>
       </section>`;
   };
+  LZ.actions.trImgDel = () => { syncDrill(); P.dedit.imageData = null; P.dedit.imageClear = true; LZ.render(); };
+  LZ.inputs.push(e => {
+    if (e.target.id !== "de-image" || e.type !== "change" || !e.target.files || !e.target.files[0]) return;
+    const f = e.target.files[0];
+    if (f.size > 6 * 1024 * 1024) { P.err = "Das Bild ist zu groß (höchstens 6 MB)."; LZ.render(); return; }
+    const rd = new FileReader();
+    rd.onload = () => { syncDrill(); P.dedit.imageData = rd.result; P.dedit.imageClear = false; P.err = ""; LZ.render(); };
+    rd.readAsDataURL(f);
+  });
   LZ.actions.trDConfirm = (b, v) => { syncDrill(); P.confirm = v === "1"; LZ.render(); };
   LZ.actions.trSketchDel = () => { syncDrill(); P.dedit.sketch = null; P.dedit.clearSketch = true; LZ.render(); };
   LZ.actions.trDrillCancel = () => LZ.go(P.dedit && P.dedit.id ? "uebung" : "training");
@@ -234,11 +248,13 @@
     syncDrill(); if (P.busy) return;
     const d = P.dedit, body = Object.assign({ action: "drill_save" }, d);
     delete body.sketch; if (d.clearSketch) body.sketch = null;
+    delete body.image; delete body.imageData; if (d.imageData) body.image = d.imageData; body.imageClear = !!d.imageClear && !d.imageData;
     P.busy = true; P.err = ""; LZ.render();
     const r = await St().send("training.php", body);
     P.busy = false;
     if (!r || !r.ok) { P.err = (r && r.error) || "Speichern hat nicht geklappt."; LZ.render(); return; }
     P.drill = r.drill; P.drills = null; loadDrills(); LZ.go("uebung"); LZ.top();
+    if (r.warning) { P.err = r.warning; LZ.render(); }
   };
   LZ.actions.trDrillDel = async () => {
     const r = await St().send("training.php", { action: "drill_delete", id: P.dedit.id });

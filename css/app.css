@@ -472,3 +472,6 @@ footer.legal .linkbtn{font-size:.85rem;color:var(--muted)}
 .sitem-row .grow{flex:1;min-width:0}
 .planlink{text-align:left;font-size:.9rem}
 @media print{ .sessblock,.drill{break-inside:avoid-page} .drillsketch{max-width:260px} }
+.drillimg{display:block}
+.drillimg img,.drillimg-prev{width:100%;height:auto;border-radius:8px;border:1px solid var(--rule);display:block}
+@media print{ .drillimg img{max-height:12cm;width:auto;max-width:100%} }

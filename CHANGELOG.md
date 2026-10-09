@@ -2,6 +2,11 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.24.1 – 2026-10-09
+- **Bilder zu Übungen:** Jede Übung kann ein Bild haben (Hochladen im Übungs-Editor, JPG/PNG/WebP, wird auf 1600 px verkleinert); erscheint in der Übung, in der Einheit und beim Drucken
+- Bilder liegen geschützt in `storage/drills/` und sind nur für Trainer des Vereins abrufbar
+- `tools/import_training.php` übernimmt auch die Bilder (auch für schon importierte Übungen ohne Bild)
+
 ## 0.24.0 – 2026-10-09
 - **Neuer Reiter „Training“** (Trainer): Trainingsplanung mit einheitlichem Aufbau
   - **Einheiten** pro Termin aus dem Kalender: Kopf (Titel, Fokus des Monats, Spielphase, Ziel, Spieler) und feste Blöcke Einstimmung · Übungsform · Spielform · Ausklang, Gesamtdauer automatisch, Druckansicht

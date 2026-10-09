@@ -4,7 +4,8 @@
  *   php tools/import_training.php storage/training-import.json [--team=N]
  * Format: {drills:[{title, topic, phase, block, minutes, players, organisation, ablauf, coaching, easier, harder, load, material, draft}],
  *          sessions:[{date, title, focus, phase, goal, players, blocks:{einstimmung:[{drill:"Titel", min, note}], uebung, spiel, ausklang}}]}
- * Übungen landen in der Bibliothek des Vereins der Mannschaft; vorhandene (gleicher Titel) werden übersprungen.
+ * Übungen landen in der Bibliothek des Vereins der Mannschaft; vorhandene (gleicher Titel) werden übersprungen,
+ * bekommen aber ihr Bild, falls sie noch keins haben. image: Pfad relativ zur JSON-Datei.
  * Einheiten werden dem Training am selben Tag zugeordnet (falls im Kalender); vorhandene Pläne bleiben unverändert.
  * Die Datei liegt in storage/ und kommt nicht ins Repository (Inhalte des Trainers).
  */
@@ -13,6 +14,7 @@ if (PHP_SAPI !== 'cli') { http_response_code(403); exit('Nur über die Kommandoz
 $_SERVER['REQUEST_METHOD'] = 'CLI';
 ob_start();
 require __DIR__ . '/../api/config.php';
+require __DIR__ . '/../api/lib/drill_image.php';
 $team = cli_team($argv);
 ob_end_clean();
 
@@ -28,12 +30,23 @@ $ids = [];
 $find = pdb()->prepare('SELECT id FROM drills WHERE club_id = ? AND title = ? AND active = 1');
 $cols = ['title', 'topic', 'phase', 'block', 'minutes', 'players', 'organisation', 'ablauf', 'coaching', 'easier', 'harder', 'load', 'material'];
 $ins = pdb()->prepare('INSERT INTO drills (club_id, ' . implode(', ', $cols) . ', draft, created_by, updated_by, updated_at) VALUES (?' . str_repeat(', ?', count($cols)) . ', ?, ?, ?, ?)');
-$newD = 0;
+$newD = 0; $imgs = 0;
+$addImage = function (int $id, array $d) use ($file, $club, &$imgs) {
+    if (empty($d['image'])) return;
+    $st = pdb()->prepare('SELECT image FROM drills WHERE id = ?'); $st->execute([$id]);
+    if ((string)$st->fetchColumn() !== '') return;
+    $path = dirname($file) . '/' . $d['image'];
+    if (!is_file($path)) { echo "Bild fehlt: {$d['image']}\n"; return; }
+    $rel = drill_image_store($club, $id, (string)file_get_contents($path));
+    if (str_starts_with($rel, '!')) { echo substr($rel, 1) . " ({$d['image']})\n"; return; }
+    pdb()->prepare('UPDATE drills SET image = ? WHERE id = ?')->execute([$rel, $id]); $imgs++;
+};
 foreach ($in['drills'] ?? [] as $d) {
     $find->execute([$club, $d['title']]);
-    if ($id = $find->fetchColumn()) { $ids[$d['title']] = (int)$id; continue; }
+    if ($id = $find->fetchColumn()) { $ids[$d['title']] = (int)$id; $addImage((int)$id, $d); continue; }
     $ins->execute(array_merge([$club], array_map(fn($c) => $d[$c] ?? ($c === 'minutes' ? 0 : ''), $cols), [!empty($d['draft']) ? 1 : 0, $coach, $coach, $now]));
-    $ids[$d['title']] = (int)pdb()->lastInsertId(); $newD++;
+    $ids[$d['title']] = $id = (int)pdb()->lastInsertId(); $newD++;
+    $addImage($id, $d);
 }
 $newS = 0; $skip = 0;
 foreach ($in['sessions'] ?? [] as $s) {
@@ -51,4 +64,4 @@ foreach ($in['sessions'] ?? [] as $s) {
     $newS++;
     echo "Einheit {$s['date']} „{$s['title']}“" . ($tid ? '' : ' (kein Training im Kalender an diesem Tag)') . "\n";
 }
-echo "Übungen neu: $newD · Einheiten neu: $newS" . ($skip ? " · übersprungen (Plan vorhanden): $skip" : '') . "\n";
+echo "Übungen neu: $newD · Bilder: $imgs · Einheiten neu: $newS" . ($skip ? " · übersprungen (Plan vorhanden): $skip" : '') . "\n";

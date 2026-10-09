@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS drills (
   load         TEXT    NOT NULL DEFAULT '',          -- Belastung / Umfang
   material     TEXT    NOT NULL DEFAULT '',
   sketch       TEXT    NOT NULL DEFAULT '',
+  image        TEXT    NOT NULL DEFAULT '',          -- Bilddatei in storage/drills/ (ab 0.24.1)
   draft        INTEGER NOT NULL DEFAULT 0,           -- 1 = Entwurf, noch zu prüfen
   active       INTEGER NOT NULL DEFAULT 1,
   created_by   INTEGER,

@@ -126,6 +126,9 @@ function platform_bootstrap(PDO $p): void {
 
 /* Plattform-Ergänzungen: 0.22.0 Vereinsadmins – der Superadmin wird Vereinsadmin der Vereine, in denen er Trainer ist */
 function platform_migrate(PDO $p): void {
+    // 0.24.1: Bild zur Übung
+    $dcols = array_column($p->query('PRAGMA table_info(drills)')->fetchAll(PDO::FETCH_ASSOC), 'name');
+    if ($dcols && !in_array('image', $dcols, true)) $p->exec("ALTER TABLE drills ADD COLUMN image TEXT NOT NULL DEFAULT ''");
     // 0.23.0: Datenschutz-Angaben je Verein (Verantwortlicher)
     $cols = array_column($p->query('PRAGMA table_info(clubs)')->fetchAll(PDO::FETCH_ASSOC), 'name');
     foreach (['legal_name', 'address', 'privacy_email', 'dpo'] as $c)
