@@ -14,7 +14,7 @@
   const showToggle = `<label class="check small-check"><input type="checkbox" id="auth-show" ${F.show ? "checked" : ""}> Passwort anzeigen</label>`;
   const errP = () => F.err ? `<p class="err" role="alert" style="text-align:left">${esc(F.err)}</p>` : "";
   const minLen = () => ((LZ.Store.pending || LZ.Store.account || {}).minLen) || (LZ.Store.gate && LZ.Store.gate() === "setup" ? 14 : 12);
-  const rules = () => `<ul class="rules"><li>mindestens ${minLen()} Zeichen – lieber lang als kompliziert</li><li>nicht dein Benutzername und nichts wie „123456789012“</li><li>Tipp: drei Wörter mit Bindestrich, z. B. <i>Ball-Wiese-Sonne</i></li></ul>`;
+  const rules = () => `<ul class="rules"><li>mindestens ${minLen()} Zeichen</li><li>Groß- und Kleinbuchstaben, mindestens eine Zahl und ein Sonderzeichen (z. B. - ! ? #)</li><li>nicht dein Benutzername</li><li>Tipp: drei Wörter mit Bindestrich und eine Zahl, z. B. <i>Ball-Tor-Wolke-7</i></li></ul>`;
   const head = (eyebrow, title, lede) => `<section class="authhead"><div class="authshirt">${LZ.shirt("")}</div>
     <p class="eyebrow">${eyebrow}</p><h1>${title}</h1>${lede ? `<p class="lede">${lede}</p>` : ""}</section>`;
 

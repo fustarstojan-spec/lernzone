@@ -385,12 +385,18 @@ function unique_username(PDO $pdo, string $base): string {
     while (true) { $st->execute([$u]); if ((int)$st->fetchColumn() === 0) return $u; $u = $base . $i++; }
 }
 
-/* Passwort-Regeln: mindestens 12 Zeichen (Trainer/Admin 14), nicht der Benutzername, keine Allerwelts-Passwörter */
+/* Passwort-Regeln: mindestens 12 Zeichen (Trainer/Admin 14), Groß- und Kleinbuchstabe, Zahl, Sonderzeichen, nicht der Benutzername, keine Allerwelts-Passwörter */
 function pw_min(string $kind): int { return $kind === 'coach' ? PW_MIN_COACH : PW_MIN_PLAYER; }
 function pw_problem(string $pw, string $username, string $kind = 'player'): ?string {
     $min = pw_min($kind);
-    if (mb_strlen($pw) < $min) return "Das Passwort muss mindestens $min Zeichen haben. Tipp: drei Wörter mit Bindestrich.";
+    if (mb_strlen($pw) < $min) return "Das Passwort muss mindestens $min Zeichen haben. Tipp: drei Wörter mit Bindestrich und eine Zahl, z. B. Ball-Tor-Wolke-7.";
     if (mb_strlen($pw) > 200) return 'Das Passwort ist zu lang.';
+    $miss = [];
+    if (!preg_match('/\p{Lu}/u', $pw)) $miss[] = 'ein Großbuchstabe';
+    if (!preg_match('/\p{Ll}/u', $pw)) $miss[] = 'ein Kleinbuchstabe';
+    if (!preg_match('/\d/', $pw))      $miss[] = 'eine Zahl';
+    if (!preg_match('/[^\p{L}\d]/u', $pw)) $miss[] = 'ein Sonderzeichen (z. B. - ! ? #)';
+    if ($miss) return 'Es fehlt noch: ' . implode(', ', $miss) . '. Beispiel: Ball-Tor-Wolke-7';
     $l = mb_strtolower($pw);
     $weak = ['12345678', '123456789', '1234567890', 'passwort', 'password', 'qwertz123', 'qwertzui', 'fussball', 'fußball',
              'heimstetten', 'lernzone', '11111111', '00000000', 'abcdefgh'];

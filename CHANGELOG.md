@@ -2,6 +2,9 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.20.1 – 2026-10-09
+- Passwörter brauchen zusätzlich Groß- und Kleinbuchstaben, eine Zahl und ein Sonderzeichen (Beispiel: Ball-Tor-Wolke-7)
+
 ## 0.20.0 – 2026-10-09
 - **Längere Passwörter:** Spieler mindestens 12 Zeichen, Trainer und Admins mindestens 14 (bisher 8). Gilt beim Festlegen und Ändern; bestehende Passwörter bleiben gültig, bis sie geändert werden.
 - Die Regeln beim Passwort-Festlegen zeigen die passende Mindestlänge und den Tipp „drei Wörter mit Bindestrich“

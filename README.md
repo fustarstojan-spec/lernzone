@@ -53,7 +53,7 @@ Mit PHP ist die App erst nach Anmeldung sichtbar: **Benutzername + Passwort**.
   Erste Anmeldung mit Benutzername + Code → sofort eigenes Passwort festlegen. Der Trainer kennt das Passwort nie.
 - **Passwort vergessen:** Kader → Spieler → „Neuen Einmal-Code erzeugen“ (Trainer-Konten: Trainer → antippen, nur Admins).
 - **Passwort ändern:** Mein Bereich bzw. Trainer-Bereich → „Passwort ändern“. Andere Geräte werden dabei abgemeldet.
-- **Passwort-Regeln:** mindestens 12 Zeichen (Trainer 14), nicht der Benutzername, keine Allerwelts-Passwörter. Tipp für Kinder: drei Wörter mit Bindestrich.
+- **Passwort-Regeln:** mindestens 12 Zeichen (Trainer 14), Groß- und Kleinbuchstaben, Zahl und Sonderzeichen, nicht der Benutzername, keine Allerwelts-Passwörter. Tipp für Kinder: drei Wörter mit Bindestrich.
 - **Umstieg von 0.7.0:** Spieler melden sich einmal mit `spielerNN` (z. B. `spieler8`) und der alten PIN an, Trainer mit ihrem Vornamen (klein, z. B. `trainer`) und der alten Trainer-PIN – danach eigenes Passwort festlegen.
 
 Erstes Trainer-Konto:
