@@ -77,7 +77,42 @@
       <section><p class="eyebrow">Trainer-Bereich</p><h1>Hallo${name ? " " + esc(name) : ""}</h1></section>
       ${D.err ? `<p class="err" style="text-align:left">${esc(D.err)}</p>` : ""}
       ${d ? eventsCard(d) + playersCard(d) : `<p class="small">Lade …</p>`}
+      ${teamCard()}
       <p class="small" style="text-align:center">Kader, Trainings und Konten: oben rechts auf das Trikot tippen.</p>`;
+  };
+
+  /* ---------- Mannschaft (ab 0.21.0): wechseln, neue anlegen (Admin) ---------- */
+  const T = { open: false, err: "", busy: false };
+  function teamCard() {
+    const c = LZ.Store.coach || {}, cur = c.team, list = c.teams || [];
+    if (!cur) return "";
+    const others = list.filter(t => t.id !== cur.id);
+    return `<section class="card stack"><div class="rowspread"><h2>Mannschaft</h2><span class="small">${esc(cur.club)}</span></div>
+      <p><b>${esc(cur.name)}</b>${cur.season ? ` <span class="small">· Saison ${esc(cur.season)}</span>` : ""}</p>
+      ${others.length ? `<div class="stack"><p class="small">Wechseln zu:</p><div class="chiprow">${others.map(t =>
+        `<button class="btn ghost small" data-act="teamSwitch" data-v="${t.id}">${esc(t.name)}${t.season ? " · " + esc(t.season) : ""}${t.club !== cur.club ? ` <span class="small">(${esc(t.club)})</span>` : ""}</button>`).join("")}</div></div>` : ""}
+      ${c.isAdmin ? (T.open ? `<div class="stack">
+          <div class="fld"><label for="team-name">Name der neuen Mannschaft</label><input id="team-name" maxlength="40" placeholder="z. B. U15"></div>
+          <div class="fld"><label for="team-season">Saison (optional)</label><input id="team-season" maxlength="20" placeholder="z. B. 26/27"></div>
+          ${T.err ? `<p class="err" style="text-align:left">${esc(T.err)}</p>` : ""}
+          <p class="small">Du wirst dort Trainer und Admin. Spieler, Trainer und Termine legst du danach in der neuen Mannschaft an.</p>
+          <div class="chiprow"><button class="btn" data-act="teamCreate" ${T.busy ? "disabled" : ""}>Anlegen</button><button class="btn ghost" data-act="teamToggle">Abbrechen</button></div></div>`
+        : `<button class="btn ghost" data-act="teamToggle">+ Neue Mannschaft anlegen</button>`) : ""}
+    </section>`;
+  }
+  LZ.actions.teamToggle = () => { T.open = !T.open; T.err = ""; LZ.render(); };
+  LZ.actions.teamSwitch = async (b, v) => {
+    const r = await LZ.Store.send("teams.php", { action: "switch", id: +v });
+    if (r && r.ok) location.reload(); else { T.err = (r && r.error) || "Wechseln hat nicht geklappt."; LZ.render(); }
+  };
+  LZ.actions.teamCreate = async () => {
+    if (T.busy) return;
+    const name = (document.getElementById("team-name") || {}).value || "", season = (document.getElementById("team-season") || {}).value || "";
+    if (!name.trim()) { T.err = "Bitte einen Namen eingeben, z. B. U15."; LZ.render(); return; }
+    T.busy = true; LZ.render();
+    const r = await LZ.Store.send("teams.php", { action: "create", name: name.trim(), season: season.trim() });
+    T.busy = false;
+    if (r && r.ok) location.reload(); else { T.err = (r && r.error) || "Anlegen hat nicht geklappt."; LZ.render(); }
   };
 
   /* ---------- Platzhalter bis 0.14.0 / 0.15.0 ---------- */

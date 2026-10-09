@@ -23,7 +23,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 calendar_refresh();
 att_autofill();
-$coaches = db()->query('SELECT id, name FROM coaches WHERE active = 1 ORDER BY is_admin DESC, name')->fetchAll(PDO::FETCH_ASSOC);
+$st = pdb()->prepare("SELECT c.id, c.name FROM memberships m JOIN coaches c ON c.id = m.ref AND c.active = 1
+                      WHERE m.team_id = ? AND m.role = 'coach' ORDER BY m.is_admin DESC, c.name");
+$st->execute([team_id()]);
+$coaches = $st->fetchAll(PDO::FETCH_ASSOC);
 $total = (int)db()->query('SELECT COUNT(*) FROM players WHERE active = 1')->fetchColumn();
 
 // Die nächsten 4 Termine (laufende von heute eingeschlossen)

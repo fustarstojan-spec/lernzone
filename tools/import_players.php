@@ -11,6 +11,7 @@ if (PHP_SAPI !== 'cli') { http_response_code(403); exit('Nur über die Kommandoz
 $_SERVER['REQUEST_METHOD'] = 'CLI';
 ob_start();
 require __DIR__ . '/../api/config.php';
+cli_team($argv);   // --team=N (Vorgabe: erste Mannschaft)
 ob_end_clean();
 
 $players = json_decode((string)file_get_contents(__DIR__ . '/../data/players.json'), true) ?: [];
@@ -21,7 +22,6 @@ foreach ($players as $p) {
     if ((int)$exists->fetchColumn() > 0) continue;
     db()->prepare("INSERT INTO players (nr, pos, plan, pos_off, pos_def, pin_hash) VALUES (?, ?, ?, ?, ?, '')")
         ->execute([$p['nr'], $p['pos'], $p['plan'], $p['posOff'] ?? '', $p['posDef'] ?? '']);
-    $u = unique_username(db(), 'spieler' . $p['nr']);
-    db()->prepare("INSERT INTO accounts (username, kind, ref, must_set_pw) VALUES (?, 'player', ?, 1)")->execute([$u, $p['nr']]);
-    printf("%-4d %-17s %s\n", $p['nr'], $u, issue_code((int)account_for('player', (int)$p['nr'])['id']));
+    $u = unique_username(pdb(), 'spieler' . $p['nr']);
+    printf("%-4d %-17s %s\n", $p['nr'], $u, issue_code(create_account($u, 'player', (int)$p['nr'])));
 }

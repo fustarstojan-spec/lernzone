@@ -76,7 +76,7 @@ if ($action === 'delete') {
     foreach (['progress', 'profiles', 'moods', 'attendance', 'absences', 'match_squad', 'iep', 'iep_versions', 'iep_ratings', 'grades', 'players'] as $t) {
         db()->prepare("DELETE FROM $t WHERE nr = ?")->execute([$nr]);
     }
-    db()->prepare("DELETE FROM accounts WHERE kind = 'player' AND ref = ?")->execute([$nr]);
+    if ($a = account_for('player', $nr)) remove_membership((int)$a['id']);
     json_out(['ok' => true]);
 }
 
@@ -97,12 +97,11 @@ if ($existing !== false && (int)$existing === 1) json_out(['ok' => false, 'error
 $pos = $type === 'tw' ? 'Tor' : 'Feldspieler';
 if ($existing !== false) {   // alte, deaktivierte Nummer
     db()->prepare('DELETE FROM players WHERE nr = ?')->execute([$nr]);
-    db()->prepare("DELETE FROM accounts WHERE kind = 'player' AND ref = ?")->execute([$nr]);
+    if ($a = account_for('player', $nr)) remove_membership((int)$a['id']);
 }
 db()->prepare("INSERT INTO players (nr, pos, plan, pos_off, pos_def, pin_hash) VALUES (?, ?, ?, ?, ?, '')")
     ->execute([$nr, $pos, $type, $posOff, $posDef]);
-$username = $username !== '' ? $username : unique_username(db(), 'spieler' . $nr);
-db()->prepare("INSERT INTO accounts (username, kind, ref, must_set_pw) VALUES (?, 'player', ?, 1)")->execute([$username, $nr]);
-$code = issue_code((int)account_for('player', $nr)['id']);
+$username = $username !== '' ? $username : unique_username(pdb(), 'spieler' . $nr);
+$code = issue_code(create_account($username, 'player', $nr));
 
 json_out(['ok' => true, 'player' => $row($nr), 'username' => $username, 'code' => $code, 'expires' => date('d.m.Y H:i', time() + CODE_HOURS * 3600)]);

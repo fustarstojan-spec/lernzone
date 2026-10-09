@@ -5,10 +5,13 @@
  */
 declare(strict_types=1);
 
-// Datenbank: Standard ist eine SQLite-Datei im Ordner /storage (nicht öffentlich erreichbar machen!)
-const DB_DSN  = 'sqlite:' . __DIR__ . '/../storage/lernzone.sqlite';
-const DB_USER = null;   // für MySQL z. B. 'lernzone'
-const DB_PASS = null;
+// Datenbanken (SQLite) im Ordner /storage – nicht öffentlich erreichbar machen!
+//   platform.sqlite  Vereine, Mannschaften, Zugänge, Trainer, Mitgliedschaften (tools/platform.sql)
+//   <db_file>        je Mannschaft eine eigene Datei mit allen Mannschaftsdaten (tools/schema.sql)
+//   Die erste Mannschaft nutzt die bisherige Datei lernzone.sqlite weiter.
+const STORAGE_DIR   = __DIR__ . '/../storage';
+const PLATFORM_FILE = STORAGE_DIR . '/platform.sqlite';
+const LEGACY_FILE   = 'lernzone.sqlite';
 
 const MAX_LOGIN_TRIES = 5;      // Fehlversuche pro Konto (und pro Sitzung) …
 const LOCK_SECONDS    = 300;    // … danach 5 Minuten Sperre
@@ -35,18 +38,89 @@ header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 header('Referrer-Policy: same-origin');
 
-/* ---------- Datenbank ---------- */
+/* ---------- Datenbanken ---------- */
 
-function db(): PDO {
+/* Plattform: Vereine, Mannschaften, Zugänge, Trainer, Mitgliedschaften */
+function pdb(): PDO {
     static $pdo = null;
     if ($pdo === null) {
-        $pdo = new PDO(DB_DSN, DB_USER, DB_PASS, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-        $pdo->exec(file_get_contents(__DIR__ . '/../tools/schema.sql'));   // legt fehlende Tabellen an
-        migrate($pdo);
-        seed_demo_players($pdo);
-        ensure_accounts($pdo);
+        $pdo = new PDO('sqlite:' . PLATFORM_FILE, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        $pdo->exec('PRAGMA foreign_keys = OFF');
+        $pdo->exec(file_get_contents(__DIR__ . '/../tools/platform.sql'));
+        platform_bootstrap($pdo);
     }
     return $pdo;
+}
+
+/* Gewählte Mannschaft dieser Sitzung (null = noch keine, z. B. vor der Anmeldung) */
+function team_id(): ?int { return !empty($_SESSION['team']) ? (int)$_SESSION['team'] : null; }
+
+function team_row(int $id): ?array {
+    $st = pdb()->prepare('SELECT t.*, c.name AS club_name FROM teams t JOIN clubs c ON c.id = t.club_id WHERE t.id = ? AND t.active = 1 AND c.active = 1');
+    $st->execute([$id]);
+    return $st->fetch(PDO::FETCH_ASSOC) ?: null;
+}
+
+/*
+ * Datenbank der gewählten Mannschaft. Die Plattform-Datenbank ist als „p“ angehängt: Abfragen auf
+ * accounts, coaches und memberships landen dort automatisch (die Mannschafts-Datei hat diese Tabellen nicht).
+ * Ohne gewählte Mannschaft gibt db() die Plattform-Datenbank zurück (Anmeldung, Zugänge).
+ */
+function db(?int $team = null): PDO {
+    static $cache = [];
+    $team ??= team_id();
+    if (!$team) return pdb();
+    if (isset($cache[$team])) return $cache[$team];
+    $t = team_row($team);
+    if (!$t) { unset($_SESSION['team']); json_out(['ok' => false, 'error' => 'Diese Mannschaft gibt es nicht mehr. Bitte neu anmelden.'], 401); }
+    pdb();   // Plattform zuerst anlegen bzw. übernehmen
+    $pdo = new PDO('sqlite:' . STORAGE_DIR . '/' . basename($t['db_file']), null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    $pdo->exec(file_get_contents(__DIR__ . '/../tools/schema.sql'));   // legt fehlende Tabellen an
+    migrate($pdo);
+    if ((int)$t['id'] === 1) seed_demo_players($pdo);   // Demo-Kader (nur Entwicklung) nur in der ersten Mannschaft
+    $pdo->exec('ATTACH DATABASE ' . $pdo->quote(PLATFORM_FILE) . ' AS p');
+    return $cache[$team] = $pdo;
+}
+
+/*
+ * Einmalig: bisherige Einzel-Installation (storage/lernzone.sqlite mit Zugängen und Trainern) wird zum ersten Verein.
+ * Vereins- und Mannschaftsname kommen aus data/team.json („SV Heimstetten U14“ → Verein „SV Heimstetten“, Mannschaft „U14“).
+ */
+function platform_bootstrap(PDO $p): void {
+    if ((int)$p->query('SELECT COUNT(*) FROM teams')->fetchColumn() > 0) return;
+    $legacy = STORAGE_DIR . '/' . LEGACY_FILE;
+    if (!is_file($legacy)) return;                                       // Neuinstallation: erstes Konto über die Einrichtung
+    $old = new PDO('sqlite:' . $legacy, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    $has = fn(string $t) => (bool)$old->query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = " . $old->quote($t))->fetchColumn();
+    $team = json_decode((string)@file_get_contents(__DIR__ . '/../data/team.json'), true) ?: [];
+    $full = trim((string)($team['name'] ?? 'Mein Verein'));
+    [$club, $tname] = preg_match('/^(.*\S)\s+(U\d+.*)$/u', $full, $m) ? [$m[1], $m[2]] : [$full, 'Mannschaft'];
+    $p->beginTransaction();
+    $p->prepare('INSERT INTO clubs (id, name) VALUES (1, ?)')->execute([$club]);
+    $p->prepare('INSERT INTO teams (id, club_id, name, db_file) VALUES (1, 1, ?, ?)')->execute([$tname, LEGACY_FILE]);
+    if ($has('coaches')) {
+        $ins = $p->prepare('INSERT INTO coaches (id, name, pin_hash, is_admin, active, fail_count, locked_until) VALUES (?, ?, ?, ?, ?, ?, ?)');
+        foreach ($old->query('SELECT * FROM coaches')->fetchAll(PDO::FETCH_ASSOC) as $c)
+            $ins->execute([$c['id'], $c['name'], $c['pin_hash'], $c['is_admin'], $c['active'], $c['fail_count'], $c['locked_until']]);
+    }
+    if ($has('accounts')) {
+        $cols = 'id, username, kind, ref, pw_hash, code_hash, code_expires, must_set_pw, active, sess_ver, fail_count, locked_until, last_login, created_at';
+        $ins = $p->prepare("INSERT INTO accounts ($cols, last_team) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
+        $mem = $p->prepare('INSERT INTO memberships (account_id, team_id, role, ref, is_admin, created_at) VALUES (?, 1, ?, ?, ?, ?)');
+        $adm = $p->prepare('SELECT is_admin FROM coaches WHERE id = ?');
+        foreach ($old->query("SELECT $cols FROM accounts")->fetchAll(PDO::FETCH_NUM) as $a) {
+            $ins->execute($a);
+            $isAdmin = 0;
+            if ($a[2] === 'coach') { $adm->execute([$a[3]]); $isAdmin = (int)$adm->fetchColumn(); }
+            $mem->execute([$a[0], $a[2] === 'coach' ? 'coach' : 'player', $a[3], $isAdmin, $a[13]]);
+        }
+    }
+    // Der erste Admin-Trainer betreibt die Plattform (darf später Vereine freischalten)
+    $p->exec("UPDATE accounts SET platform_admin = 1 WHERE id = (SELECT MIN(account_id) FROM memberships WHERE role = 'coach' AND is_admin = 1)");
+    $p->commit();
+    // Alte Tabellen in der Mannschafts-Datei umbenennen (bleiben als Sicherung erhalten, werden nicht mehr benutzt)
+    foreach (['accounts', 'coaches'] as $t) if ($has($t)) $old->exec("ALTER TABLE $t RENAME TO _legacy_$t");
+    $old->exec('DROP INDEX IF EXISTS accounts_ref');
 }
 
 /* Ergänzt, was in älteren Datenbanken noch fehlt */
@@ -77,14 +151,6 @@ function migrate(PDO $pdo): void {
     }
     // Automatisch „da“ erst für Trainings ab dem Tag dieser Umstellung (ältere ohne Eintrag zählen nicht)
     $pdo->exec("INSERT OR IGNORE INTO settings (name, value) VALUES ('auto_att_from', '" . date('Y-m-d') . "')");
-    // Bis 0.6.0 gab es nur eine Trainer-PIN → wird zum ersten Admin-Konto „Trainer“
-    $old = $pdo->query("SELECT value FROM settings WHERE name = 'coach_pin_hash'")->fetchColumn();
-    if ($old !== false) {
-        if ((int)$pdo->query('SELECT COUNT(*) FROM coaches')->fetchColumn() === 0) {
-            $pdo->prepare('INSERT INTO coaches (name, pin_hash, is_admin) VALUES (?, ?, 1)')->execute(['Trainer', $old]);
-        }
-        $pdo->exec("DELETE FROM settings WHERE name = 'coach_pin_hash'");
-    }
 }
 
 /*
@@ -156,7 +222,7 @@ function player_out(array $r): array {
 }
 
 function current_user(): ?array {
-    if (empty($_SESSION['nr'])) return null;
+    if (empty($_SESSION['nr']) || !team_id()) return null;
     $st = db()->prepare('SELECT nr, pos, plan, pos_off, pos_def, consent FROM players WHERE nr = ? AND active = 1');
     $st->execute([$_SESSION['nr']]);
     $u = $st->fetch(PDO::FETCH_ASSOC);
@@ -175,24 +241,45 @@ function require_consent(array $u): void {
 
 /* ---------- Trainer ---------- */
 
+/* Trainer der gewählten Mannschaft; isAdmin = Admin dieser Mannschaft (Mitgliedschaft) */
 function current_coach(): ?array {
-    if (empty($_SESSION['coach'])) return null;
-    $st = db()->prepare('SELECT id, name, is_admin FROM coaches WHERE id = ? AND active = 1');
-    $st->execute([(int)$_SESSION['coach']]);
+    if (empty($_SESSION['coach']) || !team_id()) return null;
+    $st = pdb()->prepare("SELECT c.id, c.name, m.is_admin FROM coaches c JOIN memberships m ON m.ref = c.id AND m.role = 'coach' AND m.team_id = ?
+                          WHERE c.id = ? AND c.active = 1");
+    $st->execute([team_id(), (int)$_SESSION['coach']]);
     $c = $st->fetch(PDO::FETCH_ASSOC);
     return $c ? ['id' => (int)$c['id'], 'name' => $c['name'], 'isAdmin' => (bool)$c['is_admin']] : null;
 }
 
+/* Mannschaften, zu denen ein Konto gehört (für die Auswahl oben) */
+function account_teams(int $accountId): array {
+    $st = pdb()->prepare('SELECT t.id, t.name, t.season, c.id AS club_id, c.name AS club, m.role, m.is_admin FROM memberships m
+                          JOIN teams t ON t.id = m.team_id AND t.active = 1 JOIN clubs c ON c.id = t.club_id AND c.active = 1
+                          WHERE m.account_id = ? ORDER BY c.name, t.name');
+    $st->execute([$accountId]);
+    return array_map(fn($r) => ['id' => (int)$r['id'], 'name' => $r['name'], 'season' => $r['season'], 'clubId' => (int)$r['club_id'],
+                                'club' => $r['club'], 'role' => $r['role'], 'isAdmin' => (bool)$r['is_admin']], $st->fetchAll(PDO::FETCH_ASSOC));
+}
+
+function team_info(): ?array {
+    $t = team_id() ? team_row(team_id()) : null;
+    return $t ? ['id' => (int)$t['id'], 'name' => $t['name'], 'season' => $t['season'], 'club' => $t['club_name'], 'clubId' => (int)$t['club_id']] : null;
+}
+
 function coach_state(): array {
     $c = current_coach();
-    $has = (int)db()->query('SELECT COUNT(*) FROM coaches WHERE active = 1')->fetchColumn() > 0;
+    $has = (int)pdb()->query('SELECT COUNT(*) FROM teams')->fetchColumn() > 0;
+    $acc = current_account();
     return [
         'active'     => $c !== null,
         'id'         => $c['id'] ?? null,
         'name'       => $c['name'] ?? null,
         'isAdmin'    => $c['isAdmin'] ?? false,
+        'team'       => team_info(),
+        'teams'      => $c && $acc ? array_values(array_filter(account_teams((int)$acc['id']), fn($t) => $t['role'] === 'coach')) : [],
+        'platformAdmin' => (bool)($acc['platform_admin'] ?? false),
         'hasCoaches' => $has,
-        'canSetup'   => !$has && is_local_request(),   // erstes Admin-Konto nur auf localhost anlegen
+        'canSetup'   => !$has && is_local_request(),   // erster Verein + erstes Admin-Konto nur auf localhost
     ];
 }
 
@@ -226,17 +313,17 @@ function count_fail(string $k): void {
 
 /* pro Konto in der Datenbank (gilt auch, wenn jemand Cookies löscht) */
 function account_locked(string $table, string $key, int $id): bool {
-    $st = db()->prepare("SELECT locked_until FROM $table WHERE $key = ?");
+    $st = pdb()->prepare("SELECT locked_until FROM $table WHERE $key = ?");
     $st->execute([$id]);
     return (int)$st->fetchColumn() > time();
 }
 function account_fail(string $table, string $key, int $id): void {
-    db()->prepare("UPDATE $table SET fail_count = fail_count + 1 WHERE $key = ?")->execute([$id]);
-    db()->prepare("UPDATE $table SET locked_until = ?, fail_count = 0 WHERE $key = ? AND fail_count >= ?")
+    pdb()->prepare("UPDATE $table SET fail_count = fail_count + 1 WHERE $key = ?")->execute([$id]);
+    pdb()->prepare("UPDATE $table SET locked_until = ?, fail_count = 0 WHERE $key = ? AND fail_count >= ?")
         ->execute([time() + LOCK_SECONDS, $id, MAX_LOGIN_TRIES]);
 }
 function account_ok(string $table, string $key, int $id): void {
-    db()->prepare("UPDATE $table SET fail_count = 0, locked_until = 0 WHERE $key = ?")->execute([$id]);
+    pdb()->prepare("UPDATE $table SET fail_count = 0, locked_until = 0 WHERE $key = ?")->execute([$id]);
 }
 
 /* ---------- Trainings, Beteiligung, Befinden ---------- */
@@ -374,15 +461,16 @@ function clean_username(string $u): string {
 function username_ok(string $u): bool { return (bool)preg_match('/^[a-z0-9][a-z0-9._-]{2,29}$/', $u); }
 
 function username_taken(string $u, int $exceptId = 0): bool {
-    $st = db()->prepare('SELECT COUNT(*) FROM accounts WHERE username = ? AND id != ?');
+    $st = pdb()->prepare('SELECT COUNT(*) FROM accounts WHERE username = ? AND id != ?');
     $st->execute([$u, $exceptId]);
     return (int)$st->fetchColumn() > 0;
 }
 function unique_username(PDO $pdo, string $base): string {
     $base = username_ok($base) ? $base : 'user';
     $u = $base; $i = 2;
+    $sep = preg_match('/\d$/', $base) ? '-' : '';                      // spieler7 → spieler7-2 (nicht spieler72)
     $st = $pdo->prepare('SELECT COUNT(*) FROM accounts WHERE username = ?');
-    while (true) { $st->execute([$u]); if ((int)$st->fetchColumn() === 0) return $u; $u = $base . $i++; }
+    while (true) { $st->execute([$u]); if ((int)$st->fetchColumn() === 0) return $u; $u = $base . $sep . $i++; }
 }
 
 /* Passwort-Regeln: mindestens 12 Zeichen (Trainer/Admin 14), Groß- und Kleinbuchstabe, Zahl, Sonderzeichen, nicht der Benutzername, keine Allerwelts-Passwörter */
@@ -415,33 +503,64 @@ function norm_code(string $c): string { return strtoupper(preg_replace('/[^A-Za-
 /* Neuen Einmal-Code setzen: altes Passwort ungültig, alle Sitzungen beendet */
 function issue_code(int $accountId): string {
     $code = gen_code();
-    db()->prepare('UPDATE accounts SET code_hash = ?, code_expires = ?, pw_hash = \'\', must_set_pw = 1, sess_ver = sess_ver + 1,
+    pdb()->prepare('UPDATE accounts SET code_hash = ?, code_expires = ?, pw_hash = \'\', must_set_pw = 1, sess_ver = sess_ver + 1,
                    fail_count = 0, locked_until = 0 WHERE id = ?')
         ->execute([hash_pw(norm_code($code)), time() + CODE_HOURS * 3600, $accountId]);
     return $code;
 }
 
-function account_for(string $kind, int $ref): ?array {
-    $st = db()->prepare('SELECT * FROM accounts WHERE kind = ? AND ref = ?');
-    $st->execute([$kind, $ref]);
+/* Zugang eines Spielers (Trikotnummer in der gewählten Mannschaft) bzw. eines Trainers (coaches.id).
+   created_at = Beitritt zur Mannschaft (für die Trainingsbeteiligung). */
+function account_for(string $kind, int $ref, ?int $team = null): ?array {
+    $team ??= team_id();
+    $st = pdb()->prepare("SELECT a.*, m.created_at AS created_at, a.created_at AS account_created FROM accounts a
+                          JOIN memberships m ON m.account_id = a.id AND m.team_id = ? AND m.role = ? AND m.ref = ?
+                          WHERE a.kind = ?");
+    $st->execute([(int)$team, $kind === 'coach' ? 'coach' : 'player', $ref, $kind]);
     return $st->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
-/* Bis 0.7.0 gab es nur PINs: jedes Konto ohne Zugang bekommt einen.
-   Benutzername spielerNN bzw. Vorname des Trainers; die alte PIN gilt einmalig, danach muss ein Passwort festgelegt werden. */
-function ensure_accounts(PDO $pdo): void {
-    // created_at weit zurück, damit bisherige Trainings in der Trainingsbeteiligung mitzählen
-    $ins = $pdo->prepare("INSERT INTO accounts (username, kind, ref, pw_hash, must_set_pw, created_at) VALUES (?, ?, ?, ?, 1, '2000-01-01 00:00:00')");
-    $rows = $pdo->query("SELECT p.nr, p.pin_hash FROM players p LEFT JOIN accounts a ON a.kind = 'player' AND a.ref = p.nr
-                         WHERE a.id IS NULL AND p.pin_hash != ''")->fetchAll(PDO::FETCH_ASSOC);
-    foreach ($rows as $r) $ins->execute([unique_username($pdo, 'spieler' . $r['nr']), 'player', $r['nr'], $r['pin_hash']]);
-    $rows = $pdo->query("SELECT c.id, c.name, c.pin_hash FROM coaches c LEFT JOIN accounts a ON a.kind = 'coach' AND a.ref = c.id
-                         WHERE a.id IS NULL AND c.pin_hash != ''")->fetchAll(PDO::FETCH_ASSOC);
-    foreach ($rows as $r) {
-        $base = clean_username((string)$r['name']);
-        $ins->execute([unique_username($pdo, username_ok($base) ? $base : 'trainer'), 'coach', $r['id'], $r['pin_hash']]);
-    }
+/* Kommandozeile: Mannschaft per --team=N wählen (Vorgabe: die einzige bzw. die erste) */
+function cli_team(array &$argv): int {
+    $id = 0;
+    foreach ($argv as $i => $a) if (preg_match('/^--team=(\d+)$/', $a, $m)) { $id = (int)$m[1]; unset($argv[$i]); }
+    $argv = array_values($argv);
+    if (!$id) $id = (int)pdb()->query('SELECT id FROM teams WHERE active = 1 ORDER BY id LIMIT 1')->fetchColumn();
+    if (!$id || !team_row($id)) { fwrite(STDERR, "Diese Mannschaft gibt es nicht (--team=N, siehe php tools/create_club.php --liste).\n"); exit(1); }
+    $_SESSION['team'] = $id;
+    return $id;
 }
+
+/* Neue Mannschaft in einem Verein; ihre Datenbank-Datei entsteht beim ersten Zugriff */
+function create_team(int $clubId, string $name, string $season = ''): int {
+    pdb()->prepare('INSERT INTO teams (club_id, name, season, db_file) VALUES (?, ?, ?, ?)')
+        ->execute([$clubId, $name, $season, 'tmp-' . bin2hex(random_bytes(6)) . '.sqlite']);
+    $id = (int)pdb()->lastInsertId();
+    pdb()->prepare('UPDATE teams SET db_file = ? WHERE id = ?')->execute(["team-$id.sqlite", $id]);
+    return $id;
+}
+function create_coach(string $name): int {
+    pdb()->prepare("INSERT INTO coaches (name, pin_hash, is_admin) VALUES (?, '', 0)")->execute([$name]);
+    return (int)pdb()->lastInsertId();
+}
+
+/* Neues Konto + Mitgliedschaft in der gewählten Mannschaft; gibt die Konto-ID zurück */
+function create_account(string $username, string $kind, int $ref, bool $isAdmin = false, ?int $team = null): int {
+    $team ??= team_id();
+    pdb()->prepare("INSERT INTO accounts (username, kind, ref, must_set_pw, last_team) VALUES (?, ?, ?, 1, ?)")->execute([$username, $kind, $ref, (int)$team]);
+    $id = (int)pdb()->lastInsertId();
+    pdb()->prepare('INSERT INTO memberships (account_id, team_id, role, ref, is_admin) VALUES (?, ?, ?, ?, ?)')
+        ->execute([$id, (int)$team, $kind === 'coach' ? 'coach' : 'player', $ref, $isAdmin ? 1 : 0]);
+    return $id;
+}
+
+/* Mitgliedschaft in der gewählten Mannschaft beenden; Konto löschen, wenn es sonst nirgends dabei ist */
+function remove_membership(int $accountId, ?int $team = null): void {
+    pdb()->prepare('DELETE FROM memberships WHERE account_id = ? AND team_id = ?')->execute([$accountId, (int)($team ?? team_id())]);
+    $st = pdb()->prepare('SELECT COUNT(*) FROM memberships WHERE account_id = ?'); $st->execute([$accountId]);
+    if ((int)$st->fetchColumn() === 0) pdb()->prepare('DELETE FROM accounts WHERE id = ?')->execute([$accountId]);
+}
+
 
 /* ---------- Sitzung ---------- */
 
@@ -457,17 +576,32 @@ function logout_session(): void {
     if ($csrf) $_SESSION['csrf'] = $csrf;
 }
 
-function start_session_for(array $acc): void {
+function start_session_for(array $acc, ?int $team = null): void {
     session_regenerate_id(true);
     $_SESSION = ['csrf' => bin2hex(random_bytes(32)), 'acc' => (int)$acc['id'], 'ver' => (int)$acc['sess_ver'], 'last' => time()];
-    if ($acc['kind'] === 'player') $_SESSION['nr'] = (int)$acc['ref'];
-    else $_SESSION['coach'] = (int)$acc['ref'];
-    db()->prepare('UPDATE accounts SET last_login = ? WHERE id = ?')->execute([date('Y-m-d H:i'), $acc['id']]);
+    // Mannschaft: gewünschte, sonst zuletzt gewählte, sonst die erste
+    $teams = array_column(account_teams((int)$acc['id']), null, 'id');
+    $pick = $team && isset($teams[$team]) ? $team : (isset($teams[(int)$acc['last_team']]) ? (int)$acc['last_team'] : (int)(array_key_first($teams) ?? 0));
+    if ($pick) select_team($pick, $acc);
+    pdb()->prepare('UPDATE accounts SET last_login = ? WHERE id = ?')->execute([date('Y-m-d H:i'), $acc['id']]);
+}
+
+/* Mannschaft wechseln: Sitzung zeigt danach nur noch deren Daten */
+function select_team(int $team, array $acc): bool {
+    $st = pdb()->prepare('SELECT role, ref FROM memberships WHERE account_id = ? AND team_id = ?');
+    $st->execute([(int)$acc['id'], $team]);
+    $m = $st->fetch(PDO::FETCH_ASSOC);
+    if (!$m || !team_row($team)) return false;
+    unset($_SESSION['nr'], $_SESSION['coach']);
+    $_SESSION['team'] = $team;
+    if ($m['role'] === 'player') $_SESSION['nr'] = (int)$m['ref']; else $_SESSION['coach'] = (int)$m['ref'];
+    pdb()->prepare('UPDATE accounts SET last_team = ? WHERE id = ?')->execute([$team, $acc['id']]);
+    return true;
 }
 
 function current_account(): ?array {
     if (empty($_SESSION['acc'])) return null;
-    $st = db()->prepare('SELECT * FROM accounts WHERE id = ?');
+    $st = pdb()->prepare('SELECT * FROM accounts WHERE id = ?');
     $st->execute([(int)$_SESSION['acc']]);
     return $st->fetch(PDO::FETCH_ASSOC) ?: null;
 }
@@ -479,6 +613,15 @@ function validate_session(): void {
     $a = current_account();
     if (!$a || !(int)$a['active'] || (int)$a['sess_ver'] !== (int)($_SESSION['ver'] ?? -1)) { logout_session(); return; }
     if ($a['kind'] === 'coach' && time() - (int)($_SESSION['last'] ?? 0) > COACH_IDLE) { logout_session(); return; }
+    // Mitgliedschaft in der gewählten Mannschaft muss noch bestehen
+    if (team_id()) {
+        $st = pdb()->prepare('SELECT COUNT(*) FROM memberships WHERE account_id = ? AND team_id = ?');
+        $st->execute([(int)$a['id'], team_id()]);
+        if ((int)$st->fetchColumn() === 0 || !team_row(team_id())) {          // entfernt → andere Mannschaft wählen, sonst abmelden
+            $other = array_values(array_filter(account_teams((int)$a['id']), fn($t) => $t['id'] !== team_id()))[0] ?? null;
+            if (!$other || !select_team($other['id'], $a)) { logout_session(); return; }
+        }
+    }
     $_SESSION['last'] = time();
 }
 

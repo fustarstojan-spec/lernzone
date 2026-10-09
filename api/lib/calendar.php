@@ -17,7 +17,7 @@ const CAL_FUTURE   = 60;     // Tage voraus
 const CAL_TZ       = 'Europe/Berlin';
 
 function cal_tz(): DateTimeZone { static $tz = null; return $tz ??= new DateTimeZone(CAL_TZ); }
-function cal_cache_file(): string { return __DIR__ . '/../../storage/calendar-cache.ics'; }
+function cal_cache_file(): string { $t = (int)team_id(); return __DIR__ . '/../../storage/calendar-cache' . ($t > 1 ? "-$t" : '') . '.ics'; }   // pro Mannschaft
 
 function cal_setting(string $k): string {
     $st = db()->prepare('SELECT value FROM settings WHERE name = ?'); $st->execute([$k]);

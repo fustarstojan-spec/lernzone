@@ -2,6 +2,17 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.21.0 – 2026-10-09
+- **Mehrere Vereine und Mannschaften (Schritt 1):** Aufbau Verein → Mannschaft → Mitglieder mit Rolle (Spieler/Trainer, Admin pro Mannschaft)
+  - Neue Plattform-Datenbank `storage/platform.sqlite` (Vereine, Mannschaften, Konten, Trainer, Mitgliedschaften); jede Mannschaft hat ihre eigene Datei (`storage/team-N.sqlite`), die Daten bleiben sauber getrennt
+  - **Automatische Übernahme:** die bisherige Datenbank wird beim ersten Aufruf zu „SV Heimstetten → U14“; alle Konten, Passwörter und Daten bleiben erhalten (alte Tabellen bleiben als `_legacy_*` zur Sicherung)
+  - Trainer-Übersicht: Karte „Mannschaft“ – zwischen eigenen Mannschaften wechseln, Admins legen neue Mannschaften im Verein an
+  - Ein Trainer kann in mehreren Mannschaften sein (in „Trainer hinzufügen“ den vorhandenen Benutzernamen eingeben); nach dem Anmelden öffnet sich die zuletzt gewählte Mannschaft
+  - Kopfzeile und Anmeldeseite zeigen Verein · Mannschaft
+  - Einrichtung (Neuinstallation, nur localhost) fragt Verein und Mannschaft ab
+  - Neues Werkzeug `php tools/create_club.php` zum Freischalten neuer Vereine (und `--liste`); `create_coach.php` und die Import-Werkzeuge haben `--team=N`
+  - Benutzernamen sind plattformweit eindeutig (z. B. `spieler7-2`, wenn `spieler7` schon vergeben ist)
+
 ## 0.20.1 – 2026-10-09
 - Passwörter brauchen zusätzlich Groß- und Kleinbuchstaben, eine Zahl und ein Sonderzeichen (Beispiel: Ball-Tor-Wolke-7)
 

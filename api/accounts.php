@@ -27,7 +27,7 @@ switch ($in['action'] ?? '') {
         $u = clean_username((string)($in['username'] ?? ''));
         if (!username_ok($u))                  json_out(['ok' => false, 'error' => 'Benutzername: 3–30 Zeichen, nur a–z, 0–9, Punkt, Bindestrich.'], 400);
         if (username_taken($u, (int)$a['id'])) json_out(['ok' => false, 'error' => 'Dieser Benutzername ist schon vergeben.'], 409);
-        db()->prepare('UPDATE accounts SET username = ? WHERE id = ?')->execute([$u, $a['id']]);
+        pdb()->prepare('UPDATE accounts SET username = ? WHERE id = ?')->execute([$u, $a['id']]);
         json_out(['ok' => true, 'username' => $u]);
 }
 json_out(['ok' => false, 'error' => 'Unbekannte Aktion'], 400);

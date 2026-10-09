@@ -77,7 +77,7 @@
    *   signIn(username, password)          → { ok, state: "ok" | "setpw", user, error }
    *   setPassword(pw, pw2)                → { ok, user, error }
    *   changePassword(old, pw, pw2)        → { ok, error }
-   *   setupFirst(name, username, pw, pw2) → { ok, error }   erstes Trainer-Konto (nur localhost)
+   *   setupFirst(name, username, pw, pw2, club, team) → { ok, error }   erster Verein + Mannschaft + Admin-Konto (nur localhost)
    *   refreshPlayers()          → Kader neu laden (nur angemeldet)
    * Jede POST-Anfrage schickt das CSRF-Token aus api/me.php mit.                                   */
   function ApiStore() {
@@ -154,8 +154,8 @@
         const r = await safe("auth.php", { action: "change", old, password, password2 });
         return r.ok ? { ok: true } : r;
       },
-      async setupFirst(name, username, password, password2) {
-        const r = await safe("auth.php", { action: "setup", name, username, password, password2 });
+      async setupFirst(name, username, password, password2, club, team) {
+        const r = await safe("auth.php", { action: "setup", name, username, password, password2, club, team });
         if (r.ok) await api_.afterLogin(r);
         return r;
       },
@@ -164,7 +164,7 @@
       async logout() {
         await safe("auth.php", { action: "logout" });
         user = null; progress = emptyProgress(); api_.account = null; api_.pending = null;
-        api_.coach = Object.assign({}, api_.coach, { active: false, id: null, name: null, isAdmin: false });
+        api_.coach = Object.assign({}, api_.coach, { active: false, id: null, name: null, isAdmin: false, team: null, teams: [] });
         if (content) content.players.splice(0);
       },
       async coachLogout() { return api_.logout(); },

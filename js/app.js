@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.20.1";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.21.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -238,12 +238,21 @@
     const gate = Store.gate ? Store.gate() : null;          // Weg B: erst anmelden
     document.getElementById("shirtBtn").innerHTML = gate ? "" : shirt(S.user ? S.user.nr : Store.coach.active ? "T" : "?");
     document.getElementById("shirtBtn").hidden = !!gate;
+    const brand = document.querySelector(".brand span"); if (brand) brand.textContent = teamLabel();
     if (gate && LZ.views[gate]) { app.innerHTML = LZ.views[gate](); return; }
     // Trainer ohne Spieler-Anmeldung: eigene Startseite (js/dashboard.js), Lerninhalte unter „Lernzone“
     const coachHome = S.view === "home" && LZ.coachMode() && LZ.views.coachHome;
     app.innerHTML = coachHome ? LZ.views.coachHome()
       : LZ.views[S.view] ? LZ.views[S.view]()
       : S.view === "phase" ? phaseView() : S.view === "modul" ? modulView() : S.view === "zonen" ? zonenView() : S.view === "me" ? meView() : home();   // "lernzone" = home()
+  }
+  // Verein · Mannschaft (Weg B aus der Anmeldung, sonst aus data/team.json)
+  function teamLabel() {
+    const t = Store.coach && Store.coach.team;
+    if (t) return `${t.club} · ${t.name}`;
+    const n = (C && C.team && C.team.name) || "";
+    const m = n.match(/^(.*\S)\s+(U\d+\S*|[^\s]+)$/);
+    return m ? `${m[1]} · ${m[2]}` : n;
   }
   const fire = (name, ...args) => (LZ.hooks[name] || []).forEach(f => f(...args));
   function go(v, arg) {
@@ -310,7 +319,7 @@
 
   /* ---------- Schnittstelle für Erweiterungen ---------- */
   const LZ = window.LZ = {
-    S, views: {}, actions: {}, inputs: [], hooks: {},
+    S, views: {}, actions: {}, inputs: [], hooks: {}, teamLabel,
     get C() { return C; }, get Store() { return Store; },
     esc, rand, shirt, pad, dots, posName, posSelect, gkNrs, render, go, weekKey,
     on(name, fn) { (this.hooks[name] = this.hooks[name] || []).push(fn); },

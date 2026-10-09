@@ -6,7 +6,7 @@
  */
 (function () {
   const LZ = window.LZ, esc = LZ.esc;
-  const F = { u: "", p: "", p2: "", old: "", name: "", show: false, err: "", msg: "", busy: false };
+  const F = { u: "", p: "", p2: "", old: "", name: "", club: "", team: "", show: false, err: "", msg: "", busy: false };
   const reset = () => Object.assign(F, { p: "", p2: "", old: "", err: "", msg: "", busy: false });
 
   const pwInput = (id, label, ac, val) => `<div class="fld"><label for="${id}">${label}</label>
@@ -19,7 +19,7 @@
     <p class="eyebrow">${eyebrow}</p><h1>${title}</h1>${lede ? `<p class="lede">${lede}</p>` : ""}</section>`;
 
   /* ---------- Anmelden ---------- */
-  LZ.views.login = () => `${head("SV Heimstetten · U14", "Anmelden", "Melde dich mit deinem Benutzernamen und deinem Passwort an.")}
+  LZ.views.login = () => `${head(esc(LZ.teamLabel()), "Anmelden", "Melde dich mit deinem Benutzernamen und deinem Passwort an.")}
     <form class="card stack authform" data-form="doLogin" novalidate>
       <div class="fld"><label for="auth-u">Benutzername</label>
         <input id="auth-u" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="30" value="${esc(F.u)}" required></div>
@@ -64,8 +64,10 @@
   LZ.actions.authCancel = async () => { await LZ.Store.cancelPending(); reset(); LZ.render(); };
 
   /* ---------- Erstes Trainer-Konto (nur localhost) ---------- */
-  LZ.views.setup = () => `${head("Einrichtung", "Erstes Trainer-Konto", "Noch gibt es keinen Trainer. Lege dein Konto an – du wirst Admin und kannst danach Spieler und weitere Trainer anlegen.")}
+  LZ.views.setup = () => `${head("Einrichtung", "Verein und erstes Trainer-Konto", "Noch gibt es keinen Verein. Lege deinen Verein, die erste Mannschaft und dein Konto an – du wirst Admin und kannst danach Spieler, Trainer und weitere Mannschaften anlegen.")}
     <form class="card stack authform" data-form="doSetup" novalidate>
+      <div class="fld"><label for="auth-club">Verein</label><input id="auth-club" autocomplete="organization" maxlength="60" placeholder="z. B. SV Musterstadt" value="${esc(F.club)}" required></div>
+      <div class="fld"><label for="auth-team">Mannschaft</label><input id="auth-team" maxlength="40" placeholder="z. B. U14" value="${esc(F.team)}" required></div>
       <div class="fld"><label for="auth-name">Dein Vorname</label><input id="auth-name" autocomplete="given-name" maxlength="30" value="${esc(F.name)}" required></div>
       <div class="fld"><label for="auth-u">Benutzername</label><input id="auth-u" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="30" placeholder="z. B. stojan" value="${esc(F.u)}" required></div>
       ${pwInput("auth-p", "Passwort", "new-password", F.p)}
@@ -78,7 +80,7 @@
     if (F.busy) return;
     if (F.p !== F.p2) { F.err = "Die beiden Passwörter sind nicht gleich."; LZ.render(); return; }
     F.busy = true; F.err = ""; LZ.render();
-    const r = await LZ.Store.setupFirst(F.name.trim(), F.u.trim(), F.p, F.p2);
+    const r = await LZ.Store.setupFirst(F.name.trim(), F.u.trim(), F.p, F.p2, F.club.trim(), F.team.trim());
     F.busy = false;
     if (!r.ok) { F.err = r.error || "Anlegen hat nicht geklappt."; LZ.render(); return; }
     done();
@@ -134,6 +136,8 @@
     else if (id === "auth-p2") F.p2 = e.target.value;
     else if (id === "auth-old") F.old = e.target.value;
     else if (id === "auth-name") F.name = e.target.value;
+    else if (id === "auth-club") F.club = e.target.value;
+    else if (id === "auth-team") F.team = e.target.value;
     else if (id === "auth-show" && e.type === "change") {
       F.show = e.target.checked;
       document.querySelectorAll(".authform input[id^='auth-p'], .authform input#auth-old").forEach(el => { el.type = F.show ? "text" : "password"; });

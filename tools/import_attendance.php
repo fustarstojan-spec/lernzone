@@ -17,6 +17,7 @@ if (PHP_SAPI !== 'cli') { http_response_code(403); exit('Nur über die Kommandoz
 $_SERVER['REQUEST_METHOD'] = 'CLI';
 ob_start();
 require __DIR__ . '/../api/config.php';
+cli_team($argv);   // --team=N (Vorgabe: erste Mannschaft)
 ob_end_clean();
 
 $file = $argv[1] ?? '';

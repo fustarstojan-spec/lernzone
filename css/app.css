@@ -414,3 +414,6 @@ code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:
 .modcard .mini.m2v1 svg{width:100%;height:100%}
 .sitpitch .pitch{max-width:340px}
 .sitcard h2{margin:0}
+/* 0.21.0 Mannschaft wechseln */
+.chiprow{display:flex;flex-wrap:wrap;gap:.5rem}
+.btn.small{padding:.45rem .8rem;font-size:.85rem}

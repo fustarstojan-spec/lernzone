@@ -58,7 +58,7 @@ Mit PHP ist die App erst nach Anmeldung sichtbar: **Benutzername + Passwort**.
 
 Erstes Trainer-Konto:
 - XAMPP / localhost: Gibt es noch keinen Trainer, zeigt die App die Seite „Erstes Trainer-Konto“ (wird Admin).
-- Echter Server: `php tools/create_coach.php "Vorname" benutzername` → gibt einen Einmal-Code aus.
+- Echter Server: `php tools/create_coach.php "Vorname" benutzername --team=N` → gibt einen Einmal-Code aus.
 
 ### Sicherheit
 
@@ -92,10 +92,10 @@ Trainer-Bereich → Trainer (nur Admin) → **Google-Kalender**: Einbettungs-Lin
 - Profil und Barometer sind erst freigeschaltet, wenn der Trainer „Einwilligung der Eltern liegt vor“ setzt.
 - Keine Gesundheitsdetails: „nicht fit“ ist nur ein Hinweis an den Trainer, kein Befund.
 - Admins können einen Spieler mit allen Daten löschen (Kader → Spieler → „Spieler löschen“).
-- Die Datenbank (`storage/lernzone.sqlite`) wird nie ins Repository übernommen.
+- Die Datenbanken (`storage/platform.sqlite` für Vereine/Konten, `storage/lernzone.sqlite` bzw. `storage/team-N.sqlite` je Mannschaft) werden nie ins Repository übernommen.
 
 Die Datenbank wird beim ersten Aufruf automatisch angelegt bzw. ergänzt. Liegt `data/demo-pins.json` vor, wird der Demo-Kader mit PIN 1234 übernommen.
-Datenbank zurücksetzen: Apache stoppen, `storage/lernzone.sqlite` löschen, Apache starten.
+Datenbank zurücksetzen: Apache stoppen, alle `storage/*.sqlite` löschen, Apache starten.
 
 ## Weg A – ohne Server-Login
 
@@ -110,8 +110,8 @@ Voraussetzung: Webspace mit PHP 8 und PDO/SQLite (bei fast allen Hostern Standar
 
 1. Alle Dateien hochladen, **außer** `data/demo-pins.json` und `storage/*.sqlite`.
 2. In `js/config.js` auf `mode: "api"` umstellen.
-3. Auf dem Server (SSH) im Projektordner: `php tools/create_coach.php "Vorname" benutzername` → erstes Admin-Konto mit Einmal-Code.
-4. Spieler im Trainer-Bereich anlegen – oder `php tools/import_players.php` übernimmt `data/players.json` und gibt eine Liste mit Benutzernamen und Einmal-Codes aus.
+3. Auf dem Server (SSH) im Projektordner: `php tools/create_club.php "Verein" "Mannschaft" "Vorname" benutzername` → Verein, erste Mannschaft und Admin-Konto mit Einmal-Code. Weitere Vereine genauso; `php tools/create_club.php --liste` zeigt alle Mannschaften mit Nummer.
+4. Spieler im Trainer-Bereich anlegen – oder `php tools/import_players.php --team=N` übernimmt `data/players.json` und gibt eine Liste mit Benutzernamen und Einmal-Codes aus.
    IEP übernehmen: JSON `{ "7": {goals, plan, season, coach} }` (Trikotnummern, keine Namen) → `php tools/import_iep.php storage/iep.json`.
    Bisherige Trainingsbeteiligung (z. B. aus einer Excel): als CSV `nr;datum;anwesend` (1/0) speichern, dann `php tools/import_attendance.php storage/anwesenheit.csv --saison=JJJJ-MM-TT`. Keine Namen, keine Gründe.
 5. Prüfen, dass `storage/` und `tools/` von außen nicht erreichbar sind (`.htaccess` liegt bei; bei Nginx entsprechend sperren). Besser: `storage/` außerhalb des Web-Ordners ablegen und den Pfad in `api/config.php` anpassen.

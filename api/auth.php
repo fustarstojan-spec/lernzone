@@ -5,7 +5,8 @@
  *        password kann auch der Einmal-Code vom Trainer sein → danach eigenes Passwort festlegen
  * POST {action:"setpw",  password, password2}        → eigenes Passwort festlegen (nach Einmal-Code / erster Anmeldung)
  * POST {action:"change", old, password, password2}   → Passwort ändern (angemeldet; andere Geräte werden abgemeldet)
- * POST {action:"setup",  name, username, password, password2} → erstes Trainer-Konto (nur ohne Trainer und nur auf localhost)
+ * POST {action:"setup",  club, team, name, username, password, password2} → erster Verein + Mannschaft + Admin-Konto
+ *        (nur solange es noch keine Mannschaft gibt und nur auf localhost; das Konto wird Plattform-Admin)
  * POST {action:"logout"}
  * Alle Antworten bei Erfolg enthalten das neue CSRF-Token.
  */
@@ -20,17 +21,27 @@ $done = function (): never {
     json_out(['ok' => true, 'state' => 'ok', 'user' => current_user(), 'coach' => coach_state(), 'csrf' => csrf_token(),
               'account' => ['username' => current_account()['username'] ?? '', 'minLen' => pw_min(current_account()['kind'] ?? 'player')]]);
 };
+/* Konto darf sich anmelden, wenn es in mindestens einer aktiven Mannschaft dabei (und dort aktiv) ist */
 $entityActive = function (array $a): bool {
-    $t = $a['kind'] === 'player' ? 'SELECT active FROM players WHERE nr = ?' : 'SELECT active FROM coaches WHERE id = ?';
-    $st = db()->prepare($t); $st->execute([(int)$a['ref']]);
-    return (int)$st->fetchColumn() === 1;
+    if ($a['kind'] === 'coach') {
+        $st = pdb()->prepare('SELECT active FROM coaches WHERE id = ?'); $st->execute([(int)$a['ref']]);
+        if ((int)$st->fetchColumn() !== 1) return false;
+    }
+    $st = pdb()->prepare('SELECT team_id, ref FROM memberships WHERE account_id = ?'); $st->execute([(int)$a['id']]);
+    foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $m) {
+        if (!team_row((int)$m['team_id'])) continue;
+        if ($a['kind'] === 'coach') return true;
+        $p = db((int)$m['team_id'])->prepare('SELECT active FROM players WHERE nr = ?'); $p->execute([(int)$m['ref']]);
+        if ((int)$p->fetchColumn() === 1) return true;
+    }
+    return false;
 };
 $setPassword = function (array $a, string $pw, string $pw2) {
     if ($pw !== $pw2) json_out(['ok' => false, 'error' => 'Die beiden Passwörter sind nicht gleich.'], 400);
     if ($p = pw_problem($pw, $a['username'], $a['kind'])) json_out(['ok' => false, 'error' => $p], 400);
-    db()->prepare("UPDATE accounts SET pw_hash = ?, must_set_pw = 0, code_hash = '', code_expires = 0, sess_ver = sess_ver + 1 WHERE id = ?")
+    pdb()->prepare("UPDATE accounts SET pw_hash = ?, must_set_pw = 0, code_hash = '', code_expires = 0, sess_ver = sess_ver + 1 WHERE id = ?")
         ->execute([hash_pw($pw), $a['id']]);
-    $st = db()->prepare('SELECT * FROM accounts WHERE id = ?'); $st->execute([$a['id']]);
+    $st = pdb()->prepare('SELECT * FROM accounts WHERE id = ?'); $st->execute([$a['id']]);
     return $st->fetch(PDO::FETCH_ASSOC);
 };
 
@@ -40,7 +51,7 @@ if ($action === 'login') {
     check_lock('login');
     $u  = clean_username((string)($in['username'] ?? ''));
     $pw = (string)($in['password'] ?? '');
-    $st = db()->prepare('SELECT * FROM accounts WHERE username = ? AND active = 1');
+    $st = pdb()->prepare('SELECT * FROM accounts WHERE username = ? AND active = 1');
     $st->execute([$u]);
     $a = $st->fetch(PDO::FETCH_ASSOC) ?: null;
     if ($a && (int)$a['locked_until'] > time()) json_out(['ok' => false, 'error' => 'Zu viele falsche Versuche. Warte 5 Minuten.'], 429);
@@ -63,7 +74,7 @@ if ($action === 'login') {
         json_out(['ok' => true, 'state' => 'setpw', 'username' => $a['username'], 'minLen' => pw_min($a['kind']), 'csrf' => csrf_token()]);
     }
     if (password_needs_rehash($a['pw_hash'], defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT)) {
-        db()->prepare('UPDATE accounts SET pw_hash = ? WHERE id = ?')->execute([hash_pw($pw), $a['id']]);
+        pdb()->prepare('UPDATE accounts SET pw_hash = ? WHERE id = ?')->execute([hash_pw($pw), $a['id']]);
     }
     start_session_for($a);
     $done();
@@ -75,7 +86,7 @@ if ($action === 'setpw') {
         logout_session();
         json_out(['ok' => false, 'error' => 'Das hat zu lange gedauert. Bitte melde dich noch einmal an.', 'csrf' => csrf_token()], 401);
     }
-    $st = db()->prepare('SELECT * FROM accounts WHERE id = ? AND active = 1'); $st->execute([$id]);
+    $st = pdb()->prepare('SELECT * FROM accounts WHERE id = ? AND active = 1'); $st->execute([$id]);
     $a = $st->fetch(PDO::FETCH_ASSOC);
     if (!$a) { logout_session(); json_out(['ok' => false, 'error' => 'Bitte melde dich noch einmal an.'], 401); }
     $a = $setPassword($a, (string)($in['password'] ?? ''), (string)($in['password2'] ?? ''));
@@ -90,13 +101,17 @@ if ($action === 'change') {
         account_fail('accounts', 'id', (int)$a['id']);
         json_out(['ok' => false, 'error' => 'Dein bisheriges Passwort stimmt nicht.'], 400);
     }
+    $team = team_id();
     $a = $setPassword($a, (string)($in['password'] ?? ''), (string)($in['password2'] ?? ''));
-    start_session_for($a);                 // dieses Gerät bleibt angemeldet, alle anderen nicht
+    start_session_for($a, $team);          // dieses Gerät bleibt angemeldet (gleiche Mannschaft), alle anderen nicht
     $done();
 }
 
 if ($action === 'setup') {
     if (!coach_state()['canSetup']) json_out(['ok' => false, 'error' => 'Das erste Trainer-Konto kann hier nicht angelegt werden.'], 403);
+    $club = clean_text($in['club'] ?? '', 60);
+    $tname = clean_text($in['team'] ?? '', 40);
+    if ($club === '' || $tname === '') json_out(['ok' => false, 'error' => 'Bitte Verein und Mannschaft eingeben.'], 400);
     $name = clean_text($in['name'] ?? '', 30);
     $u    = clean_username((string)($in['username'] ?? ''));
     if ($name === '')       json_out(['ok' => false, 'error' => 'Bitte deinen Vornamen eingeben.'], 400);
@@ -105,10 +120,13 @@ if ($action === 'setup') {
     $pw = (string)($in['password'] ?? '');
     if ($pw !== (string)($in['password2'] ?? '')) json_out(['ok' => false, 'error' => 'Die beiden Passwörter sind nicht gleich.'], 400);
     if ($p = pw_problem($pw, $u, 'coach')) json_out(['ok' => false, 'error' => $p], 400);
-    db()->prepare("INSERT INTO coaches (name, pin_hash, is_admin) VALUES (?, '', 1)")->execute([$name]);
-    $cid = (int)db()->lastInsertId();
-    db()->prepare("INSERT INTO accounts (username, kind, ref, pw_hash, must_set_pw) VALUES (?, 'coach', ?, ?, 0)")->execute([$u, $cid, hash_pw($pw)]);
-    start_session_for(account_for('coach', $cid));
+    pdb()->prepare('INSERT INTO clubs (name) VALUES (?)')->execute([$club]);
+    $team = create_team((int)pdb()->lastInsertId(), $tname);
+    $cid = create_coach($name);
+    $aid = create_account($u, 'coach', $cid, true, $team);
+    pdb()->prepare('UPDATE accounts SET pw_hash = ?, must_set_pw = 0, platform_admin = 1 WHERE id = ?')->execute([hash_pw($pw), $aid]);
+    $st = pdb()->prepare('SELECT * FROM accounts WHERE id = ?'); $st->execute([$aid]);
+    start_session_for($st->fetch(PDO::FETCH_ASSOC), $team);
     $done();
 }
 
