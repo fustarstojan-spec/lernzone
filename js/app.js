@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.22.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.23.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -239,7 +239,7 @@
     document.getElementById("shirtBtn").innerHTML = gate ? "" : shirt(S.user ? S.user.nr : Store.coach.active ? "T" : LZ.adminOnly() ? "A" : "?");
     document.getElementById("shirtBtn").hidden = !!gate;
     const brand = document.querySelector(".brand span"); if (brand) brand.textContent = teamLabel();
-    if (gate && LZ.views[gate]) { app.innerHTML = LZ.views[gate](); return; }
+    if (gate && LZ.views[gate] && !(LZ.legalPages || []).includes(S.view)) { app.innerHTML = LZ.views[gate](); return; }   // Impressum & Co. auch ohne Anmeldung
     // Trainer ohne Spieler-Anmeldung: eigene Startseite (js/dashboard.js), Lerninhalte unter „Lernzone“
     const coachHome = S.view === "home" && LZ.coachMode() && LZ.views.coachHome;
     const adminHome = ["home", "me"].includes(S.view) && LZ.adminOnly() && LZ.views.verwaltung;   // Vereins-/Superadmin ohne Mannschaft

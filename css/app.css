@@ -427,3 +427,25 @@ code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:
 .admcoaches .chiprow{gap:.6rem}
 .subform{border-left:3px solid var(--accent);padding-left:.7rem}
 .rowspread>span{min-width:0;overflow-wrap:anywhere}
+/* 0.23.0 Rechtliches */
+footer.legal{max-width:var(--maxw,720px);margin:2rem auto 1.5rem;padding:0 16px;text-align:center;font-size:.85rem;color:var(--muted)}
+footer.legal .linkbtn{font-size:.85rem;color:var(--muted)}
+.legal h2{font-size:1.15rem;margin-top:.6rem}
+.legal h3{font-size:1rem;margin-top:.3rem}
+.legal ul,.legal ol{margin:0;padding-left:1.2rem;display:grid;gap:.35rem}
+.legal p{margin:0}
+.legal-missing{color:var(--bad);font-style:italic}
+.legal-club{border-left:3px solid var(--accent);padding-left:.7rem;display:grid;gap:.3rem}
+.rules-kids{gap:.6rem}
+.sigline{display:grid;gap:2px;margin-top:1.6rem}
+.sigline span{border-bottom:1px solid var(--fg);height:1.2rem}
+.sigline small{color:var(--muted);font-size:.75rem}
+.sigrow{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.printable .check{display:flex;gap:.5rem;align-items:flex-start}
+.printable .box{font-size:1.2rem;line-height:1}
+@media print{
+  .top,footer.legal,.noprint,.coachnav{display:none!important}
+  body{background:#fff;color:#000;font-size:11pt}
+  .card{border:0;box-shadow:none;padding:0}
+  .legal-missing{color:#000}
+}

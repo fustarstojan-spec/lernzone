@@ -1,0 +1,4 @@
+/* Schriften lokal (ab 0.23.0) – keine Verbindung zu Google. Lizenz: SIL Open Font License, siehe fonts/OFL-*.txt */
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-weight:600;font-display:swap;src:url(../fonts/barlow-condensed-semibold.woff) format("woff")}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-weight:700;font-display:swap;src:url(../fonts/barlow-condensed-bold.woff) format("woff")}
+@font-face{font-family:"Source Sans 3";font-style:normal;font-weight:400 700;font-display:swap;src:url(../fonts/source-sans-3.woff) format("woff")}

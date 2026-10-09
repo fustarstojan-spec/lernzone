@@ -126,6 +126,10 @@ function platform_bootstrap(PDO $p): void {
 
 /* Plattform-Ergänzungen: 0.22.0 Vereinsadmins – der Superadmin wird Vereinsadmin der Vereine, in denen er Trainer ist */
 function platform_migrate(PDO $p): void {
+    // 0.23.0: Datenschutz-Angaben je Verein (Verantwortlicher)
+    $cols = array_column($p->query('PRAGMA table_info(clubs)')->fetchAll(PDO::FETCH_ASSOC), 'name');
+    foreach (['legal_name', 'address', 'privacy_email', 'dpo'] as $c)
+        if (!in_array($c, $cols, true)) $p->exec("ALTER TABLE clubs ADD COLUMN $c TEXT NOT NULL DEFAULT ''");
     if ($p->query("SELECT 1 FROM platform_settings WHERE name = 'club_admins_done'")->fetchColumn()) return;
     $p->exec("INSERT OR IGNORE INTO club_admins (account_id, club_id)
               SELECT DISTINCT a.id, t.club_id FROM accounts a JOIN memberships m ON m.account_id = a.id AND m.role = 'coach'

@@ -16,7 +16,7 @@
     if (r && r.ok) { A.data = r; A.err = ""; } else A.err = (r && r.error) || "Verwaltung konnte nicht geladen werden.";
     LZ.render();
   }
-  LZ.on("enter", v => { if (v === "verwaltung" || (LZ.adminOnly() && ["home", "me"].includes(v))) load(); });
+  LZ.on("enter", v => { if (v === "verwaltung" || (LZ.adminOnly() && ["home", "me"].includes(v))) { load(); if (LZ.legal) LZ.legal.load(true); } });
   LZ.on("ready", () => { if (LZ.adminOnly()) load(); });
 
   async function send(body, after) {
@@ -62,8 +62,52 @@
         <p class="small"><b>Vereinsadmin</b> (z. B. Jugendleiter)</p></div>` : ""}
       ${personForm("club", "Verein anlegen")}
       ${A.open === "club" ? "" : `<button class="btn ghost" data-act="admOpen" data-v="club">+ Neuer Verein</button>`}
+    </section>
+    ${operatorCard()}`;
+  }
+
+  /* ---------- Rechtliches (ab 0.23.0) ---------- */
+  const lg = () => (LZ.legal && LZ.legal.get()) || { operator: {}, clubs: [] };
+  const fld = (id, label, v, area, ph = "") => `<div class="fld"><label for="${id}">${label}</label>${area
+    ? `<textarea id="${id}" rows="3" maxlength="300" placeholder="${esc(ph)}">${esc(keep[id] ?? v ?? "")}</textarea>`
+    : `<input id="${id}" maxlength="100" value="${esc(keep[id] ?? v ?? "")}" placeholder="${esc(ph)}">`}</div>`;
+  let keep = {};                                                               // Eingaben behalten, wenn Speichern scheitert
+  function operatorCard() {
+    const o = lg().operator || {}, done = o.name && o.street && o.city && o.email;
+    return `<section class="card stack"><div class="rowspread"><h2>Impressum und Betreiber</h2>${done ? "" : `<span class="badge">fehlt noch</span>`}</div>
+      <p class="small">Steht im Impressum und in der Datenschutzerklärung (öffentlich). Die Angaben liegen nur in der Datenbank.</p>
+      ${A.open === "op" ? `<div class="stack subform">
+        ${fld("op-name", "Name", o.name, false, "Vorname Nachname")}${fld("op-street", "Straße und Hausnummer", o.street)}${fld("op-city", "PLZ und Ort", o.city)}
+        ${fld("op-email", "E-Mail", o.email)}${fld("op-phone", "Telefon (empfohlen)", o.phone)}
+        ${fld("op-host", "Hosting-Anbieter (Name, Anschrift, Serverstandort)", o.host, true, "z. B. Firma GmbH, Straße, Ort – Server in Deutschland")}
+        ${fld("op-logs", "Server-Protokolle (optional, sonst Standardtext)", o.logs, true, "z. B. … werden nach 7 Tagen gelöscht")}
+        <div class="chiprow"><button class="btn" data-act="admOpSave">Speichern</button><button class="btn ghost" data-act="admOpen" data-v="">Abbrechen</button></div></div>`
+        : `<p>${o.name ? `${esc(o.name)} · ${esc(o.city)}` : `<span class="legal-missing">Noch keine Angaben</span>`}</p>
+        <div class="chiprow"><button class="btn ghost small" data-act="admOpen" data-v="op">Bearbeiten</button><button class="linkbtn" data-act="legal" data-v="impressum">Impressum ansehen</button></div>`}
     </section>`;
   }
+  function clubLegal(c) {
+    const x = lg().clubs.find(y => y.id === c.id) || {}, k = "c" + c.id + "legal", done = x.address && x.email;
+    return `<h3>Datenschutz-Angaben ${done ? "" : `<span class="badge">fehlt noch</span>`}</h3>
+      <p class="small">Der Verein ist Verantwortlicher für die Daten seiner Mannschaften. Steht in der Datenschutzerklärung und auf der Einwilligung.</p>
+      ${A.open === k ? `<div class="stack subform">
+        ${fld(k + "-name", "Offizieller Name", x.legalName, false, "z. B. SV Musterstadt e. V.")}${fld(k + "-addr", "Anschrift und vertretungsberechtigter Vorstand", x.address, true, "Straße, PLZ Ort\nVertreten durch: …")}
+        ${fld(k + "-email", "E-Mail für Datenschutz-Fragen", x.email)}${fld(k + "-dpo", "Datenschutzbeauftragte/r (falls vorhanden)", x.dpo, true)}
+        <div class="chiprow"><button class="btn" data-act="admClubLegal" data-v="${c.id}">Speichern</button><button class="btn ghost" data-act="admOpen" data-v="">Abbrechen</button></div></div>`
+        : `<div class="chiprow"><button class="btn ghost small" data-act="admOpen" data-v="${k}">Bearbeiten</button><button class="linkbtn" data-act="legal" data-v="einwilligung">Einwilligung drucken</button></div>`}`;
+  }
+  async function legalSend(body) {
+    const r = await LZ.Store.send("legal.php", body);
+    if (!r || !r.ok) {
+      keep = {}; document.querySelectorAll(".subform input, .subform textarea").forEach(el => { keep[el.id] = el.value; });
+      A.err = (r && r.error) || "Speichern hat nicht geklappt."; LZ.render(); return;
+    }
+    keep = {}; A.open = ""; A.err = ""; await LZ.legal.load(true); LZ.render();
+  }
+  LZ.actions.admOpSave = () => legalSend({ action: "operator", name: val("op-name"), street: val("op-street"), city: val("op-city"),
+    email: val("op-email"), phone: val("op-phone"), host: val("op-host"), logs: val("op-logs") });
+  LZ.actions.admClubLegal = (b, v) => { const k = "c" + v + "legal";
+    legalSend({ action: "club", club: +v, legalName: val(k + "-name"), address: val(k + "-addr"), email: val(k + "-email"), dpo: val(k + "-dpo") }); };
 
   /* ---------- Verein ---------- */
   function teamBlock(c, t) {
@@ -103,6 +147,7 @@
         ${c.admins.length > 1 && a.accountId !== me() ? confirmBtn(k + "adm" + a.accountId, "entfernen", "admAdminRm", `data-v="${c.id}" data-c="${a.accountId}"`) : ""}</span></li>`).join("")}</ul>
       ${personForm(k + "admin", "Vereinsadmin hinzufügen")}
       ${A.open === k + "admin" ? "" : `<button class="linkbtn" data-act="admOpen" data-v="${k}admin">+ Vereinsadmin hinzufügen</button>`}
+      ${clubLegal(c)}
     </section>`;
   }
 
@@ -119,7 +164,7 @@
   };
 
   /* ---------- Aktionen ---------- */
-  LZ.actions.admOpen = (b, v) => { A.open = v; A.confirm = ""; A.err = ""; LZ.render(); const f = document.querySelector(".subform input"); if (f) f.focus(); };
+  LZ.actions.admOpen = (b, v) => { keep = {}; A.open = v; A.confirm = ""; A.err = ""; LZ.render(); const f = document.querySelector(".subform input"); if (f) f.focus(); };
   LZ.actions.admConfirm = (b, v) => { A.confirm = v; LZ.render(); };
   LZ.actions.admNoteClose = () => { A.note = null; LZ.render(); };
   LZ.actions.admClub = (b, v) => { A.club = A.club === +v ? 0 : +v; LZ.render(); };

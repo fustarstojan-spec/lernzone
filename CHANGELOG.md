@@ -2,6 +2,14 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.23.0 – 2026-10-09
+- **Impressum, Datenschutzerklärung, Regeln für Kinder** – unten auf jeder Seite verlinkt, auch ohne Anmeldung erreichbar
+  - Datenschutzerklärung beschreibt genau, was die App speichert (Konten, Kader, Beteiligung, Barometer, IEP, Noten …), wer was sieht, Rechtsgrundlagen, Cookie, Speicherdauer, Rechte
+  - Verantwortlicher ist der jeweilige Verein, der Betreiber verarbeitet im Auftrag
+- **Einwilligung der Eltern** als Druckvorlage (Profil, Barometer inkl. „nicht fit“, Selbsteinschätzung), verlinkt im Kader und in der Verwaltung
+- Verwaltung: Superadmin pflegt Impressum/Betreiber und Hosting-Anbieter, Vereinsadmin die Datenschutz-Angaben des Vereins (nur in der Datenbank, nicht im Repository)
+- **Schriften lokal** statt von Google Fonts (keine Verbindung mehr zu Google beim Laden); Content-Security-Policy angepasst
+
 ## 0.22.0 – 2026-10-09
 - **Rollen Superadmin · Vereinsadmin · Cheftrainer · Trainer**
   - **Superadmin** (Plattform-Betreiber): legt Vereine an, setzt Vereinsadmins ein, sperrt/entsperrt Vereine, gibt neue Codes aus. Sieht keine Mannschaftsdaten (Kader, IEP, Noten, Befinden).

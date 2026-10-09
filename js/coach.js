@@ -112,7 +112,8 @@
       <section class="me-head">${LZ.shirt(p.nr)}<div><p class="eyebrow">${p.plan === "tw" ? "Torwart" : "Feldspieler"}</p><h1>Nr. ${p.nr}</h1><p class="small">${esc(name || "Profil noch leer")}</p></div></section>
       ${d.flag ? `<p class="alert">Bitte ansprechen: ${esc(d.flag)}</p>` : ""}
       <section class="card stack"><h2>Einwilligung der Eltern</h2>
-        <label class="check"><input type="checkbox" id="c-consent" ${p.consent ? "checked" : ""}> Liegt vor – Profil und Befindens-Barometer sind freigeschaltet</label></section>
+        <label class="check"><input type="checkbox" id="c-consent" ${p.consent ? "checked" : ""}> Liegt vor – Profil, Befindens-Barometer und Selbsteinschätzung sind freigeschaltet</label>
+        <button class="linkbtn" data-act="legal" data-v="einwilligung">Formular zum Ausdrucken</button></section>
       <section class="card stack"><h2>Profil</h2>${rows.length ? `<dl class="sub">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : `<p class="small">${p.consent ? "Der Spieler hat noch nichts eingetragen." : "Wird nach der Einwilligung freigeschaltet."}</p>`}</section>
       <section class="card stack"><h2>Trainingsbeteiligung</h2>${attLine(d.attendance)}</section>
       ${gradeSummary(d)}
