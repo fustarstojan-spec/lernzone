@@ -2,6 +2,13 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.25.0 – 2026-10-09
+- **Bremse pro Netz (IP-Adresse):** Nach 20 Fehlversuchen innerhalb von 15 Minuten sind Anmeldungen von dieser Adresse 15 Minuten gesperrt – gegen Bots, die viele Konten durchprobieren (zusätzlich zur Sperre pro Konto und Sitzung)
+- **Sicherheitsprotokoll** (Verwaltung → ganz unten): Anmeldungen, Fehlversuche, Konto- und Netzsperren, Anmeldungen nachts (0–5 Uhr), neue Einmal-Codes, Passwortänderungen, Rollen- und Kontoänderungen, gelöschte Spieler, Einwilligungen, alle Verwaltungsaktionen; Übersicht der letzten 24 Stunden, Filter „Nur Warnungen“
+  - Superadmin sieht alles, Vereinsadmins ihren Verein
+  - IP-Adressen nur als Prüfwert (Hash mit geheimem Schlüssel), Netzsperren nach 24 Std. vergessen, Protokoll nach 90 Tagen gelöscht
+- Datenschutzerklärung um das Sicherheitsprotokoll ergänzt
+
 ## 0.24.1 – 2026-10-09
 - **Bilder zu Übungen:** Jede Übung kann ein Bild haben (Hochladen im Übungs-Editor, JPG/PNG/WebP, wird auf 1600 px verkleinert); erscheint in der Übung, in der Einheit und beim Drucken
 - Bilder liegen geschützt in `storage/drills/` und sind nur für Trainer des Vereins abrufbar

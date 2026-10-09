@@ -83,7 +83,21 @@ $orphan = function (int $aid) use ($q): void {
     $q('DELETE FROM accounts WHERE id = ?', [$aid]);
     if (!(int)$q("SELECT COUNT(*) FROM accounts WHERE kind = 'coach' AND ref = ?", [$a['ref']])->fetchColumn()) $q('DELETE FROM coaches WHERE id = ?', [$a['ref']]);
 };
-$done = fn(array $extra = []) => json_out(['ok' => true, 'me' => coach_state()] + $extra);
+/* Erfolg melden und ins Sicherheitsprotokoll schreiben (welche Verwaltungsaktion, für wen) */
+$labels = ['club_create' => 'Verein angelegt', 'club_update' => 'Verein geändert', 'admin_add' => 'Vereinsadmin hinzugefügt', 'admin_remove' => 'Vereinsadmin entfernt',
+           'team_create' => 'Mannschaft angelegt', 'team_update' => 'Mannschaft geändert', 'coach_add' => 'Trainer hinzugefügt', 'coach_head' => 'Cheftrainer geändert',
+           'coach_remove' => 'Trainer entfernt', 'code' => 'neuer Einmal-Code'];
+$done = function (array $extra = []) use ($in, $labels) {
+    $act = (string)($in['action'] ?? '');
+    $parts = [];
+    foreach (['name', 'club', 'team', 'coachId', 'accountId'] as $k) if (isset($in[$k]) && $in[$k] !== '') $parts[] = "$k=" . (is_scalar($in[$k]) ? $in[$k] : '');
+    if (array_key_exists('active', $in)) $parts[] = !empty($in['active']) ? 'aktiv' : 'gesperrt/archiviert';
+    if (array_key_exists('head', $in)) $parts[] = !empty($in['head']) ? 'Cheftrainer' : 'kein Cheftrainer';
+    $acc = isset($in['accountId']) ? (int)$in['accountId'] : null;
+    $level = in_array($act, ['code', 'admin_add', 'admin_remove', 'club_create', 'coach_remove'], true) || array_key_exists('active', $in) ? 'warn' : 'info';
+    sec_log('admin_' . $act, $level, $acc, (string)($extra['username'] ?? sec_user($acc)), trim(($labels[$act] ?? $act) . ' · ' . implode(', ', $parts), ' ·'));
+    json_out(['ok' => true, 'me' => coach_state()] + $extra);
+};
 $codeOut = fn(?string $code, string $u) => $code ? ['code' => $code, 'username' => $u, 'expires' => $expires()] : ['username' => $u];
 
 switch ($action) {

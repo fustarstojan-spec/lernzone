@@ -99,3 +99,26 @@ CREATE TABLE IF NOT EXISTS platform_settings (
   name   TEXT PRIMARY KEY,
   value  TEXT NOT NULL
 );
+
+-- Sicherheit (ab 0.25.0)
+-- Bremse pro IP-Adresse beim Anmelden (IP nur als Schlüssel-Hash gespeichert, nach 24 Std. gelöscht)
+CREATE TABLE IF NOT EXISTS ip_guard (
+  ip            TEXT    PRIMARY KEY,
+  fails         INTEGER NOT NULL DEFAULT 0,
+  window_start  INTEGER NOT NULL DEFAULT 0,
+  locked_until  INTEGER NOT NULL DEFAULT 0
+);
+-- Sicherheitsprotokoll (90 Tage): Anmeldungen, Fehlversuche, Sperren, Codes, Rechte- und Kontoänderungen
+CREATE TABLE IF NOT EXISTS security_log (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts          INTEGER NOT NULL,
+  event       TEXT    NOT NULL,
+  level       TEXT    NOT NULL DEFAULT 'info',      -- info | warn | alert
+  account_id  INTEGER,                              -- betroffenes Konto
+  username    TEXT    NOT NULL DEFAULT '',          -- eingegebener bzw. betroffener Benutzername
+  actor_id    INTEGER,                              -- wer es ausgelöst hat (angemeldetes Konto)
+  ip          TEXT    NOT NULL DEFAULT '',          -- IP als Schlüssel-Hash (16 Zeichen)
+  team_id     INTEGER,
+  detail      TEXT    NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS security_log_ts ON security_log (ts);

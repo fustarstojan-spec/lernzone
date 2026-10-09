@@ -22,12 +22,14 @@ if (!$a) json_out(['ok' => false, 'error' => 'Dieses Konto gibt es nicht.'], 404
 switch ($in['action'] ?? '') {
     case 'code':
         $code = issue_code((int)$a['id']);
+        sec_log('code_issued', 'warn', (int)$a['id'], $a['username'], 'neuer Einmal-Code, bisheriges Passwort ungültig');
         json_out(['ok' => true, 'username' => $a['username'], 'code' => $code, 'expires' => date('d.m.Y H:i', time() + CODE_HOURS * 3600)]);
     case 'rename':
         $u = clean_username((string)($in['username'] ?? ''));
         if (!username_ok($u))                  json_out(['ok' => false, 'error' => 'Benutzername: 3–30 Zeichen, nur a–z, 0–9, Punkt, Bindestrich.'], 400);
         if (username_taken($u, (int)$a['id'])) json_out(['ok' => false, 'error' => 'Dieser Benutzername ist schon vergeben.'], 409);
         pdb()->prepare('UPDATE accounts SET username = ? WHERE id = ?')->execute([$u, $a['id']]);
+        sec_log('username_change', 'info', (int)$a['id'], $u, "vorher: {$a['username']}");
         json_out(['ok' => true, 'username' => $u]);
 }
 json_out(['ok' => false, 'error' => 'Unbekannte Aktion'], 400);

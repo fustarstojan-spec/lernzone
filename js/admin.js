@@ -6,12 +6,18 @@
  */
 (function () {
   const LZ = window.LZ, esc = LZ.esc;
+  const SEC = { data: null, warn: true, all: false };
   const A = { data: null, err: "", note: null, open: "", confirm: "", club: 0, busy: false };
   const val = id => ((document.getElementById(id) || {}).value || "").trim();
   const me = () => (LZ.Store.coach || {}).accountId;
   const chk = id => !!(document.getElementById(id) || {}).checked;
 
+  async function loadSec() {
+    const r = await LZ.Store.get("security.php" + (SEC.warn ? "?only=warn" : ""));
+    SEC.data = r && r.ok ? r : null; LZ.render();
+  }
   async function load() {
+    loadSec();
     const r = await LZ.Store.get("admin.php");
     if (r && r.ok) { A.data = r; A.err = ""; } else A.err = (r && r.error) || "Verwaltung konnte nicht geladen werden.";
     LZ.render();
@@ -160,8 +166,33 @@
     return `${top}<section><p class="eyebrow">Verwaltung</p><h1>${d.platform ? "Vereine" : "Verein"}</h1></section>
       ${noteBox()}${errBox()}
       ${d.platform ? platformCard(d) : ""}
-      ${clubs.map(clubCard).join("")}`;
+      ${clubs.map(clubCard).join("")}
+      ${secCard()}`;
   };
+
+  /* ---------- Sicherheitsprotokoll (ab 0.25.0) ---------- */
+  const SEC_LABELS = { login_ok: "Anmeldung", login_code: "Anmeldung mit Einmal-Code", login_fail: "Fehlversuch", login_locked: "Versuch trotz Sperre",
+    account_locked: "Konto gesperrt", ip_blocked: "Netz gesperrt", pw_set: "Passwort festgelegt", pw_change: "Passwort geändert", pw_change_fail: "Passwort ändern fehlgeschlagen",
+    code_issued: "Neuer Einmal-Code", username_change: "Benutzername geändert", coach_add: "Trainer hinzugefügt", coach_remove: "Trainer entfernt",
+    role_change: "Rolle geändert", player_add: "Spieler angelegt", player_delete: "Spieler gelöscht", consent: "Einwilligung", setup: "Einrichtung" };
+  function secCard() {
+    const d = SEC.data; if (!d) return "";
+    const st = d.stats, fmt = ts => new Date(ts * 1000).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    const list = SEC.all ? d.events : d.events.slice(0, 25);
+    const chip = (n, l, bad) => `<span class="secstat ${n && bad ? "bad" : ""}"><b>${n}</b> ${l}</span>`;
+    return `<section class="card stack"><div class="rowspread"><h2>Sicherheitsprotokoll</h2>${st.locks || st.blocked ? `<span class="badge">Achtung</span>` : ""}</div>
+      <p class="small">Letzte 24 Stunden:</p>
+      <div class="chiprow">${chip(st.fails, "Fehlversuche", st.fails >= 10)}${chip(st.locks, "Kontosperren", true)}${chip(st.blocked, "gesperrte Netze", true)}${chip(st.night, "nachts angemeldet", true)}</div>
+      <label class="check small-check"><input type="checkbox" id="sec-warn" ${SEC.warn ? "checked" : ""}> Nur Warnungen</label>
+      <ul class="seclog">${list.map(e => `<li class="lv-${esc(e.level)}"><span class="small">${fmt(e.ts)}</span>
+        <span><b>${esc(SEC_LABELS[e.event] || (e.event.startsWith("admin_") ? "Verwaltung" : e.event))}</b>${e.username ? ` · ${esc(e.username)}` : ""}${e.detail ? ` <span class="small">– ${esc(e.detail)}</span>` : ""}
+        ${e.actor && e.actor !== e.username ? `<span class="small"> · von ${esc(e.actor)}</span>` : ""} <span class="small ipk" title="Netz (verschlüsselt)">#${esc((e.ip || "").slice(0, 6))}</span></span></li>`).join("") || `<li class="small">Keine Einträge.</li>`}</ul>
+      ${!SEC.all && d.events.length > 25 ? `<button class="linkbtn" data-act="secAll">Alle ${d.events.length} anzeigen</button>` : ""}
+      <p class="small">Einträge werden nach 90 Tagen gelöscht. Netze erscheinen nur verschlüsselt (#…), gleiche Kennung = gleiches Netz.</p>
+    </section>`;
+  }
+  LZ.actions.secAll = () => { SEC.all = true; LZ.render(); };
+  LZ.inputs.push(e => { if (e.target.id === "sec-warn" && e.type === "change") { SEC.warn = e.target.checked; SEC.all = false; loadSec(); } });
 
   /* ---------- Aktionen ---------- */
   LZ.actions.admOpen = (b, v) => { keep = {}; A.open = v; A.confirm = ""; A.err = ""; LZ.render(); const f = document.querySelector(".subform input"); if (f) f.focus(); };

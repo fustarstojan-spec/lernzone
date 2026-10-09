@@ -68,6 +68,8 @@ if ($action === 'setconsent') {
     db()->prepare('UPDATE players SET consent = ? WHERE nr = ? AND active = 1')->execute([!empty($in['consent']) ? 1 : 0, $nr]);
     $p = $row($nr);
     if (!$p) json_out(['ok' => false, 'error' => "Nr. $nr gibt es nicht."], 404);
+    $acc = account_for('player', $nr);
+    sec_log('consent', 'info', $acc ? (int)$acc['id'] : null, $acc['username'] ?? '', "Nr. $nr: Einwilligung " . (!empty($in['consent']) ? 'eingetragen' : 'entfernt'));
     json_out(['ok' => true, 'player' => $p]);
 }
 
@@ -77,6 +79,7 @@ if ($action === 'delete') {
         db()->prepare("DELETE FROM $t WHERE nr = ?")->execute([$nr]);
     }
     if ($a = account_for('player', $nr)) remove_membership((int)$a['id']);
+    sec_log('player_delete', 'warn', $a ? (int)$a['id'] : null, $a['username'] ?? '', "Nr. $nr mit allen Daten gelöscht");
     json_out(['ok' => true]);
 }
 
@@ -102,6 +105,8 @@ if ($existing !== false) {   // alte, deaktivierte Nummer
 db()->prepare("INSERT INTO players (nr, pos, plan, pos_off, pos_def, pin_hash) VALUES (?, ?, ?, ?, ?, '')")
     ->execute([$nr, $pos, $type, $posOff, $posDef]);
 $username = $username !== '' ? $username : unique_username(pdb(), 'spieler' . $nr);
-$code = issue_code(create_account($username, 'player', $nr));
+$newAcc = create_account($username, 'player', $nr);
+$code = issue_code($newAcc);
+sec_log('player_add', 'info', $newAcc, $username, "Nr. $nr angelegt, Einmal-Code ausgegeben");
 
 json_out(['ok' => true, 'player' => $row($nr), 'username' => $username, 'code' => $code, 'expires' => date('d.m.Y H:i', time() + CODE_HOURS * 3600)]);

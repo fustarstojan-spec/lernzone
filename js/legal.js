@@ -78,7 +78,8 @@
       <h2>3. Welche Daten wir verarbeiten</h2>
       <h3>Alle Nutzer</h3>
       <ul><li>Benutzername, Passwort (nur verschlüsselt als Hash – niemand kann es lesen), Mannschaft und Rolle</li>
-        <li>Zeitpunkt der letzten Anmeldung, falsche Anmeldeversuche und Sperren (Schutz vor Missbrauch)</li></ul>
+        <li>Zeitpunkt der letzten Anmeldung, falsche Anmeldeversuche und Sperren (Schutz vor Missbrauch)</li>
+        <li>Sicherheitsprotokoll: Anmeldungen, Fehlversuche, Sperren, neue Einmal-Codes sowie Änderungen an Konten und Rechten – mit einer Kennung des Netzes. Die IP-Adresse wird dabei nie im Klartext gespeichert, sondern nur als Prüfwert (Hash mit geheimem Schlüssel).</li></ul>
       <h3>Spielerinnen und Spieler</h3>
       <ul><li>Trikotnummer, Torwart oder Feldspieler, Positionen (vom Trainer festgelegt)</li>
         <li>Lernfortschritt in der App (Quiz-Ergebnisse)</li>
@@ -103,7 +104,7 @@
       <ul><li>Kinder sehen nur ihre eigenen Daten – nie die anderer Kinder.</li>
         <li>Die Trainer einer Mannschaft sehen die Daten ihrer Spielerinnen und Spieler.</li>
         <li>Die Vereinsadmins (z. B. Jugendleitung) sehen alle Mannschaften ihres Vereins.</li>
-        <li>Der Betreiber hat nur technischen Zugriff (z. B. für Fehlerbehebung und Sicherungen).</li>
+        <li>Der Betreiber hat nur technischen Zugriff (z. B. für Fehlerbehebung und Sicherungen) und sieht das Sicherheitsprotokoll; die Vereinsadmins sehen es für ihren Verein.</li>
         <li>Es gibt keine Weitergabe an Dritte, keine Werbung und kein Tracking.</li></ul>
 
       <h2>6. Cookies und Speicher im Browser</h2>
@@ -118,10 +119,10 @@
       <p>${o.logs ? nl(o.logs) : "Beim Aufruf der Seite speichert der Webserver technische Protokolle (IP-Adresse, Zeitpunkt, aufgerufene Adresse, Browser). Sie dienen nur der Sicherheit und Fehlersuche und werden automatisch gelöscht."}</p>
 
       <h2>9. Wie lange wir Daten speichern</h2>
-      <p>Solange das Kind in der Mannschaft ist. Verlässt es die Mannschaft, löscht der Trainer es aus dem Kader – damit werden alle zugehörigen Daten gelöscht. Trainer-Konten werden gelöscht, wenn sie keiner Mannschaft mehr angehören. Auf Wunsch löschen wir früher.</p>
+      <p>Solange das Kind in der Mannschaft ist. Verlässt es die Mannschaft, löscht der Trainer es aus dem Kader – damit werden alle zugehörigen Daten gelöscht. Trainer-Konten werden gelöscht, wenn sie keiner Mannschaft mehr angehören. Das Sicherheitsprotokoll wird nach 90 Tagen gelöscht, Sperren von Netzen nach 24 Stunden. Auf Wunsch löschen wir früher.</p>
 
       <h2>10. Sicherheit</h2>
-      <p>Verschlüsselte Verbindung (HTTPS), Passwörter nur als Argon2id-Hash, Sperre nach mehreren Fehlversuchen, automatische Abmeldung von Trainern nach 8 Stunden ohne Aktivität, Schutz vor fremden Anfragen (CSRF), Daten jeder Mannschaft in einer eigenen Datei.</p>
+      <p>Verschlüsselte Verbindung (HTTPS), Passwörter nur als Argon2id-Hash, Sperre nach mehreren Fehlversuchen pro Konto und pro Netz, Sicherheitsprotokoll, automatische Abmeldung von Trainern nach 8 Stunden ohne Aktivität, Schutz vor fremden Anfragen (CSRF), Daten jeder Mannschaft in einer eigenen Datei.</p>
 
       <h2>11. Deine Rechte</h2>
       <p>Du (bzw. deine Eltern) kannst jederzeit Auskunft verlangen, welche Daten gespeichert sind, und Berichtigung, Löschung, Einschränkung, Übertragung der Daten oder Widerspruch verlangen (Art. 15–21 DSGVO). Eine Einwilligung kann jederzeit widerrufen werden (Art. 7 Abs. 3 DSGVO). Wende dich dafür an deinen Verein (siehe 1).</p>

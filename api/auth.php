@@ -50,12 +50,13 @@ if ($action === 'logout') { logout_session(); json_out(['ok' => true, 'csrf' => 
 
 if ($action === 'login') {
     check_lock('login');
+    if (ip_blocked()) json_out(['ok' => false, 'error' => 'Zu viele Fehlversuche von diesem Netz. Warte 15 Minuten.'], 429);
     $u  = clean_username((string)($in['username'] ?? ''));
     $pw = (string)($in['password'] ?? '');
     $st = pdb()->prepare('SELECT * FROM accounts WHERE username = ? AND active = 1');
     $st->execute([$u]);
     $a = $st->fetch(PDO::FETCH_ASSOC) ?: null;
-    if ($a && (int)$a['locked_until'] > time()) json_out(['ok' => false, 'error' => 'Zu viele falsche Versuche. Warte 5 Minuten.'], 429);
+    if ($a && (int)$a['locked_until'] > time()) { sec_log('login_locked', 'warn', (int)$a['id'], $u, 'Anmeldung während der Sperre'); json_out(['ok' => false, 'error' => 'Zu viele falsche Versuche. Warte 5 Minuten.'], 429); }
 
     $via = null;
     if (!$a) password_verify($pw, DUMMY_HASH);                       // gleiche Antwortzeit, ob es den Namen gibt oder nicht
@@ -64,20 +65,28 @@ if ($action === 'login') {
 
     if (!$via || !$entityActive($a)) {
         count_fail('login');
-        if ($a) account_fail('accounts', 'id', (int)$a['id']);
+        if ($a) {
+            account_fail('accounts', 'id', (int)$a['id']);
+            sec_log('login_fail', 'warn', (int)$a['id'], $u, $via ? 'Konto ohne aktive Mannschaft' : 'falsches Passwort');
+            if (account_locked('accounts', 'id', (int)$a['id'])) sec_log('account_locked', 'alert', (int)$a['id'], $u, 'Konto für 5 Minuten gesperrt');
+        } else sec_log('login_fail', 'warn', null, $u, 'unbekannter Benutzername');
+        if (ip_fail()) sec_log('ip_blocked', 'alert', null, '', 'Netz für 15 Minuten gesperrt (' . IP_MAX_FAILS . ' Fehlversuche)');
         json_out(['ok' => false, 'error' => 'Benutzername oder Passwort stimmt nicht.'], 401);
     }
     account_ok('accounts', 'id', (int)$a['id']);
+    $night = (int)date('G') < 5;
 
     if ($via === 'code' || (int)$a['must_set_pw'] === 1) {
         session_regenerate_id(true);
         $_SESSION = ['csrf' => bin2hex(random_bytes(32)), 'pending' => (int)$a['id'], 'pending_at' => time()];
+        sec_log('login_code', $night ? 'warn' : 'info', (int)$a['id'], $a['username'], $via === 'code' ? 'mit Einmal-Code' . ($night ? ', nachts' : '') : 'muss Passwort festlegen');
         json_out(['ok' => true, 'state' => 'setpw', 'username' => $a['username'], 'minLen' => pw_min($a['kind']), 'csrf' => csrf_token()]);
     }
     if (password_needs_rehash($a['pw_hash'], defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT)) {
         pdb()->prepare('UPDATE accounts SET pw_hash = ? WHERE id = ?')->execute([hash_pw($pw), $a['id']]);
     }
     start_session_for($a);
+    sec_log('login_ok', $night ? 'warn' : 'info', (int)$a['id'], $a['username'], $night ? 'Anmeldung nachts' : '');
     $done();
 }
 
@@ -92,6 +101,7 @@ if ($action === 'setpw') {
     if (!$a) { logout_session(); json_out(['ok' => false, 'error' => 'Bitte melde dich noch einmal an.'], 401); }
     $a = $setPassword($a, (string)($in['password'] ?? ''), (string)($in['password2'] ?? ''));
     start_session_for($a);
+    sec_log('pw_set', 'info', (int)$a['id'], $a['username'], 'eigenes Passwort festgelegt');
     $done();
 }
 
@@ -100,11 +110,13 @@ if ($action === 'change') {
     $a = current_account();
     if ($a['pw_hash'] === '' || !password_verify((string)($in['old'] ?? ''), $a['pw_hash'])) {
         account_fail('accounts', 'id', (int)$a['id']);
+        sec_log('pw_change_fail', 'warn', (int)$a['id'], $a['username'], 'bisheriges Passwort falsch');
         json_out(['ok' => false, 'error' => 'Dein bisheriges Passwort stimmt nicht.'], 400);
     }
     $team = team_id();
     $a = $setPassword($a, (string)($in['password'] ?? ''), (string)($in['password2'] ?? ''));
     start_session_for($a, $team);          // dieses Gerät bleibt angemeldet (gleiche Mannschaft), alle anderen nicht
+    sec_log('pw_change', 'info', (int)$a['id'], $a['username'], 'Passwort geändert, andere Geräte abgemeldet');
     $done();
 }
 
@@ -129,6 +141,7 @@ if ($action === 'setup') {
     pdb()->prepare('INSERT INTO club_admins (account_id, club_id) VALUES (?, (SELECT club_id FROM teams WHERE id = ?))')->execute([$aid, $team]);
     $st = pdb()->prepare('SELECT * FROM accounts WHERE id = ?'); $st->execute([$aid]);
     start_session_for($st->fetch(PDO::FETCH_ASSOC), $team);
+    sec_log('setup', 'alert', $aid, $u, "Erstes Konto und Verein „{$club}“ eingerichtet");
     $done();
 }
 

@@ -705,5 +705,6 @@ function require_login(): void {
     if (empty($_SESSION['acc'])) json_out(['ok' => false, 'error' => 'Bitte melde dich an.'], 401);
 }
 
+require_once __DIR__ . '/lib/security.php';   // IP-Bremse und Sicherheitsprotokoll (ab 0.25.0)
 validate_session();
 check_csrf();

@@ -37,6 +37,7 @@ if ($action === 'add') {
             if ($coach((int)$a['ref'])) json_out(['ok' => false, 'error' => 'Dieser Trainer ist schon in der Mannschaft.'], 409);
             pdb()->prepare("INSERT INTO memberships (account_id, team_id, role, ref, is_admin) VALUES (?, ?, 'coach', ?, ?)")
                 ->execute([$a['id'], team_id(), $a['ref'], !empty($in['isAdmin']) ? 1 : 0]);
+            sec_log('coach_add', 'info', (int)$a['id'], $u, 'vorhandenes Konto zur Mannschaft hinzugefügt' . (!empty($in['isAdmin']) ? ' (Cheftrainer)' : ''));
             json_out(['ok' => true, 'coach' => $coach((int)$a['ref']), 'username' => $u, 'code' => null, 'existing' => true]);
         }
     }
@@ -48,6 +49,7 @@ if ($action === 'add') {
     $cid = create_coach($name);
     $aid = create_account($u, 'coach', $cid, !empty($in['isAdmin']));
     $code = issue_code($aid);
+    sec_log('coach_add', 'info', $aid, $u, 'neues Trainer-Konto' . (!empty($in['isAdmin']) ? ' (Cheftrainer)' : ''));
     json_out(['ok' => true, 'coach' => $coach($cid), 'username' => $u, 'code' => $code, 'expires' => date('d.m.Y H:i', time() + CODE_HOURS * 3600)]);
 }
 
@@ -69,6 +71,7 @@ if ($action === 'update') {
         $make = !empty($in['isAdmin']);
         if (!$make && $target['isAdmin'] && $admins() <= 1) json_out(['ok' => false, 'error' => 'Es muss mindestens einen Cheftrainer geben.'], 400);
         pdb()->prepare('UPDATE memberships SET is_admin = ? WHERE account_id = ? AND team_id = ?')->execute([$make ? 1 : 0, $acc['id'], team_id()]);
+        if ($make !== $target['isAdmin']) sec_log('role_change', 'warn', (int)$acc['id'], $acc['username'], $make ? 'wird Cheftrainer' : 'nicht mehr Cheftrainer');
     }
     json_out(['ok' => true, 'coach' => $coach($id), 'me' => coach_state()]);
 }
@@ -78,6 +81,7 @@ if ($action === 'delete') {
     if ($id === $me['id'])                      json_out(['ok' => false, 'error' => 'Du kannst dich nicht selbst entfernen.'], 400);
     if ($target['isAdmin'] && $admins() <= 1)   json_out(['ok' => false, 'error' => 'Es muss mindestens einen Cheftrainer geben.'], 400);
     remove_membership((int)$acc['id']);
+    sec_log('coach_remove', 'warn', (int)$acc['id'], $acc['username'], 'aus der Mannschaft entfernt');
     $st = pdb()->prepare('SELECT COUNT(*) FROM accounts WHERE kind = ? AND ref = ?'); $st->execute(['coach', $id]);
     if ((int)$st->fetchColumn() === 0) pdb()->prepare('DELETE FROM coaches WHERE id = ?')->execute([$id]);   // nirgends mehr dabei
     json_out(['ok' => true]);

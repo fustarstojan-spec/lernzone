@@ -22,9 +22,16 @@ Pflege: neue Ideen hier eintragen, Erledigtes streichen und ins CHANGELOG übern
 
 ## Sicherheit und Betrieb
 
+- [x] ~~Bremse pro IP-Adresse beim Anmelden~~ (0.25.0)
+- [x] ~~Sicherheitsprotokoll~~ (0.25.0)
+- [ ] Projektdateien sperren, die von außen abrufbar sind: `tools/*.sql`, `data/demo-pins.json` (auf dem Server weglassen), `ROADMAP.md`, `api/lib/`
+- [ ] Unabhängiger Sicherheitscheck (Code-Prüfung) vor dem Online-Gehen
+- [ ] Beim Hosting prüfen, ob die echte Besucher-IP ankommt (Proxy) – sonst sperrt die IP-Bremse alle
+- [ ] Optional: E-Mail an Superadmin bei Alarmen (Netz gesperrt, viele Fehlversuche)
+
 - [ ] Datenbanken außerhalb des Web-Ordners, automatische Backups
 - [ ] HSTS, optional 2FA für Admins
-- [ ] Benutzerverwaltung: Konten sperren/entsperren, Protokoll (wer hat wann was geändert), „überall abmelden“
+- [ ] Benutzerverwaltung: Konten sperren/entsperren, „überall abmelden“ (Protokoll seit 0.25.0)
 - [ ] Automatisches Löschen alter Daten (z. B. Barometer nach Saisonende) – Datenschutztext dann anpassen
 
 ## Inhalte (vom Trainer)
