@@ -45,6 +45,9 @@ Pflege: neue Ideen hier eintragen, Erledigtes streichen und ins CHANGELOG übern
 
 ## Ideen (noch nicht besprochen)
 
+- [ ] Namen der Spieler durch den Trainer eintragen (bisher nur über das Profil des Kindes) – dann zeigen Teilnehmerlisten Namen statt nur Nummern
+- [ ] Übungen ebenfalls einem Schwerpunkt aus der Spielphasen-Referenz zuordnen und danach filtern
+
 - [ ] Eltern-Zugang; Einwilligung digital statt Papier
 - [ ] Lernfortschritt aller Spieler in der Trainer-Ansicht
 - [ ] Individuelle Pläne pro Spieler

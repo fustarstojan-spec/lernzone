@@ -170,6 +170,11 @@ function migrate(PDO $pdo): void {
         $pdo->exec('INSERT INTO iep_versions (nr, data, created_at, created_by) SELECT nr, data, updated_at, updated_by FROM iep ORDER BY nr');
         $pdo->exec("INSERT INTO settings (name, value) VALUES ('iep_versions_done', '1')");
     }
+    // 0.26.0: Einheiten als PDF, Trainingsart, Schwerpunkt
+    $scols = array_column($pdo->query('PRAGMA table_info(sessions)')->fetchAll(PDO::FETCH_ASSOC), 'name');
+    foreach (['kind' => "TEXT NOT NULL DEFAULT 'plan'", 'pdf' => "TEXT NOT NULL DEFAULT ''", 'pdf_name' => "TEXT NOT NULL DEFAULT ''", 'train_type' => "TEXT NOT NULL DEFAULT ''",
+              'focus_key' => "TEXT NOT NULL DEFAULT ''", 'focus_points' => "TEXT NOT NULL DEFAULT '[]'"] as $c => $def)
+        if ($scols && !in_array($c, $scols, true)) $pdo->exec("ALTER TABLE sessions ADD COLUMN $c $def");
     // Automatisch „da“ erst für Trainings ab dem Tag dieser Umstellung (ältere ohne Eintrag zählen nicht)
     $pdo->exec("INSERT OR IGNORE INTO settings (name, value) VALUES ('auto_att_from', '" . date('Y-m-d') . "')");
 }

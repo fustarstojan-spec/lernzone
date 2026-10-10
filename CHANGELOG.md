@@ -2,6 +2,13 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.26.0 – 2026-10-10
+- **Einheit anlegen: erst wählen** – „Aus Übungen zusammenstellen“ oder „PDF hochladen“ (Trainingsplan als PDF, höchstens 15 MB, geschützt in `storage/sessions/`, Öffnen und Herunterladen nur für Trainer der Mannschaft)
+- **Trainingsart:** Mannschafts-, Individual-, Positions-, Kleingruppen- oder Techniktraining
+- **Schwerpunkt aus der Spielphasen-Referenz** (`data/schwerpunkte.json`): Spielphase (A Mit dem Ball · B Gegen den Ball · C Umschalten · D Standards) → Unterphase → einzelne Schwerpunkte zum Ankreuzen; ersetzt in neuen Einheiten die Auswahl „Spielphase 1–5“
+- **Teilnehmer in der Einheit:** vergangene Trainings zeigen, wer da war, und wer abgesagt hat (mit Grund); kommende Trainings, wer erwartet wird; in der Liste „x da“ bzw. „fällt aus“
+- Datenschutzerklärung: hochgeladene Trainingspläne ergänzt
+
 ## 0.25.0 – 2026-10-09
 - **Bremse pro Netz (IP-Adresse):** Nach 20 Fehlversuchen innerhalb von 15 Minuten sind Anmeldungen von dieser Adresse 15 Minuten gesperrt – gegen Bots, die viele Konten durchprobieren (zusätzlich zur Sperre pro Konto und Sitzung)
 - **Sicherheitsprotokoll** (Verwaltung → ganz unten): Anmeldungen, Fehlversuche, Konto- und Netzsperren, Anmeldungen nachts (0–5 Uhr), neue Einmal-Codes, Passwortänderungen, Rollen- und Kontoänderungen, gelöschte Spieler, Einwilligungen, alle Verwaltungsaktionen; Übersicht der letzten 24 Stunden, Filter „Nur Warnungen“

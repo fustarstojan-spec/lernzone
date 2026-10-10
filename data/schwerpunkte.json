@@ -1,0 +1,402 @@
+{
+ "source": "Spielphasen – Unterphasen & Schwerpunkte (DFB-Rahmentrainingskonzeption U13–U15), Referenz des Trainers",
+ "types": [
+  "Mannschaftstraining",
+  "Individualtraining",
+  "Positionstraining",
+  "Kleingruppentraining",
+  "Techniktraining"
+ ],
+ "groups": [
+  {
+   "key": "A",
+   "title": "Mit dem Ball",
+   "phases": [
+    {
+     "key": "A1",
+     "title": "Spielaufbau",
+     "sub": [
+      {
+       "title": "Spiel aus der Abwehr heraus aufbauen",
+       "points": [
+        "Ball sichern und Raum nutzen",
+        "Linienüberwindung im Aufbau",
+        "Aufspielen bei hohem Druck",
+        "Spielerischer Aufbau aus der Abwehr"
+       ]
+      },
+      {
+       "title": "Torhüter als Anspielstation",
+       "points": [
+        "TW als aktiver Spieler im Aufbau",
+        "Rückpass und Weiterspiel über den TW",
+        "Druckentlastung über den TW",
+        "Kommunikation TW – Abwehr"
+       ]
+      },
+      {
+       "title": "Überzahl im Aufbau schaffen",
+       "points": [
+        "3 gegen 2 im Aufbau nutzen",
+        "Freier Mann im Aufbau finden",
+        "Überladen einer Spielfeldseite",
+        "Kurzpassspiel in Überzahl"
+       ]
+      },
+      {
+       "title": "Gegenpressing überspielen",
+       "points": [
+        "Ball schnell aus dem Pressingbereich spielen",
+        "Sicherheitspass rück- und seitwärts",
+        "Langen Ball nutzen bei hohem Druck",
+        "Befreiungsschlag als taktische Option"
+       ]
+      }
+     ]
+    },
+    {
+     "key": "A2",
+     "title": "Spiel durch das Mittelfeld",
+     "sub": [
+      {
+       "title": "Kombinationsspiel im Zentrum",
+       "points": [
+        "Dreieckspassing und Positionswechsel",
+        "Anbieten als Verbindungsstation",
+        "Spiel in engen Räumen",
+        "Tempo und Rhythmus im Kurzpassspiel"
+       ]
+      },
+      {
+       "title": "Spiel über den Dritten",
+       "points": [
+        "Mann-Ball-Mann Prinzip",
+        "Dreieck formen – dritter Mann einbeziehen",
+        "Bewegung ohne Ball nach Pass",
+        "Timing des Freilaufens"
+       ]
+      },
+      {
+       "title": "Verlagerung und Breitenspiel",
+       "points": [
+        "Spiel von einer Seite zur anderen",
+        "Diagonalpässe in Räume",
+        "Breit stehen und Spielfeld nutzen",
+        "Verlagerung als Druckmittel"
+       ]
+      },
+      {
+       "title": "Linien überspielen / Tiefenpässe",
+       "points": [
+        "Pass zwischen und hinter Abwehr",
+        "Timing Tiefenpass – Laufweg",
+        "Hinterlaufen und Überladung",
+        "Raumorientierung vor dem Pass"
+       ]
+      },
+      {
+       "title": "Spiel über die Außen",
+       "points": [
+        "Einbinden der Außenverteidiger",
+        "Kombination mit dem Flügelstürmer",
+        "Flankenraum öffnen und nutzen",
+        "Hereingabe und Anschlussaktion"
+       ]
+      }
+     ]
+    },
+    {
+     "key": "A3",
+     "title": "Torabschluss / Torchancen",
+     "sub": [
+      {
+       "title": "Spiel in die Tiefe / Steilpass",
+       "points": [
+        "Timing Laufweg – Pass",
+        "Abseitslinie erkennen und nutzen",
+        "Steilpass in den Lauf",
+        "Zweikampf nach Tiefenball"
+       ]
+      },
+      {
+       "title": "Flanken und Hereingaben",
+       "points": [
+        "Flankenform (flach / gehoben / geschnitten)",
+        "Besetzung der Flankenräume",
+        "Anschlusskopfball oder Abschluss",
+        "Anbieten im Fünfmeterraum"
+       ]
+      },
+      {
+       "title": "Abschluss nach Kombination",
+       "points": [
+        "Kombination mit Abschluss verbinden",
+        "Abschluss aus Bewegung",
+        "Schussvorbereitung und Körperposition",
+        "Torabschluss unter Druck"
+       ]
+      },
+      {
+       "title": "1v1 auf den Torhüter",
+       "points": [
+        "Ruhe und Technik im Abschluss",
+        "Finten vor dem TW",
+        "Chip oder Platzierung",
+        "Reaktion auf TW-Verhalten"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "B",
+   "title": "Gegen den Ball",
+   "phases": [
+    {
+     "key": "B1",
+     "title": "Pressing / Gegenpressing",
+     "sub": [
+      {
+       "title": "Anlaufverhalten und Laufwege",
+       "points": [
+        "Anlaufwinkel und Laufweg zum Ball",
+        "Anlaufstaffel organisieren",
+        "Abschneiden von Passwegen",
+        "Signale geben – wann anlaufen"
+       ]
+      },
+      {
+       "title": "Kompaktheit im Pressing",
+       "points": [
+        "Engen Block bilden",
+        "Abstände verkürzen",
+        "Löcher schließen im Pressing",
+        "Ballorientiertes Verschieben"
+       ]
+      },
+      {
+       "title": "Gegenpressing nach Ballverlust",
+       "points": [
+        "Sofortreaktion nach Ballverlust",
+        "Nächster Spieler läuft sofort an",
+        "Zweikampf im Gegenpressing",
+        "Raum um den Ball zumachen"
+       ]
+      },
+      {
+       "title": "Ballorientiertes Verschieben",
+       "points": [
+        "Verschieben zur Ballseite",
+        "Abdeckung der Räume",
+        "Gleichgewicht Ballseite / Schattenseite",
+        "Umschalten im Block"
+       ]
+      }
+     ]
+    },
+    {
+     "key": "B2",
+     "title": "Mittelfeldpressing",
+     "sub": [
+      {
+       "title": "Raumaufteilung im Mittelfeld",
+       "points": [
+        "Kompakte Mittelfeldreihe",
+        "Abdeckung von Passlinien",
+        "Herausrücken aus dem Block",
+        "Zonenaufteilung 4-4-2 / 4-3-3"
+       ]
+      },
+      {
+       "title": "Absicherung und Deckungsschatten",
+       "points": [
+        "Deckungsschatten setzen",
+        "Tiefenstaffelung",
+        "Absichern hinter dem Presser",
+        "Sicherung der Schnittstellen"
+       ]
+      },
+      {
+       "title": "Herauslocken und Abfangen",
+       "points": [
+        "Ball in den Pressingbereich locken",
+        "Passwege bewusst öffnen und schließen",
+        "Abfangen nach Verlagerung",
+        "Ballgewinn durch Herauslocken"
+       ]
+      }
+     ]
+    },
+    {
+     "key": "B3",
+     "title": "Verteidigen im letzten Drittel",
+     "sub": [
+      {
+       "title": "Tiefes Verteidigen / Block",
+       "points": [
+        "Kompakter Tiefblock",
+        "Abstände in der Abwehrreihe",
+        "Abseitsfalle als taktisches Mittel",
+        "Räume eng halten"
+       ]
+      },
+      {
+       "title": "1v1 defensiv",
+       "points": [
+        "Körperposition im Zweikampf",
+        "Verzögern und Kanalisieren",
+        "Abstandhalten – nicht überspringen",
+        "Timing des Tacklings"
+       ]
+      },
+      {
+       "title": "Absicherung der Innenverteidiger",
+       "points": [
+        "IV als letzte Instanz",
+        "Ablösung und Übernehmen",
+        "Kommunikation in der Abwehrkette",
+        "Raumorientierung IV"
+       ]
+      },
+      {
+       "title": "Klären und Sichern",
+       "points": [
+        "Klarer Ball weg aus dem Gefahrenbereich",
+        "Sicherungsverhalten nach Klärung",
+        "Zweikampf in der Gefahrenzone",
+        "Ballkontrolle unter Druck"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "C",
+   "title": "Umschalten",
+   "phases": [
+    {
+     "key": "C1",
+     "title": "Umschalten nach Ballgewinn (offensiv)",
+     "sub": [
+      {
+       "title": "Schnelles Umschalten in die Tiefe",
+       "points": [
+        "Sofortiger Tiefenlauf nach Ballgewinn",
+        "Ball direkt in den Lauf spielen",
+        "Überraschungsmoment nutzen",
+        "Tempo vor Sicherheit"
+       ]
+      },
+      {
+       "title": "Konter über die Außen",
+       "points": [
+        "Schnelles Breitspiel nach Ballgewinn",
+        "Außen einbeziehen im Konterspiel",
+        "1v1 Situation auf dem Flügel schaffen",
+        "Flanke oder Hereingabe nach Konter"
+       ]
+      },
+      {
+       "title": "Direktes Spiel nach Ballgewinn",
+       "points": [
+        "Ball nicht halten – sofort vorwärts",
+        "Passweg in die Tiefe prüfen",
+        "Wenige Kontakte – hohe Geschwindigkeit",
+        "Entscheidung: Konter oder Sichern"
+       ]
+      }
+     ]
+    },
+    {
+     "key": "C2",
+     "title": "Umschalten nach Ballverlust (defensiv)",
+     "sub": [
+      {
+       "title": "Sofort Gegenpressing",
+       "points": [
+        "Sofortreaktion – Nächster läuft an",
+        "Spieler der verliert presst als erster",
+        "2-3 Spieler schließen Raum",
+        "Erste 3 Sekunden entscheiden"
+       ]
+      },
+      {
+       "title": "Schnelles Zurückstellen / Ordnen",
+       "points": [
+        "Wann Gegenpressing – wann Ordnen?",
+        "Block herstellen bei Ballverlust tief",
+        "Tiefenstaffelung schnell wiederherstellen",
+        "Kommunikation beim Ordnen"
+       ]
+      },
+      {
+       "title": "Absicherung nach Ballverlust",
+       "points": [
+        "Absicherer bleibt hinter Presser",
+        "Keine Löcher in der Kette",
+        "Räume hinter dem Pressing sichern",
+        "Ruhiges Ordnen ohne Panik"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "D",
+   "title": "Standards",
+   "phases": [
+    {
+     "key": "D1",
+     "title": "Offensive Standards",
+     "sub": [
+      {
+       "title": "Ecken / Freistöße auf das Tor",
+       "points": [
+        "Kurze Ecke – Kombination",
+        "Hereinflanke auf Zielspieler",
+        "Freistellung und Blocken",
+        "Varianten einstudieren"
+       ]
+      },
+      {
+       "title": "Einwürfe im letzten Drittel",
+       "points": [
+        "Einwurf als Angriffsmittel",
+        "Kombination nach Einwurf",
+        "Freistellen zum Einwurf",
+        "Druckentlastung oder Angriff"
+       ]
+      }
+     ]
+    },
+    {
+     "key": "D2",
+     "title": "Defensive Standards",
+     "sub": [
+      {
+       "title": "Absicherung bei Ecken / Freistößen",
+       "points": [
+        "Zonendeckung organisieren",
+        "Manndeckung auf Gefahrenspielern",
+        "Besetzen des kurzen Pfostens",
+        "Abwehrspieler vor dem Tor positionieren"
+       ]
+      },
+      {
+       "title": "Zonendeckung vs. Manndeckung",
+       "points": [
+        "Vor- und Nachteile verstehen",
+        "Kombinierte Deckung",
+        "Absicherung hinter der Mauer",
+        "Reaktion auf schnelle Ausführung"
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

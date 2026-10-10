@@ -163,6 +163,12 @@ CREATE TABLE IF NOT EXISTS sessions (
   players      TEXT    NOT NULL DEFAULT '',          -- z. B. „18 Spieler + 2 TW“
   notes        TEXT    NOT NULL DEFAULT '',
   data         TEXT    NOT NULL DEFAULT '{}',
+  kind         TEXT    NOT NULL DEFAULT 'plan',      -- 0.26.0: plan (aus Übungen) | pdf (hochgeladener Plan)
+  pdf          TEXT    NOT NULL DEFAULT '',          -- Datei in storage/sessions/<Mannschaft>/
+  pdf_name     TEXT    NOT NULL DEFAULT '',          -- ursprünglicher Dateiname
+  train_type   TEXT    NOT NULL DEFAULT '',          -- Mannschafts-, Individual-, Positions-, Kleingruppen-, Techniktraining
+  focus_key    TEXT    NOT NULL DEFAULT '',          -- Schwerpunkt aus data/schwerpunkte.json, z. B. „A1“ oder „A1.2“ (Unterphase)
+  focus_points TEXT    NOT NULL DEFAULT '[]',        -- gewählte Schwerpunkte (JSON-Liste)
   created_by   INTEGER,
   updated_by   INTEGER,
   updated_at   TEXT    NOT NULL DEFAULT ''

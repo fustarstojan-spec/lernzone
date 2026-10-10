@@ -1,7 +1,9 @@
 /*
  * Lernzone – Trainingsplanung (ab 0.24.0, nur Trainer, Weg B)
  * Einheiten (pro Termin, Mannschaft) aus Übungen der Vereins-Bibliothek. Einheitlicher Aufbau:
- *   Einheit: Kopf (Datum, Titel, Fokus, Spielphase, Ziel, Spieler) · Blöcke Einstimmung · Übungsform · Spielform · Ausklang
+ *   Einheit: Kopf (Datum, Titel, Trainingsart, Schwerpunkt, Fokus, Ziel, Spieler) · Blöcke Einstimmung · Übungsform · Spielform · Ausklang
+ *            oder (ab 0.26.0) ein hochgeladenes PDF. Schwerpunkte aus data/schwerpunkte.json (Spielphasen-Referenz des Trainers).
+ *   Teilnehmer: bei vergangenen Terminen die Anwesenden, sonst alle ohne Absage
  *   Übung:   Organisation · Ablauf · Coachingpunkte · Leichter · Schwerer · Belastung · Material · Skizze (leere Abschnitte entfallen)
  * Daten: api/training.php
  */
@@ -10,6 +12,10 @@
   const BLOCKS = [["einstimmung", "Einstimmung"], ["uebung", "Übungsform"], ["spiel", "Spielform"], ["ausklang", "Ausklang"]];
   const PHASES = { 1: "Eigener Ballbesitz", 2: "Umschalten nach Ballverlust", 3: "Gegnerischer Ballbesitz", 4: "Umschalten nach Ballgewinn", 5: "Standards" };
   const SECTIONS = [["organisation", "Organisation"], ["ablauf", "Ablauf"], ["coaching", "Coachingpunkte"], ["easier", "Leichter"], ["harder", "Schwerer"], ["load", "Belastung"]];
+  let REF = null;   // data/schwerpunkte.json
+  async function loadRef() { if (REF) return; try { REF = await (await fetch("data/schwerpunkte.json", { credentials: "same-origin" })).json(); } catch (e) { REF = { types: [], groups: [] }; } LZ.render(); }
+  const phaseOf = key => { if (!REF || !key) return null; const k = key.split(".")[0]; for (const g of REF.groups) for (const ph of g.phases) if (ph.key === k) return { g, ph }; return null; };
+  const focusLabel = key => { const f = phaseOf(key); if (!f) return ""; const i = key.split(".")[1]; return `${f.ph.key} ${f.ph.title}${i !== undefined && f.ph.sub[+i] ? " › " + f.ph.sub[+i].title : ""}`; };
   const P = { tab: "einheiten", list: null, drills: null, q: "", sess: null, sdrills: {}, training: null, edit: null, drill: null, dedit: null, boards: null, err: "", busy: false, confirm: false, back: null };
   const St = () => LZ.Store;
   const val = id => ((document.getElementById(id) || {}).value || "");
@@ -23,9 +29,10 @@
   async function loadSession(q) {
     const r = await St().get("training.php?" + q);
     if (!r || !r.ok) { P.err = (r && r.error) || "Laden hat nicht geklappt."; LZ.render(); return null; }
-    P.sess = r.session; P.sdrills = r.drills || {}; P.training = r.training || null; LZ.render(); return r;
+    P.sess = r.session; P.sdrills = r.drills || {}; P.training = r.training || null; P.parts = r.participants || null; LZ.render(); return r;
   }
   LZ.on("enter", v => {
+    if (["training", "einheit", "einheitEdit"].includes(v)) loadRef();
     if (v === "training") { P.err = ""; loadList(); if (P.tab === "uebungen" || !P.drills) loadDrills(); }
     if (v === "einheitEdit" || v === "uebungEdit") { if (!P.drills) loadDrills(); }
   });
@@ -56,7 +63,8 @@
     const row = t => {
       const s = t.session ? L.sessions.find(x => x.id === t.session) : null;
       return `<li class="trow2"><span><b>${esc(cal().dayName(t.date))}</b> <span class="small">${esc(cal().timeText(t))}</span></span>
-        ${s ? `<button class="linkbtn" data-act="trSess" data-v="${s.id}">${esc(s.title)}${s.minutes ? ` · ${s.minutes} Min.` : ""}</button>`
+        ${t.state === 1 ? `<span class="small">${t.present} da</span>` : t.state === 2 ? `<span class="small">fällt aus</span>` : ""}
+        ${s ? `<button class="linkbtn" data-act="trSess" data-v="${s.id}">${s.kind === "pdf" ? "📄 " : ""}${esc(s.title)}${s.minutes ? ` · ${s.minutes} Min.` : ""}${s.trainType && s.trainType !== "Mannschaftstraining" ? ` <span class="badge muted">${esc(s.trainType)}</span>` : ""}</button>`
             : `<button class="btn ghost small" data-act="trNew" data-v="${t.id}">+ Plan</button>`}</li>`;
     };
     const free = L.sessions.filter(s => !s.trainingId);
@@ -87,14 +95,27 @@
     const t = P.training;
     return `<button class="back noprint" data-act="trBack">‹ Training</button>
       <section class="sesshead"><p class="eyebrow">${esc(fmtDate(s.date))}${t && t.time ? ` · ${esc(cal().timeText({ time: t.time, endTime: t.end_time }))}` : ""}</p><h1>${esc(s.title)}</h1>
-        <p class="small">${[s.focus ? `Fokus: ${esc(s.focus)}` : "", s.phase ? `Spielphase ${s.phase}: ${PHASES[s.phase]}` : "", s.minutes ? `ca. ${s.minutes} Min.` : "", esc(s.players)].filter(Boolean).join(" · ")}</p>
+        <p class="small">${[s.trainType ? esc(s.trainType) : "", s.focus ? `Fokus: ${esc(s.focus)}` : "", !s.focusKey && s.phase ? `Spielphase ${s.phase}: ${PHASES[s.phase]}` : "", s.minutes ? `ca. ${s.minutes} Min.` : "", esc(s.players)].filter(Boolean).join(" · ")}</p>
+        ${s.focusKey ? `<p><b>Schwerpunkt:</b> ${esc(focusLabel(s.focusKey))}</p>${s.focusPoints.length ? `<div class="chiprow">${s.focusPoints.map(x => `<span class="fpoint">${esc(x)}</span>`).join("")}</div>` : ""}` : ""}
         ${s.goal ? `<p><b>Ziel:</b> ${esc(s.goal)}</p>` : ""}</section>
-      <div class="chiprow noprint"><button class="btn" data-act="trSessEdit">Bearbeiten</button><button class="btn ghost" data-act="trPrint">Drucken</button></div>
+      <div class="chiprow noprint"><button class="btn" data-act="trSessEdit">Bearbeiten</button>${s.kind === "pdf" ? "" : `<button class="btn ghost" data-act="trPrint">Drucken</button>`}</div>
+      ${s.kind === "pdf" ? `<section class="card stack"><h2>Trainingsplan (PDF)</h2>${s.pdf ? `<p>📄 ${esc(s.pdfName || "Trainingsplan.pdf")}</p>
+        <div class="chiprow"><a class="btn" href="${esc(s.pdf)}" target="_blank" rel="noopener">PDF öffnen</a><a class="btn ghost" href="${esc(s.pdf)}&download=1">Herunterladen</a></div>` : `<p class="small">Noch kein PDF hochgeladen.</p>`}</section>` : ""}
+      ${partsCard()}
       ${BLOCKS.map(([k, l], bi) => { const items = s.blocks[k] || []; if (!items.length) return "";
         const min = items.reduce((a, i) => a + (i.min || 0), 0);
         return `<section class="card stack sessblock"><h2>${bi + 1}. ${l}${min ? ` <span class="small">(${min} Min.)</span>` : ""}</h2>${items.map(i => drillHtml(i.drill ? P.sdrills[i.drill] : null, i.min, i.note)).join("")}</section>`; }).join("")}
       ${s.notes ? `<section class="card stack"><h2>Notizen</h2>${bullets(s.notes)}</section>` : ""}`;
   };
+  function partsCard() {
+    const p = P.parts; if (!p) return "";
+    const who = x => `<li><span class="pnr">${x.nr}</span> ${esc(x.name || "")}${x.reason ? ` <span class="small">– ${esc(x.reason)}</span>` : ""}</li>`;
+    const title = p.state === "recorded" ? `Teilgenommen (${p.present.length})` : p.state === "cancelled" ? "Training fällt aus" : `Erwartet (${p.present.length})`;
+    return `<section class="card stack parts"><h2>${title}</h2>
+      ${p.state === "expected" ? `<p class="small">Noch nicht erfasst – alle, die nicht abgesagt haben.</p>` : ""}
+      ${p.present.length ? `<ul class="plist">${p.present.map(who).join("")}</ul>` : ""}
+      ${p.absent.length ? `<h3>Abgesagt (${p.absent.length})</h3><ul class="plist">${p.absent.map(who).join("")}</ul>` : ""}</section>`;
+  }
   LZ.actions.trSess = async (b, v) => { P.back = LZ.S.view === "home" ? "home" : "training"; P.sess = null; P.err = ""; LZ.go("einheit"); LZ.top(); await loadSession("session=" + v); };
   LZ.actions.trBack = () => LZ.go(P.back || "training");
   LZ.actions.trPrint = () => window.print();
@@ -109,13 +130,18 @@
   const blank = () => Object.fromEntries(BLOCKS.map(([k]) => [k, []]));
   LZ.actions.trNew = async (b, v) => {
     const t = v ? ((P.list && P.list.trainings.find(x => x.id === +v)) || P.training) : null;
-    P.edit = { id: null, trainingId: v ? +v : null, date: t ? t.date : "", title: "", focus: "", phase: "1", goal: "", players: "", notes: "", blocks: blank() };
+    P.edit = { id: null, kind: null, trainingId: v ? +v : null, date: t ? t.date : "", title: "", focus: "", phase: "", goal: "", players: "", notes: "", blocks: blank(),
+               trainType: "Mannschaftstraining", focusKey: "", focusPoints: [], pdfData: null, pdfName: "" };
     P.err = ""; P.confirm = false; LZ.go("einheitEdit"); LZ.top();
   };
   LZ.actions.trSessEdit = () => { P.edit = JSON.parse(JSON.stringify(P.sess)); P.err = ""; P.confirm = false; LZ.go("einheitEdit"); LZ.top(); };
   function syncEdit() {
     const e = P.edit; if (!e || !document.getElementById("se-title")) return;
-    ["title", "focus", "phase", "goal", "players", "notes", "date"].forEach(k => { const el = document.getElementById("se-" + k); if (el) e[k] = el.value; });
+    ["title", "focus", "goal", "players", "notes", "date"].forEach(k => { const el = document.getElementById("se-" + k); if (el) e[k] = el.value; });
+    const ty = document.getElementById("se-type"); if (ty) e.trainType = ty.value;
+    const ph = document.getElementById("se-fphase"), su = document.getElementById("se-fsub");
+    if (ph) e.focusKey = ph.value ? ph.value + (su && su.value !== "" ? "." + su.value : "") : "";
+    const pts = document.querySelectorAll("input[data-fpoint]"); if (pts.length || ph) e.focusPoints = [...pts].filter(x => x.checked).map(x => x.dataset.fpoint);
     BLOCKS.forEach(([k]) => e.blocks[k].forEach((it, i) => {
       it.drill = +val(`se-${k}-${i}-d`) || null; it.min = +val(`se-${k}-${i}-m`) || 0; it.note = val(`se-${k}-${i}-n`);
     }));
@@ -126,20 +152,40 @@
     const missing = sel && !all.some(d => d.id === sel) ? `<option value="${sel}" selected>${esc((P.sdrills[sel] || {}).title || "Übung")}</option>` : "";
     return `<option value="">– nur Notiz –</option>${missing}${own.map(opt).join("")}${other.length ? `<optgroup label="Andere">${other.map(opt).join("")}</optgroup>` : ""}`;
   };
+  /* Schwerpunkt: Phase → Unterphase → einzelne Schwerpunkte (aus der Spielphasen-Referenz) */
+  function focusPicker(e) {
+    if (!REF) return `<p class="small">Lade Schwerpunkte …</p>`;
+    const [pk, si] = (e.focusKey || "").split("."), f = phaseOf(pk);
+    return `<div class="fld"><label for="se-fphase">Schwerpunkt – Spielphase</label><select id="se-fphase"><option value="">– kein Schwerpunkt –</option>
+        ${REF.groups.map(g => `<optgroup label="${esc(g.key + " · " + g.title)}">${g.phases.map(ph => `<option value="${ph.key}" ${ph.key === pk ? "selected" : ""}>${ph.key} ${esc(ph.title)}</option>`).join("")}</optgroup>`).join("")}</select></div>
+      ${f ? `<div class="fld"><label for="se-fsub">Unterphase</label><select id="se-fsub"><option value="">– ganze Phase –</option>${f.ph.sub.map((x, i) => `<option value="${i}" ${String(i) === si ? "selected" : ""}>${esc(x.title)}</option>`).join("")}</select></div>` : ""}
+      ${f && si !== undefined && si !== "" && f.ph.sub[+si] ? `<fieldset class="fpoints"><legend class="small">Schwerpunkte (mehrere möglich)</legend>${f.ph.sub[+si].points.map(x =>
+        `<label class="check"><input type="checkbox" data-fpoint="${esc(x)}" ${e.focusPoints.includes(x) ? "checked" : ""}> ${esc(x)}</label>`).join("")}</fieldset>` : ""}`;
+  }
   LZ.views.einheitEdit = () => {
     const e = P.edit; if (!e) return `<button class="back" data-act="trBack">‹ Training</button>`;
+    const head = `<button class="back" data-act="trEditCancel">‹ Abbrechen</button>
+      <section><p class="eyebrow">${e.trainingId ? esc(fmtDate(e.date)) : "Einheit"}</p><h1>${e.id ? "Einheit bearbeiten" : "Neue Einheit"}</h1></section>`;
+    if (!e.kind) return `${head}<section class="card stack"><h2>Wie willst du die Einheit anlegen?</h2>
+      <button class="choice" data-act="trKind" data-v="plan"><b>Aus Übungen zusammenstellen</b><span class="small">Übungen aus der Bibliothek in Einstimmung · Übungsform · Spielform · Ausklang</span></button>
+      <button class="choice" data-act="trKind" data-v="pdf"><b>PDF hochladen</b><span class="small">Fertigen Trainingsplan als PDF anhängen (höchstens 15 MB)</span></button></section>`;
     const total = BLOCKS.reduce((a, [k]) => a + e.blocks[k].reduce((x, i) => x + (+i.min || 0), 0), 0);
-    return `<button class="back" data-act="trEditCancel">‹ Abbrechen</button>
-      <section><p class="eyebrow">${e.trainingId ? esc(fmtDate(e.date)) : "Einheit"}</p><h1>${e.id ? "Einheit bearbeiten" : "Neue Einheit"}</h1></section>
+    const types = (REF && REF.types) || ["Mannschaftstraining"];
+    return `${head}
       <section class="card stack">
+        <div class="fld"><label for="se-type">Trainingsart</label><select id="se-type">${types.map(t => `<option ${t === e.trainType ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></div>
         <div class="fld"><label for="se-title">Titel</label><input id="se-title" maxlength="80" value="${esc(e.title)}" placeholder="z. B. 2v1 – Koordination"></div>
         ${e.trainingId ? "" : `<div class="fld"><label for="se-date">Datum (optional)</label><input id="se-date" type="date" value="${esc(e.date)}"></div>`}
         <div class="fld"><label for="se-focus">Fokus des Monats</label><input id="se-focus" maxlength="60" value="${esc(e.focus)}" placeholder="z. B. 2v1"></div>
-        <div class="fld"><label for="se-phase">Spielphase</label><select id="se-phase"><option value="">–</option>${Object.entries(PHASES).map(([k, l]) => `<option value="${k}" ${e.phase === k ? "selected" : ""}>${k} · ${l}</option>`).join("")}</select></div>
+        ${focusPicker(e)}
         <div class="fld"><label for="se-goal">Ziel</label><input id="se-goal" maxlength="300" value="${esc(e.goal)}" placeholder="Was sollen die Spieler danach können?"></div>
         <div class="fld"><label for="se-players">Spieler</label><input id="se-players" maxlength="100" value="${esc(e.players)}" placeholder="z. B. 18 Spieler + 2 TW"></div>
       </section>
-      ${BLOCKS.map(([k, l], bi) => `<section class="card stack"><h2>${bi + 1}. ${l}</h2>
+      ${e.kind === "pdf" ? `<section class="card stack"><h2>Trainingsplan (PDF)</h2>
+        ${e.pdfData ? `<p>📄 ${esc(e.pdfName)} <span class="small">(neu, wird beim Speichern hochgeladen)</span></p>` : e.pdf ? `<p>📄 ${esc(e.pdfName || "Trainingsplan.pdf")}</p>` : ""}
+        <div class="fld"><label for="se-pdf">${e.pdf || e.pdfData ? "Anderes PDF wählen" : "PDF auswählen"}</label><input id="se-pdf" type="file" accept="application/pdf,.pdf"></div>
+        <p class="small">Bitte keine Gesundheitsangaben über Kinder in hochgeladene Pläne schreiben.</p></section>` : ""}
+      ${e.kind === "pdf" ? "" : BLOCKS.map(([k, l], bi) => `<section class="card stack"><h2>${bi + 1}. ${l}</h2>
         ${e.blocks[k].map((it, i) => `<div class="sitem">
           <div class="fld"><label for="se-${k}-${i}-d">Übung</label><select id="se-${k}-${i}-d">${drillOptions(k, it.drill)}</select></div>
           <div class="sitem-row"><div class="fld"><label for="se-${k}-${i}-m">Min.</label><input id="se-${k}-${i}-m" type="number" min="0" max="120" inputmode="numeric" value="${it.min || ""}"></div>
@@ -148,10 +194,24 @@
         </div>`).join("")}
         <button class="linkbtn" data-act="trItem" data-v="add" data-b="${k}">+ ${k === "ausklang" ? "Eintrag" : "Übung"}</button></section>`).join("")}
       <section class="card stack"><div class="fld"><label for="se-notes">Notizen (eine pro Zeile)</label><textarea id="se-notes" rows="3">${esc(e.notes)}</textarea></div>
-        <p class="small">Gesamt: ${total} Min.</p>${errBox()}
+        ${e.kind === "pdf" ? "" : `<p class="small">Gesamt: ${total} Min.</p>`}${errBox()}
         <div class="chiprow"><button class="btn" data-act="trSessSave" ${P.busy ? "disabled" : ""}>Speichern</button>
         ${e.id ? (P.confirm ? `<button class="btn danger-btn" data-act="trSessDel">Wirklich löschen?</button><button class="linkbtn" data-act="trConfirm" data-v="0">Nein</button>` : `<button class="linkbtn" data-act="trConfirm" data-v="1">Löschen</button>`) : ""}</div></section>`;
   };
+  LZ.actions.trKind = (b, v) => { P.edit.kind = v; LZ.render(); };
+  LZ.inputs.push(e => {
+    const id = e.target.id;
+    if ((id === "se-fphase" || id === "se-fsub") && e.type === "change") {
+      syncEdit(); if (id === "se-fphase") P.edit.focusKey = e.target.value; P.edit.focusPoints = []; LZ.render();
+    }
+    if (id === "se-pdf" && e.type === "change" && e.target.files && e.target.files[0]) {
+      const f = e.target.files[0];
+      if (f.size > 15 * 1024 * 1024) { P.err = "Das PDF ist zu groß (höchstens 15 MB)."; LZ.render(); return; }
+      const rd = new FileReader();
+      rd.onload = () => { syncEdit(); P.edit.pdfData = rd.result; P.edit.pdfName = f.name; if (!P.edit.title) P.edit.title = f.name.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ").slice(0, 80); P.err = ""; LZ.render(); };
+      rd.readAsDataURL(f);
+    }
+  });
   LZ.actions.trItem = b => {
     syncEdit();
     const list = P.edit.blocks[b.dataset.b], i = +b.dataset.i, v = b.dataset.v;
@@ -165,7 +225,9 @@
   LZ.actions.trSessSave = async () => {
     syncEdit(); if (P.busy) return;
     const e = P.edit; P.busy = true; P.err = ""; LZ.render();
-    const r = await St().send("training.php", Object.assign({ action: "session_save" }, e));
+    const body = Object.assign({ action: "session_save" }, e); delete body.pdfData; delete body.pdf;
+    if (e.pdfData) body.pdf = e.pdfData;
+    const r = await St().send("training.php", body);
     P.busy = false;
     if (!r || !r.ok) { P.err = (r && r.error) || "Speichern hat nicht geklappt."; LZ.render(); return; }
     P.list = null; LZ.go("einheit"); LZ.top(); await loadSession("session=" + r.id);

@@ -15,6 +15,7 @@
 require __DIR__ . '/config.php';
 require_once __DIR__ . '/lib/board.php';
 require_once __DIR__ . '/lib/drill_image.php';
+require_once __DIR__ . '/lib/session_pdf.php';
 $me   = require_coach();
 $club = (int)team_info()['clubId'];
 
@@ -51,6 +52,9 @@ $sessionOut = function (array $s): array {
     foreach (BLOCKS as $b) $blocks[$b] = array_values(array_map(fn($i) => ['drill' => (int)($i['drill'] ?? 0) ?: null, 'min' => (int)($i['min'] ?? 0), 'note' => (string)($i['note'] ?? '')],
                                                                  is_array($d['blocks'][$b] ?? null) ? $d['blocks'][$b] : []));
     return ['id' => (int)$s['id'], 'trainingId' => $s['training_id'] ? (int)$s['training_id'] : null, 'date' => $s['date'], 'title' => $s['title'],
+        'kind' => $s['kind'] ?? 'plan', 'pdf' => ($s['pdf'] ?? '') !== '' ? 'api/session_pdf.php?id=' . (int)$s['id'] . '&v=' . substr(md5($s['pdf']), 0, 8) : null,
+        'pdfName' => $s['pdf_name'] ?? '', 'trainType' => $s['train_type'] ?? '', 'focusKey' => $s['focus_key'] ?? '',
+        'focusPoints' => json_decode($s['focus_points'] ?? '[]', true) ?: [],
         'focus' => $s['focus'], 'phase' => $s['phase'], 'goal' => $s['goal'], 'players' => $s['players'], 'notes' => $s['notes'], 'blocks' => $blocks,
         'minutes' => array_sum(array_map(fn($b) => array_sum(array_column($b, 'min')), $blocks)), 'updated' => $s['updated_at']];
 };
@@ -62,8 +66,19 @@ $sessionFull = function (?array $row) use ($sessionOut, $drills): array {
     return ['ok' => true, 'session' => $s, 'drills' => (object)array_column($drills(array_unique($ids)), null, 'id')];
 };
 $training = function (int $id): ?array {
-    $st = db()->prepare('SELECT id, date, time, end_time, title, kind FROM trainings WHERE id = ?'); $st->execute([$id]);
+    $st = db()->prepare('SELECT id, date, time, end_time, title, kind, att_done FROM trainings WHERE id = ?'); $st->execute([$id]);
     return $st->fetch(PDO::FETCH_ASSOC) ?: null;
+};
+/* Teilnehmer eines Termins (ab 0.26.0): state recorded (erfasst) | cancelled (fällt aus) | expected (noch offen: alle ohne Absage) */
+$participants = function (?array $t): ?array {
+    if (!$t || $t['kind'] !== 'training') return null;
+    $name = function (int $nr) { $p = profile_of($nr); return trim(($p['vorname'] ?? '') . ' ' . ($p['nachname'] ?? '')); };
+    $st = db()->prepare('SELECT nr, reason FROM absences WHERE training_id = ? ORDER BY nr'); $st->execute([$t['id']]);
+    $absent = array_map(fn($a) => ['nr' => (int)$a['nr'], 'name' => $name((int)$a['nr']), 'reason' => ABSENCE_REASONS[$a['reason']] ?? $a['reason']], $st->fetchAll(PDO::FETCH_ASSOC));
+    $state = match ((int)$t['att_done']) { 1 => 'recorded', 2 => 'cancelled', default => 'expected' };
+    if ($state === 'recorded') { $st = db()->prepare('SELECT nr FROM attendance WHERE training_id = ? ORDER BY nr'); $st->execute([$t['id']]); $nrs = array_map('intval', $st->fetchAll(PDO::FETCH_COLUMN)); }
+    else $nrs = $state === 'cancelled' ? [] : expected_players((int)$t['id']);
+    return ['state' => $state, 'present' => array_map(fn($nr) => ['nr' => $nr, 'name' => $name($nr)], $nrs), 'absent' => $absent];
 };
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -71,21 +86,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if (isset($_GET['session'])) {
         $st = db()->prepare('SELECT * FROM sessions WHERE id = ?'); $st->execute([(int)$_GET['session']]);
         $row = $st->fetch(PDO::FETCH_ASSOC) ?: $fail('Diese Einheit gibt es nicht.', 404);
-        json_out($sessionFull($row) + ['training' => $row['training_id'] ? $training((int)$row['training_id']) : null]);
+        $t = $row['training_id'] ? $training((int)$row['training_id']) : null;
+        json_out($sessionFull($row) + ['training' => $t, 'participants' => $participants($t)]);
     }
     if (isset($_GET['training'])) {
         $st = db()->prepare('SELECT * FROM sessions WHERE training_id = ? ORDER BY id DESC LIMIT 1'); $st->execute([(int)$_GET['training']]);
-        json_out($sessionFull($st->fetch(PDO::FETCH_ASSOC) ?: null) + ['training' => $training((int)$_GET['training'])]);
+        $t = $training((int)$_GET['training']);
+        json_out($sessionFull($st->fetch(PDO::FETCH_ASSOC) ?: null) + ['training' => $t, 'participants' => $participants($t)]);
     }
     $sessions = array_map($sessionOut, db()->query('SELECT * FROM sessions ORDER BY date DESC, id DESC')->fetchAll(PDO::FETCH_ASSOC));
     $byTraining = [];
     foreach ($sessions as $s) if ($s['trainingId']) $byTraining[$s['trainingId']] ??= $s['id'];
-    $st = db()->prepare("SELECT id, date, time, end_time, title FROM trainings WHERE kind = 'training' AND date >= ? AND date <= ? ORDER BY date, time");
+    $st = db()->prepare("SELECT t.id, t.date, t.time, t.end_time, t.title, t.att_done, (SELECT COUNT(*) FROM attendance a WHERE a.training_id = t.id) AS present
+                         FROM trainings t WHERE t.kind = 'training' AND t.date >= ? AND t.date <= ? ORDER BY t.date, t.time");
     $st->execute([date('Y-m-d', strtotime('-21 days')), date('Y-m-d', strtotime('+21 days'))]);
     json_out(['ok' => true,
-        'sessions' => array_map(fn($s) => ['id' => $s['id'], 'trainingId' => $s['trainingId'], 'date' => $s['date'], 'title' => $s['title'], 'focus' => $s['focus'], 'minutes' => $s['minutes']], $sessions),
+        'sessions' => array_map(fn($s) => ['id' => $s['id'], 'trainingId' => $s['trainingId'], 'date' => $s['date'], 'title' => $s['title'], 'focus' => $s['focus'], 'minutes' => $s['minutes'],
+                                           'kind' => $s['kind'], 'trainType' => $s['trainType'], 'focusKey' => $s['focusKey']], $sessions),
         'trainings' => array_map(fn($t) => ['id' => (int)$t['id'], 'date' => $t['date'], 'time' => $t['time'], 'endTime' => $t['end_time'], 'title' => $t['title'] ?: 'Training',
-                                            'session' => $byTraining[(int)$t['id']] ?? null], $st->fetchAll(PDO::FETCH_ASSOC))]);
+                                            'session' => $byTraining[(int)$t['id']] ?? null, 'state' => (int)$t['att_done'], 'present' => (int)$t['present']], $st->fetchAll(PDO::FETCH_ASSOC))]);
 }
 
 require_method('POST');
@@ -140,6 +159,20 @@ switch ($in['action'] ?? '') {
         $date = $t ? $t['date'] : (preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)($in['date'] ?? '')) ? $in['date'] : '');
         $title = clean_text($in['title'] ?? '', 80);
         if ($title === '') $fail('Bitte einen Titel eingeben, z. B. „2v1 – Koordination“.');
+        $kind = ($in['kind'] ?? 'plan') === 'pdf' ? 'pdf' : 'plan';
+        // Trainingsart und Schwerpunkt nur aus data/schwerpunkte.json
+        $ref = json_decode((string)@file_get_contents(__DIR__ . '/../data/schwerpunkte.json'), true) ?: ['types' => [], 'groups' => []];
+        $type = in_array($in['trainType'] ?? '', $ref['types'], true) ? $in['trainType'] : '';
+        $fkey = ''; $fpoints = [];
+        if (preg_match('/^([A-D][1-3])(?:\.(\d{1,2}))?$/', (string)($in['focusKey'] ?? ''), $m)) {
+            foreach ($ref['groups'] as $g) foreach ($g['phases'] as $ph) if ($ph['key'] === $m[1]) {
+                $fkey = $m[1];
+                if (isset($m[2]) && isset($ph['sub'][(int)$m[2]])) {
+                    $fkey .= '.' . (int)$m[2];
+                    $fpoints = array_values(array_intersect($ph['sub'][(int)$m[2]]['points'], is_array($in['focusPoints'] ?? null) ? $in['focusPoints'] : []));
+                }
+            }
+        }
         $valid = array_column($drills(null), 'id');
         $blocks = [];
         foreach (BLOCKS as $b) {
@@ -153,8 +186,11 @@ switch ($in['action'] ?? '') {
         }
         $vals = ['training_id' => $tid, 'date' => $date, 'title' => $title, 'focus' => clean_text($in['focus'] ?? '', 60), 'phase' => $phase($in['phase'] ?? ''),
                  'goal' => clean_text($in['goal'] ?? '', 300), 'players' => clean_text($in['players'] ?? '', 100), 'notes' => $lines($in['notes'] ?? '', 2000),
-                 'data' => json_encode(['blocks' => $blocks], JSON_UNESCAPED_UNICODE)];
-        $id = (int)($in['id'] ?? 0);
+                 'data' => json_encode(['blocks' => $kind === 'pdf' ? array_fill_keys(BLOCKS, []) : $blocks], JSON_UNESCAPED_UNICODE),
+                 'kind' => $kind, 'train_type' => $type, 'focus_key' => $fkey, 'focus_points' => json_encode($fpoints, JSON_UNESCAPED_UNICODE)];
+        $old = null;
+        if ($id = (int)($in['id'] ?? 0)) { $st = db()->prepare('SELECT pdf FROM sessions WHERE id = ?'); $st->execute([$id]); $old = $st->fetchColumn(); if ($old === false) $fail('Diese Einheit gibt es nicht.', 404); }
+        if ($kind === 'pdf' && empty($in['pdf']) && !$old) $fail('Bitte ein PDF auswählen.');
         if ($tid) {   // ein Plan pro Termin
             $st = db()->prepare('SELECT id FROM sessions WHERE training_id = ? AND id != ?'); $st->execute([$tid, $id]);
             if ($st->fetchColumn()) $fail('Für diesen Termin gibt es schon einen Plan.', 409);
@@ -169,9 +205,21 @@ switch ($in['action'] ?? '') {
             db()->prepare("INSERT INTO sessions ($cols, created_by, updated_by, updated_at) VALUES ($ph, :by, :by, :at)")->execute($vals + ['by' => $me['id'], 'at' => $now]);
             $id = (int)db()->lastInsertId();
         }
+        // PDF speichern bzw. bei Wechsel zu „aus Übungen“ entfernen
+        if ($kind === 'pdf' && !empty($in['pdf'])) {
+            $rel = session_pdf_store((int)team_id(), $id, (string)$in['pdf']);
+            if (str_starts_with($rel, '!')) $fail(substr($rel, 1) . ($old ? '' : ' Die Einheit ist ohne PDF gespeichert.'));
+            db()->prepare('UPDATE sessions SET pdf = ?, pdf_name = ? WHERE id = ?')->execute([$rel, clean_text($in['pdfName'] ?? 'Trainingsplan.pdf', 120), $id]);
+            if ($old) session_pdf_delete((string)$old);
+        } elseif ($kind === 'plan' && $old) {
+            db()->prepare("UPDATE sessions SET pdf = '', pdf_name = '' WHERE id = ?")->execute([$id]);
+            session_pdf_delete((string)$old);
+        }
         json_out(['ok' => true, 'id' => $id]);
 
     case 'session_delete':
+        $st = db()->prepare('SELECT pdf FROM sessions WHERE id = ?'); $st->execute([(int)($in['id'] ?? 0)]);
+        if ($old = $st->fetchColumn()) session_pdf_delete((string)$old);
         db()->prepare('DELETE FROM sessions WHERE id = ?')->execute([(int)($in['id'] ?? 0)]);
         json_out(['ok' => true]);
 }
