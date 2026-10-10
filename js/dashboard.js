@@ -8,10 +8,8 @@
   const LZ = window.LZ, esc = LZ.esc;
   const D = { data: null, at: 0, sort: "nr", busy: false, err: "" };
 
-  /* ---------- Reiter für Trainer ---------- */
-  const TABS = [["home", "Übersicht"], ["training", "Training"], ["wissen", "Wissen"], ["lernzone", "Lernzone"], ["taktik", "Taktik"], ["spielzeiten", "Spielzeiten"]];
-  LZ.coachNav = active => `<nav class="seg coachnav" aria-label="Trainer-Bereich">${TABS.concat(LZ.isAdmin() ? [["verwaltung", "Verwaltung"]] : []).map(([k, l]) =>
-    `<button aria-pressed="${active === k}" data-act="${k === "home" ? "home" : "cnav"}" data-v="${k}">${l}</button>`).join("")}</nav>`;
+  /* ---------- Reiter für Trainer: seit 0.28.0 im Inhaltsverzeichnis links (js/app.js), hier nur noch leer ---------- */
+  LZ.coachNav = () => "";
   LZ.actions.cnav = (b, v) => LZ.go(v);
 
   async function load(force) {

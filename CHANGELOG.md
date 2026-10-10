@@ -2,6 +2,14 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.28.0 – 2026-10-10
+- **Layout links ausgerichtet und breiter:** Inhalt bis 1100 px statt 640 px mittig
+- **Inhaltsverzeichnis als linke Spalte:** schmale Leiste mit Mini-Icons, ☰ (oben links) oder » klappt sie mit Namen aus; Gruppen (Lernzone, Spielphasen, Module) auf- und zuklappbar; Einstellung wird im Browser gemerkt
+  - Trainer: Übersicht · Training · Trainer-Wissen · Kader · Lernzone (Start, Spielfeld & Zonen, Spielphasen 1–5, Module) · Taktik · Spielzeiten · Verwaltung
+  - Spieler: Start · Spielfeld & Zonen · Spielphasen · Module · Mein Bereich
+  - Handy: ☰ öffnet das Verzeichnis als Schublade, nach der Auswahl schließt sie sich; die Reiterleiste oben entfällt
+- **Spielfeld & Zonen:** Feld passt immer ganz auf den Bildschirm; am Computer Erklärung und Bedienung links, Feld rechts
+
 ## 0.27.1 – 2026-10-10
 - **Ort bei Terminen antippen → Google Maps:** in „Nächste Termine“ (Trainer-Übersicht), beim Termin selbst, in „Meine Trainings“ und beim Befinden der Spieler; öffnet die Adresse in einem neuen Fenster (📍)
 

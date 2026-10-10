@@ -9,11 +9,18 @@
 </head>
 <body>
 <header class="top"><div class="top-in">
+  <button class="menu-btn" id="menuBtn" data-act="sideToggle" aria-label="Inhaltsverzeichnis" aria-controls="side" aria-expanded="false" hidden><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   <button class="brand" data-act="home" aria-label="Zur Startseite"><span>SV Heimstetten · U14</span><b>Lernzone</b></button>
   <button class="shirt-btn" data-act="me" id="shirtBtn" aria-label="Mein Bereich"></button>
 </div></header>
+<div class="shell">
+<nav id="side" class="side" aria-label="Inhaltsverzeichnis"></nav>
+<button class="side-shade" data-act="sideClose" aria-label="Inhaltsverzeichnis schließen" tabindex="-1"></button>
+<div class="content">
 <main id="app"><p class="small">Lernzone wird geladen …</p></main>
 <footer class="legal"><button class="linkbtn" data-act="legal" data-v="impressum">Impressum</button> · <button class="linkbtn" data-act="legal" data-v="datenschutz">Datenschutz</button> · <button class="linkbtn" data-act="legal" data-v="regeln">Regeln</button></footer>
+</div>
+</div>
 
 <script src="js/config.js"></script>
 <script src="js/store.js"></script>

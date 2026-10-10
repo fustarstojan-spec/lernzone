@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.27.1";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.28.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -172,14 +172,15 @@
   }
   function zonenView() {
     const modes = [["entdecken", "Entdecken"], ["finden", "Finden"], ["benennen", "Benennen"]];
-    let area = "";
+    let info = "", pitch = "";   // links Erklärung und Bedienung, rechts das ganze Feld (ab 0.28.0)
     if (Z.mode === "entdecken") {
-      area = `<p class="zlabel">${Z.sel ? zoneName(Z.sel[0], Z.sel[1]) : "Tippe auf eine Zone"}</p>
-    ${field({ tap: true, hl: Z.sel ? [{ l: Z.sel[0], t: Z.sel[1] }] : [], label: "Spielfeld mit 15 Zonen" })}`;
+      info = `<p class="zlabel">${Z.sel ? zoneName(Z.sel[0], Z.sel[1]) : "Tippe auf eine Zone"}</p>`;
+      pitch = field({ tap: true, hl: Z.sel ? [{ l: Z.sel[0], t: Z.sel[1] }] : [], label: "Spielfeld mit 15 Zonen" });
     } else if (Z.done) {
-      area = `<div class="card stack" style="text-align:center"><p class="eyebrow">Ergebnis</p><p class="score">${Z.score}/${ZROUNDS}</p>
+      info = `<div class="card stack" style="text-align:center"><p class="eyebrow">Ergebnis</p><p class="score">${Z.score}/${ZROUNDS}</p>
     <p>${Z.score === ZROUNDS ? "Du kennst das Feld perfekt." : Z.score >= 7 ? "Sehr gut – fast alles sitzt." : "Üb im Modus „Entdecken“ und versuch es nochmal."}</p>
     <button class="btn wide" data-act="zmode" data-v="${Z.mode}">Nochmal</button></div>`;
+      pitch = field({ label: "Spielfeld mit 15 Zonen" });
     } else {
       const [tl, tt] = Z.target, done = Z.picked !== null;
       const head = `<div class="qcount"><span>Runde ${Z.i + 1} von ${ZROUNDS}</span><span>${Z.score} richtig</span></div>`;
@@ -187,19 +188,22 @@
       if (Z.mode === "finden") {
         const ok = done && Z.picked[0] === tl && Z.picked[1] === tt;
         const hl = done ? [{ l: tl, t: tt, c: "ok" }].concat(ok ? [] : [{ l: Z.picked[0], t: Z.picked[1], c: "bad" }]) : [];
-        area = `${head}<p class="prompt">Tippe: ${zoneName(tl, tt)}</p>${field({ tap: !done, hl, label: "Spielfeld: Zone finden" })}
+        info = `${head}<p class="prompt">Tippe: ${zoneName(tl, tt)}</p>
       ${done ? `<div class="fb ${ok ? "ok" : "bad"}"><b>${ok ? "Richtig!" : "Nicht ganz."}</b>${ok ? "" : `Du hast die ${zoneName(Z.picked[0], Z.picked[1]).replace(/^./, c => c.toLowerCase())} getippt. Grün ist richtig.`}</div>${next}` : ""}`;
+        pitch = field({ tap: !done, hl, label: "Spielfeld: Zone finden" });
       } else {
-        area = `${head}<p class="prompt">Wie heißt die gelbe Zone?</p>${field({ hl: [{ l: tl, t: tt, c: "tgt" }], label: "Spielfeld mit markierter Zone" })}
+        info = `${head}<p class="prompt">Wie heißt die gelbe Zone?</p>
       <div class="opts2">${Z.opts.map((o, i) => { const right = o[0] === tl && o[1] === tt; return `<button class="opt ${done && right ? "ok" : ""} ${done && i === Z.picked && !right ? "bad" : ""}" data-act="zpick" data-i="${i}" ${done ? "disabled" : ""}>${zoneName(o[0], o[1])}</button>`; }).join("")}</div>
       ${done ? next : ""}`;
+        pitch = field({ hl: [{ l: tl, t: tt, c: "tgt" }], label: "Spielfeld mit markierter Zone" });
       }
     }
-    return `<button class="back" data-act="home">‹ Übersicht</button>
+    return `<div class="zlayout"><div class="stack zinfo" style="gap:18px"><button class="back" data-act="home">‹ Übersicht</button>
   <section><p class="eyebrow">Modul 0 · Basis</p><h1>Spielfeld &amp; Zonen</h1>
   <p class="lede">Wir teilen das Feld in <b>5 Spuren</b> (Außenspur, Halbspur, Zentrum, Halbspur, Außenspur) und <b>3 Drittel</b> (hinten, Mitte, vorne). Wir spielen immer nach oben: Links und rechts gelten aus unserer Blickrichtung.</p></section>
   <div class="seg">${modes.map(([k, l]) => `<button aria-pressed="${Z.mode === k}" data-act="zmode" data-v="${k}">${l}</button>`).join("")}</div>
-  <div class="stack">${area}</div>`;
+  <div class="stack">${info}</div></div>
+  <div class="zpitch">${pitch}</div></div>`;
   }
 
   /* ---------- Anmeldung Weg A (nur ohne Server: Trikot + PIN); Weg B siehe js/auth.js ---------- */
@@ -239,6 +243,7 @@
     document.getElementById("shirtBtn").innerHTML = gate ? "" : shirt(S.user ? S.user.nr : Store.coach.active ? "T" : LZ.adminOnly() ? "A" : "?");
     document.getElementById("shirtBtn").hidden = !!gate;
     const brand = document.querySelector(".brand span"); if (brand) brand.textContent = teamLabel();
+    renderSide(gate);
     if (gate && LZ.views[gate] && !(LZ.legalPages || []).includes(S.view)) { app.innerHTML = LZ.views[gate](); return; }   // Impressum & Co. auch ohne Anmeldung
     // Trainer ohne Spieler-Anmeldung: eigene Startseite (js/dashboard.js), Lerninhalte unter „Lernzone“
     const coachHome = S.view === "home" && LZ.coachMode() && LZ.views.coachHome;
@@ -281,8 +286,17 @@
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-act]"); if (!b || !C) return;
     const a = b.dataset.act, v = b.dataset.v;
+    if (SIDE.mob && b.closest("#side") && a !== "sideGrp" && a !== "sideToggle") SIDE.mob = false;   // Schublade nach Auswahl schließen
     if (a === "home") go(LZ.coachMode() && ["phase", "zonen", "modul"].includes(S.view) ? "lernzone" : "home");   // Trainer: zurück in die Lernzone
     else if (a === "lernzone") go("lernzone");
+    else if (a === "side") { SIDE.mob = false; go(v, b.dataset.a); }
+    else if (a === "sideGrp") {
+      if (!SIDE.open && !SIDE.mob) { SIDE.open = true; SIDE.grp[v] = true; }
+      else SIDE.grp[v] = !(b.getAttribute("aria-expanded") === "true");
+      saveSide(); render();
+    }
+    else if (a === "sideToggle") { if (mobile() && SIDE.mob) SIDE.mob = false; else if (mobile()) SIDE.mob = true; else { SIDE.open = !SIDE.open; saveSide(); } render(); }
+    else if (a === "sideClose") { SIDE.mob = false; render(); }
     else if (a === "me") {
       if (Store.mode === "api" && !S.user && Store.coach.active && LZ.actions.kaderStart) LZ.actions.kaderStart();
       else go("me");
@@ -322,6 +336,83 @@
     const p = prog(), wk = weekKey(); p.tasks[wk] = p.tasks[wk] || {};
     p.tasks[wk][e.target.dataset.i] = e.target.checked; Store.saveProgress(p); render();
   });
+
+
+  /* ---------- Inhaltsverzeichnis links (ab 0.28.0): Leiste mit Mini-Icons, ☰ klappt aus; auf dem Handy als Schublade ---------- */
+  const IC = {
+    home: '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+    training: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M8.5 10h7M8.5 14h7M8.5 18h4"/>',
+    wissen: '<path d="M4 5.5C6.5 4 9.5 4 12 6c2.5-2 5.5-2 8-.5V19c-2.5-1.5-5.5-1.5-8 .5-2.5-2-5.5-2-8-.5z"/><path d="M12 6v13.5"/>',
+    lernzone: '<circle cx="12" cy="12" r="8.5"/><path d="m12 7.5 3.5 2.5-1.3 4h-4.4l-1.3-4z"/><path d="M12 3.5v4M15.5 10l4.3-1.4M14.2 14l2.6 3.6M9.8 14l-2.6 3.6M8.5 10 4.2 8.6"/>',
+    zonen: '<rect x="5" y="2.5" width="14" height="19" rx="1.5"/><path d="M5 9h14M5 15h14M9.7 2.5v19M14.3 2.5v19"/>',
+    phasen: '<path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4.5h-4.5"/>',
+    modul: '<circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="2.5"/><circle cx="12" cy="6.5" r="2.5"/><path d="m8.5 15 6-7"/>',
+    taktik: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l2 2m0-2-2 2"/><circle cx="16" cy="15" r="1.8"/><path d="M9 13.5c2 2 4 2.5 5.3 1.8" stroke-dasharray="2 1.6"/>',
+    spielzeiten: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 2"/><path d="M10 3h4M12 3v3"/>',
+    kader: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2c3 .2 5 2.4 5 5.8"/>',
+    me: '<path d="M8 3 4 6l2 4 2-1v12h8V9l2 1 2-4-4-3c-.8 1.6-2.2 2.5-4 2.5S8.8 4.6 8 3z"/>',
+    verwaltung: '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
+    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>'
+  };
+  const icon = k => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[k] || ""}</svg>`;
+  const SIDE = { open: false, mob: false, grp: { lernzone: false, phasen: true, module: true } };
+  try { const o = JSON.parse(localStorage.getItem("lz-side") || "{}"); if (typeof o.open === "boolean") SIDE.open = o.open; Object.assign(SIDE.grp, o.grp || {}); } catch (e) { }
+  const saveSide = () => { try { localStorage.setItem("lz-side", JSON.stringify({ open: SIDE.open, grp: SIDE.grp })); } catch (e) { } };
+  const mobile = () => window.matchMedia("(max-width: 899px)").matches;
+  function activeKey() {
+    const v = S.view, coach = LZ.coachMode();
+    if (["training", "einheit", "einheitEdit", "uebung", "uebungEdit"].includes(v)) return "training";
+    if (v.startsWith("wissen")) return "wissen";
+    if (v === "taktik" || (coach && v === "tafel")) return "taktik";
+    if (v === "phase" || v === "modul") return v + ":" + S.arg;
+    if (v === "coach" || (coach && v === "me")) return "kader";
+    if (["profile", "pwchange"].includes(v)) return "me";
+    if (v === "termine") return "home";
+    if (v === "lernzone") return coach ? "lernzone" : "home";
+    return v;
+  }
+  function sideItems() {
+    const phases = C.phases.map(ph => ({ k: "phase:" + ph.id, label: ph.title, nr: ph.nr, act: "side", v: "phase", a: ph.id }));
+    const mods = (C.modules || []).map(m => ({ k: "modul:" + m.id, label: m.title, sub: m.label, act: "side", v: "modul", a: m.id }));
+    const learn = [{ k: "zonen", label: "Spielfeld & Zonen", icon: "zonen", act: "side", v: "zonen" },
+      { k: "phasen", label: "Spielphasen", icon: "phasen", group: phases }].concat(mods.length ? [{ k: "module", label: "Module", icon: "modul", group: mods }] : []);
+    if (LZ.adminOnly()) return [{ k: "verwaltung", label: "Verwaltung", icon: "verwaltung", act: "side", v: "verwaltung" }];
+    if (LZ.coachMode()) return [
+      { k: "home", label: "Übersicht", icon: "home", act: "side", v: "home" },
+      { k: "training", label: "Training", icon: "training", act: "side", v: "training" },
+      { k: "wissen", label: "Trainer-Wissen", icon: "wissen", act: "side", v: "wissen" },
+      { k: "kader", label: "Kader", icon: "kader", act: "me" },
+      { k: "lernzone", label: "Lernzone", icon: "lernzone", group: [{ k: "lernzone", label: "Start der Lernzone", act: "side", v: "lernzone" }].concat(learn.map(x => x.group ? x : Object.assign({}, x))) },
+      { k: "taktik", label: "Taktik", icon: "taktik", act: "side", v: "taktik" },
+      { k: "spielzeiten", label: "Spielzeiten", icon: "spielzeiten", act: "side", v: "spielzeiten" }
+    ].concat(LZ.isAdmin() ? [{ k: "verwaltung", label: "Verwaltung", icon: "verwaltung", act: "side", v: "verwaltung" }] : []);
+    return [{ k: "home", label: "Start", icon: "home", act: "side", v: "home" }].concat(learn, [{ k: "me", label: "Mein Bereich", icon: "me", act: "me" }]);
+  }
+  function sideHtml() {
+    const act = activeKey(), wide = SIDE.open || SIDE.mob;
+    const has = it => it.k === act || (it.group || []).some(has);
+    const row = (it, depth) => {
+      const on = has(it), lab = `<span class="sl">${esc(it.label)}</span>`;
+      const ico = it.icon ? icon(it.icon) : it.nr ? `<b class="snr">${it.nr}</b>` : `<i class="sdot"></i>`;
+      if (it.group) {
+        const open = wide && (SIDE.grp[it.k] || on);
+        return `<li><button class="sitem sgrp${on ? " on" : ""}" data-act="sideGrp" data-v="${it.k}" aria-expanded="${!!open}" title="${esc(it.label)}">${ico}${lab}<span class="schev" aria-hidden="true">›</span></button>
+          ${open ? `<ul class="ssub">${it.group.map(x => row(x, depth + 1)).join("")}</ul>` : ""}</li>`;
+      }
+      return `<li><button class="sitem${it.k === act ? " on" : ""}" data-act="${it.act}" data-v="${it.v || ""}" ${it.a ? `data-a="${esc(it.a)}"` : ""} title="${esc(it.label)}" ${it.k === act ? 'aria-current="page"' : ""}>${ico}${lab}</button></li>`;
+    };
+    return `<ul class="slist">${sideItems().map(x => row(x, 0)).join("")}</ul>
+      <button class="sitem stoggle" data-act="sideToggle" title="${wide ? "Einklappen" : "Ausklappen"}" aria-label="${wide ? "Inhaltsverzeichnis einklappen" : "Inhaltsverzeichnis ausklappen"}"><span class="schev2" aria-hidden="true">${wide ? "«" : "»"}</span><span class="sl">Einklappen</span></button>`;
+  }
+  function renderSide(gate) {
+    const nav = document.getElementById("side"), btn = document.getElementById("menuBtn"); if (!nav) return;
+    const off = !!gate || !C;
+    document.body.classList.toggle("noside", off);
+    document.body.classList.toggle("side-open", !off && SIDE.open);
+    document.body.classList.toggle("side-mob", !off && SIDE.mob);
+    if (btn) { btn.hidden = off; btn.setAttribute("aria-expanded", String(SIDE.mob || SIDE.open)); }
+    nav.innerHTML = off ? "" : sideHtml();
+  }
 
   /* ---------- Schnittstelle für Erweiterungen ---------- */
   const LZ = window.LZ = {

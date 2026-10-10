@@ -34,14 +34,15 @@ p{margin:0}
 .eyebrow{font-size:.75rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
 
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--rule)}
-.top-in{max-width:640px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.top-in{padding:8px 16px;display:flex;align-items:center;gap:12px}
+.top-in .shirt-btn{margin-left:auto}
 .brand{background:none;border:0;padding:0;text-align:left;display:grid}
 .brand b{font-family:var(--display);font-size:1.5rem;text-transform:uppercase;color:var(--accent);line-height:1}
 .brand span{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .shirt-btn{background:none;border:0;padding:0;width:52px;height:50px;display:grid;place-items:center}
 .shirt-btn svg{width:52px;height:50px}
 
-main{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:18px 56px;display:grid;gap:18px}
+main{max-width:1100px;margin:0;padding-inline:16px;padding-block:18px 56px;display:grid;gap:18px;min-width:0}
 .back{justify-self:start;background:none;border:0;padding:4px 0;color:var(--muted);font-weight:600}
 .card{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:16px}
 .lede{color:var(--muted);max-width:60ch;margin-top:6px}
@@ -428,7 +429,7 @@ code{font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:
 .subform{border-left:3px solid var(--accent);padding-left:.7rem}
 .rowspread>span{min-width:0;overflow-wrap:anywhere}
 /* 0.23.0 Rechtliches */
-footer.legal{max-width:var(--maxw,720px);margin:2rem auto 1.5rem;padding:0 16px;text-align:center;font-size:.85rem;color:var(--muted)}
+footer.legal{max-width:1100px;margin:2rem 0 1.5rem;padding:0 16px;text-align:left;font-size:.85rem;color:var(--muted)}
 footer.legal .linkbtn{font-size:.85rem;color:var(--muted)}
 .legal h2{font-size:1.15rem;margin-top:.6rem}
 .legal h3{font-size:1rem;margin-top:.3rem}
@@ -444,7 +445,8 @@ footer.legal .linkbtn{font-size:.85rem;color:var(--muted)}
 .printable .check{display:flex;gap:.5rem;align-items:flex-start}
 .printable .box{font-size:1.2rem;line-height:1}
 @media print{
-  .top,footer.legal,.noprint,.coachnav{display:none!important}
+  .top,footer.legal,.noprint,.coachnav,.side,.side-shade{display:none!important}
+  .shell{display:block}
   body{background:#fff;color:#000;font-size:11pt}
   .card{border:0;box-shadow:none;padding:0}
   .legal-missing{color:#000}
@@ -509,3 +511,51 @@ footer.legal .linkbtn{font-size:.85rem;color:var(--muted)}
 .wsec h2{margin-top:0}
 .wsec ul{margin:0;padding-left:1.2rem;display:grid;gap:4px}
 .wpage .badge{justify-self:start}
+
+/* 0.28.0 Layout links ausgerichtet, Inhaltsverzeichnis als linke Spalte */
+:root{--toph:67px;--rail:64px;--sidew:272px}
+.shell{display:flex;align-items:flex-start;min-height:calc(100dvh - var(--toph))}
+.content{flex:1;min-width:0}
+@media (min-width:900px){main,footer.legal{padding-inline:28px}}
+.menu-btn{background:none;border:0;padding:6px;margin-left:-6px;width:40px;height:40px;border-radius:10px;color:var(--fg);display:grid;place-items:center}
+.menu-btn[hidden]{display:none}
+.menu-btn svg{width:24px;height:24px}
+.menu-btn:hover{background:var(--accent-soft)}
+.side{position:sticky;top:var(--toph);flex:none;width:var(--rail);height:calc(100dvh - var(--toph));overflow-y:auto;overflow-x:hidden;background:var(--surface);border-right:1px solid var(--rule);
+  display:flex;flex-direction:column;justify-content:space-between;padding:10px 8px;box-sizing:border-box;transition:width .18s ease;scrollbar-width:thin}
+body.side-open .side{width:var(--sidew)}
+body.noside .side,body.noside .side-shade{display:none}
+.slist,.ssub{list-style:none;margin:0;padding:0;display:grid;gap:2px;grid-template-columns:minmax(0,1fr)}
+.slist li{min-width:0}
+.ssub{margin:2px 0 6px 18px;padding-left:8px;border-left:1px solid var(--rule)}
+.sitem{display:flex;align-items:center;gap:12px;width:100%;min-height:42px;padding:8px 12px;border:0;border-radius:10px;background:none;color:var(--muted);font-weight:600;text-align:left;white-space:nowrap;box-sizing:border-box}
+.sitem svg{width:22px;height:22px;flex:none}
+.sitem:hover{background:var(--accent-soft);color:var(--fg)}
+.sitem.on{color:var(--accent)}
+.sitem[aria-current="page"]{background:var(--shirt);color:#fff}
+.ssub .sitem{min-height:36px;padding:6px 10px;font-size:.93rem;gap:10px}
+.sl{overflow:hidden;text-overflow:ellipsis;flex:1}
+.snr{width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:.75rem;border:1.5px solid currentColor}
+.sdot{width:6px;height:6px;margin:0 8px;border-radius:50%;background:currentColor;flex:none}
+.schev{transition:transform .15s;font-size:1.1rem}
+.sgrp[aria-expanded="true"] .schev{transform:rotate(90deg)}
+.stoggle{margin-top:8px;border-top:1px solid var(--rule);border-radius:0 0 10px 10px}
+.schev2{width:22px;text-align:center;font-size:1.15rem;flex:none}
+body:not(.side-open):not(.side-mob) .side .sl,body:not(.side-open):not(.side-mob) .side .schev{display:none}
+body:not(.side-open):not(.side-mob) .side .sitem{justify-content:center;padding-inline:0}
+.side-shade{display:none}
+@media (max-width:899px){
+  .side{position:fixed;left:0;top:var(--toph);z-index:6;width:min(84vw,300px)!important;transform:translateX(-102%);transition:transform .2s ease;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+  body.side-mob .side{transform:none}
+  body.side-mob .side-shade{display:block;position:fixed;inset:var(--toph) 0 0 0;z-index:5;border:0;background:rgba(0,0,0,.35)}
+  .stoggle{display:none}
+}
+@media (prefers-reduced-motion:reduce){.side,.schev{transition:none}}
+/* Spielfeld & Zonen: Feld immer ganz sichtbar */
+.zlayout{display:grid;gap:18px}
+.zpitch .pitch{width:calc((100dvh - var(--toph) - 36px) * 74 / 115);max-width:100%}
+@media (min-width:900px){
+  .zlayout{grid-template-columns:minmax(280px,1fr) minmax(0,auto);align-items:start}
+  .zpitch{position:sticky;top:calc(var(--toph) + 18px)}
+  .zpitch .pitch{margin:0}
+}
