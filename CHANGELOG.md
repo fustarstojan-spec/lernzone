@@ -2,6 +2,9 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.27.1 – 2026-10-10
+- **Ort bei Terminen antippen → Google Maps:** in „Nächste Termine“ (Trainer-Übersicht), beim Termin selbst, in „Meine Trainings“ und beim Befinden der Spieler; öffnet die Adresse in einem neuen Fenster (📍)
+
 ## 0.27.0 – 2026-10-10
 - **Trainer-Wissen** (neuer Reiter „Wissen“, gilt für den ganzen Verein): Altersstufen Grundlagen U8–U11 · Aufbau U12–U16 · Leistung U17+ · Alle
   - **Seiten** je Stufe mit den Abschnitten Entwicklung · Technik · Taktik · Athletik · Belastung · Methodik · Ernährung und Erholung · Material; eigene Zusammenfassungen, bearbeitbar, druckbar, Kennzeichen „Entwurf“

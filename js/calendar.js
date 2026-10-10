@@ -23,7 +23,7 @@
     if (h >= 1) return `in ${h} Std.${h < 10 && min % 60 ? " " + (min % 60) + " Min." : ""}`;
     return `in ${min} Min.`;
   }
-  const mapLink = loc => loc ? `<a class="maplink" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc)}" target="_blank" rel="noopener">${esc(loc)}</a>` : "";
+  const mapLink = loc => loc ? `<a class="maplink" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc)}" target="_blank" rel="noopener noreferrer" title="In Google Maps öffnen">📍 ${esc(loc)}</a>` : "";
 
   async function load(force) {
     const St = LZ.Store;
@@ -108,5 +108,6 @@
             <span class="small">${esc(timeText(e))}${e.location ? " · " : ""}${mapLink(e.location)}</span></div></div>`).join("")}</section>`).join("")}`;
   };
 
+  LZ.mapLink = mapLink;   // Ort → Google Maps (neues Fenster)
   LZ.calendar = { chip, kindLabel, dayName, timeText, reload: () => load(true) };
 })();

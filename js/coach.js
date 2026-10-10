@@ -170,7 +170,7 @@
       const sorted = d.moods.slice().sort((a, b) => (alert(b) ? 1 : 0) - (alert(a) ? 1 : 0));
       return `<button class="back" data-act="ctab" data-v="trainings">‹ Trainings</button>${tabs()}
       <section><p class="eyebrow">${LZ.calendar ? esc(LZ.calendar.kindLabel(t.kind)) : "Training"}${t.fromCalendar ? " · aus dem Kalender" : ""}</p><h1>${esc(t.title)}</h1>
-        <p class="lede">${esc(fmtDate(t.date))}${t.time ? " · " + esc(t.time) + (t.endTime ? "–" + esc(t.endTime) : "") : ""}${t.location ? " · " + esc(t.location) : ""}${t.note ? " · " + esc(t.note) : ""}</p></section>
+        <p class="lede">${esc(fmtDate(t.date))}${t.time ? " · " + esc(t.time) + (t.endTime ? "–" + esc(t.endTime) : "") : ""}${t.location ? " · " + (LZ.mapLink ? LZ.mapLink(t.location) : esc(t.location)) : ""}${t.note ? " · " + esc(t.note) : ""}</p></section>
       ${(d.coachesOut || []).length ? `<p class="alert">Trainer nicht dabei: ${d.coachesOut.map(esc).join(", ")}</p>` : ""}
       ${t.kind !== "training" ? "" : t.state === 2 ? `<section class="card stack"><div class="rowspread"><h2>Fällt aus</h2></div>
         <p class="small">Dieses Training zählt nicht für die Trainingsbeteiligung. Die Spieler sehen „fällt aus“.</p>

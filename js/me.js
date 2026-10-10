@@ -80,7 +80,7 @@
           <button class="linkbtn" data-act="absCancel">Abbrechen</button></div>`;
       else if (t.absent) right = `<span class="abschip">Abgesagt · ${esc(R[t.absent] || t.absent)}</span>${t.canChange ? `<button class="linkbtn" data-act="absBack" data-t="${t.id}">Ich bin doch dabei</button>` : ""}`;
       else right = t.canChange ? `<button class="btn ghost small-btn" data-act="absOpen" data-t="${t.id}">Absagen</button>` : `<span class="small">Absagen nur noch beim Trainer</span>`;
-      return `<li class="trrow${t.absent ? " off" : ""}"><div><b>${when}</b><span class="small">${esc(t.title)}${t.location ? " · " + esc(t.location) : ""}</span>
+      return `<li class="trrow${t.absent ? " off" : ""}"><div><b>${when}</b><span class="small">${esc(t.title)}${t.location ? " · " + (LZ.mapLink ? LZ.mapLink(t.location) : esc(t.location)) : ""}</span>
         ${!t.absent && !t.cancelled && t.canChange && K.abs !== t.id ? `<span class="small">absagen bis ${esc(dl)} Uhr</span>` : ""}</div><div class="trright">${right}</div></li>`;
     };
     return `<section class="card stack"><h2>Meine Trainings</h2>
@@ -142,7 +142,7 @@
     if (!d.consent) return `<section class="card stack"><h2>Wie geht's dir?</h2><p class="small">Das Befindens-Barometer schaltet dein Trainer frei, sobald die Einwilligung deiner Eltern da ist.</p></section>`;
     if (!d.today.length) return `<section class="card stack"><h2>Wie geht's dir?</h2><p class="small">Heute ist kein Training eingetragen. Vor und nach jedem Training kannst du hier deinem Trainer sagen, wie es dir geht.</p></section>`;
     return d.today.map(t => `<section class="card stack"><div class="rowspread"><h2>Wie geht's dir?</h2><span class="small">${isToday(t.date) ? "heute" : "gestern"}${t.time ? " · " + esc(t.time) : ""}</span></div>
-      <p class="small"><b>${esc(t.title || "Training")}</b>${t.location ? " · " + esc(t.location) : ""}${t.note ? " · " + esc(t.note) : ""}</p>
+      <p class="small"><b>${esc(t.title || "Training")}</b>${t.location ? " · " + (LZ.mapLink ? LZ.mapLink(t.location) : esc(t.location)) : ""}${t.note ? " · " + esc(t.note) : ""}</p>
       ${isToday(t.date) ? moodBlock(t, "vor") : ""}${moodBlock(t, "nach")}
       <p class="small">Wenn dich etwas belastet, sprich mit deinem Trainer oder deinen Eltern.</p></section>`).join("");
   }

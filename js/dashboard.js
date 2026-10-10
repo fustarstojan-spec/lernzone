@@ -35,7 +35,8 @@
         : `<span class="pcount"><b>${e.players.coming}</b>/${e.players.total} ${e.players.recorded ? "da" : "Spieler"}${e.players.absent ? ` · ${e.players.absent} abgesagt` : ""}</span>`) : "";
       return `<li class="evcard">
         <div class="rowspread"><span><b>${esc(cal().dayName(e.date))}</b> · ${esc(cal().timeText(e))}</span>${cal().chip(e.kind)}</div>
-        <button class="evtitle-btn" data-act="tOpen" data-v="${e.id}">${esc(e.title)}${e.location ? ` <span class="small">· ${esc(e.location)}</span>` : ""}</button>
+        <button class="evtitle-btn" data-act="tOpen" data-v="${e.id}">${esc(e.title)}</button>
+        ${e.location ? `<span class="small">${LZ.mapLink ? LZ.mapLink(e.location) : esc(e.location)}</span>` : ""}
         ${pl}
         ${e.kind === "training" ? `<button class="linkbtn planlink" data-act="trOpenTraining" data-v="${e.id}">${e.plan ? "📋 Plan: " + esc(e.plan.title) : "+ Trainingsplan anlegen"}</button>` : ""}
         <div class="cchips">${coaches}</div>

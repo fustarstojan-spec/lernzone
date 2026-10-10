@@ -51,7 +51,7 @@ Sprache: Deutsch. Antworten kurz und direkt.
 
 ## Stand und nächste Schritte
 
-- Aktuell: Version 0.27.0 (siehe `CHANGELOG.md`). 0.25.0–0.27.0 liegen lokal, noch nicht auf GitHub.
+- Aktuell: Version 0.27.1 (siehe `CHANGELOG.md`). 0.25.0–0.27.1 liegen lokal, noch nicht auf GitHub.
 - Trainer-Wissen (ab 0.27.0): `js/wissen.js` + `api/wissen.php`, Plattform-Tabelle `knowledge` (club_id, kind page|link, stage grundlagen|aufbau|leistung|alle, category, phase A1–D2, body mit „## “/„- “, url nur https). Material (CV Academy usw.) bleibt im Google Drive des Trainers, nur Links + eigene Zusammenfassungen – nichts kopieren. Import `tools/import_wissen.php storage/wissen-import.json`.
 - Einheiten (ab 0.26.0): `sessions.kind` plan|pdf (PDF in `storage/sessions/<Mannschaft>/`, `api/lib/session_pdf.php`, Ausgabe `api/session_pdf.php`), `train_type` (Liste `types` in `data/schwerpunkte.json`), `focus_key` („A1“ oder „A1.2“ = Unterphase) + `focus_points` (JSON). `data/schwerpunkte.json` = Spielphasen-Referenz des Trainers (DFB-Rahmentrainingskonzeption U13–U15: A Mit dem Ball, B Gegen den Ball, C Umschalten, D Standards). Teilnehmer kommen aus `attendance`/`absences` (`$participants` in `api/training.php`).
 - Sicherheit (ab 0.25.0): `api/lib/security.php` – `ip_blocked()/ip_fail()` (Tabelle `ip_guard`, 20 Fehlversuche/15 Min. → 15 Min. Sperre, IP nur als HMAC `ip_key()`), `sec_log(event, level, account, username, detail)` → Tabelle `security_log` (90 Tage). Neue sicherheitsrelevante Aktionen immer mit `sec_log` protokollieren. Ansicht: `api/security.php` + Karte in `js/admin.js`. Beim Hosting prüfen: kommt `REMOTE_ADDR` vom Besucher oder von einem Proxy (sonst sperrt die Bremse alle).
