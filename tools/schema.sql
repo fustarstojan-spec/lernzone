@@ -125,10 +125,19 @@ CREATE TABLE IF NOT EXISTS grades (
   training_id  INTEGER NOT NULL,
   nr           INTEGER NOT NULL,
   coach_id     INTEGER NOT NULL,
-  area         TEXT    NOT NULL,                     -- verhalten | umsetzung | einstellung | soziales
+  area         TEXT    NOT NULL,                     -- verhalten | umsetzung | soziales (einstellung bis 0.28: nur Altbestand)
   value        INTEGER NOT NULL,                     -- 1 = sehr gut … 6 = ungenügend
   created_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (training_id, nr, coach_id, area)
+);
+-- Trainer-Notizen zum Spieler nach dem Training (ab 0.29.0, ersetzt den Bereich „Einstellung“): jeder Trainer einzeln, nur für Trainer
+CREATE TABLE IF NOT EXISTS grade_notes (
+  training_id  INTEGER NOT NULL,
+  nr           INTEGER NOT NULL,
+  coach_id     INTEGER NOT NULL,
+  note         TEXT    NOT NULL,
+  updated_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (training_id, nr, coach_id)
 );
 -- Selbsteinschätzung nach Spielen: 1–5 pro Zielbereich
 CREATE TABLE IF NOT EXISTS iep_ratings (

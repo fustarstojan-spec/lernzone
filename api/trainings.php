@@ -92,7 +92,7 @@ $st->execute([$id]);
 if ((int)$st->fetchColumn() === 0) json_out(['ok' => false, 'error' => 'Dieses Training gibt es nicht.'], 404);
 
 if ($action === 'delete') {
-    foreach (['attendance', 'moods', 'absences', 'coach_absences', 'grades'] as $t) db()->prepare("DELETE FROM $t WHERE training_id = ?")->execute([$id]);
+    foreach (['attendance', 'moods', 'absences', 'coach_absences', 'grades', 'grade_notes'] as $t) db()->prepare("DELETE FROM $t WHERE training_id = ?")->execute([$id]);
     db()->prepare('DELETE FROM trainings WHERE id = ?')->execute([$id]);
     json_out(['ok' => true]);
 }

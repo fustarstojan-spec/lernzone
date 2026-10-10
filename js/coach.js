@@ -248,7 +248,9 @@
       ${g.list.length ? `<table class="ieptable gradetable"><tr><th></th>${GRADE_AREAS.map(([, l]) => `<th>${l}</th>`).join("")}</tr>
         <tr><td>Ø 4 Wochen</td>${GRADE_AREAS.map(([k]) => `<td class="${gradeTone(g.avg4[k])}">${f(g.avg4[k])}</td>`).join("")}</tr>
         <tr><td>Ø Saison</td>${GRADE_AREAS.map(([k]) => `<td class="${gradeTone(g.season[k])}">${f(g.season[k])}</td>`).join("")}</tr>
-        ${g.list.slice(0, 6).map(r => `<tr><td>${esc(fmtDate(r.date))}</td>${GRADE_AREAS.map(([k]) => `<td>${f(r.values[k])}</td>`).join("")}</tr>`).join("")}</table>`
+        ${g.list.slice(0, 6).map(r => `<tr><td>${esc(fmtDate(r.date))}</td>${GRADE_AREAS.map(([k]) => `<td>${f(r.values[k])}</td>`).join("")}</tr>`).join("")}</table>
+        ${g.list.some(r => (r.notes || []).length) ? `<h3>Notizen</h3><ul class="gnotes">${g.list.filter(r => (r.notes || []).length).slice(0, 10).map(r =>
+          r.notes.map(n => `<li><span class="small">${esc(fmtDate(r.date))} · ${esc(n.by)}</span> ${esc(n.text)}</li>`).join("")).join("")}</ul>` : ""}`
         : `<p class="small">Noch keine Noten. Bewerten im Training unter „Bewertung“.</p>`}</section>`;
   }
   function iepSection(d) {
@@ -365,7 +367,8 @@
     show("training", { tr: null });
     const [r, g] = await Promise.all([St().get("trainings.php?id=" + id), St().get("grades.php?training=" + id), refreshPlayers()]);
     if (!r.ok) return fail(r);
-    r.grades = g && g.ok ? g : { mine: {}, others: {}, count: {} };
+    r.grades = g && g.ok ? g : { mine: {}, others: {}, count: {}, notes: {}, otherNotes: {} };
+    r.grades.notes = r.grades.notes || {}; r.grades.otherNotes = r.grades.otherNotes || {};
     T.tr = r; LZ.render();
   }
   LZ.actions.tCreate = async () => {
@@ -377,18 +380,20 @@
   };
   LZ.actions.tOpen = (b, v) => openTraining(+v);
   /* ---------- Bewertung nach dem Training: Schulnoten 1–6, jeder Trainer einzeln, nur Trainer ---------- */
-  const GRADE_AREAS = [["verhalten", "Verhalten"], ["umsetzung", "Umsetzung"], ["einstellung", "Einstellung"], ["soziales", "Soziales"]];
+  const GRADE_AREAS = [["verhalten", "Verhalten"], ["umsetzung", "Umsetzung"], ["soziales", "Soziales"]];   // „Einstellung“ seit 0.29.0 ersetzt durch Notizen
   const gradeTone = v => v == null ? "" : v <= 2 ? "g-good" : v <= 3.5 ? "g-mid" : "g-low";
   function gradeSection(d, pres) {
     const G = d.grades, list = LZ.C.players.filter(p => pres.has(p.nr));
-    const done = list.filter(p => G.mine[p.nr] && Object.keys(G.mine[p.nr]).length === 4).length;
+    const done = list.filter(p => G.mine[p.nr] && GRADE_AREAS.every(([k]) => G.mine[p.nr][k] != null)).length;
     return `<section class="card stack"><div class="rowspread"><h2>Bewertung</h2><span class="small">${done}/${list.length} bewertet</span></div>
-      <p class="small">Nur für Trainer · Schulnoten 1 (sehr gut) bis 6 · jeder Trainer bewertet für sich. Vorgabe ist 1 – sobald du eine Note änderst, gilt für alle anderen Anwesenden die 1. In Klammern: Ø der anderen Trainer.</p>
-      ${list.length ? `<div class="gradegrid"><span></span>${GRADE_AREAS.map(([, l]) => `<b>${l}</b>`).join("")}
+      <p class="small">Nur für Trainer · Schulnoten 1 (sehr gut) bis 6 · jeder Trainer bewertet für sich. Vorgabe ist 1 – sobald du eine Note änderst, gilt für alle anderen Anwesenden die 1. In Klammern: Ø der anderen Trainer. Notizen: kurze Beobachtungen, keine Gesundheitsdaten.</p>
+      ${list.length ? `<div class="gradegrid"><span></span>${GRADE_AREAS.map(([, l]) => `<b>${l}</b>`).join("")}<b>Notizen</b>
         ${list.map(p => { const m = G.mine[p.nr] || {}, o = G.others[p.nr] || {};
           return `<span class="gnr">${LZ.shirt(p.nr)}</span>${GRADE_AREAS.map(([k, l]) => `<label class="gcell"><select id="gr-${p.nr}-${k}" class="${gradeTone(m[k] ?? 1)}" aria-label="Nr. ${p.nr} ${l}">
             ${[1, 2, 3, 4, 5, 6].map(v => `<option value="${v}" ${(m[k] ?? 1) === v ? "selected" : ""}>${v}</option>`).join("")}</select>
-            ${o[k] != null ? `<span class="small">(${String(o[k]).replace(".", ",")})</span>` : ""}</label>`).join("")}`; }).join("")}</div>`
+            ${o[k] != null ? `<span class="small">(${String(o[k]).replace(".", ",")})</span>` : ""}</label>`).join("")}
+            <div class="gnote"><textarea id="gn-${p.nr}" rows="${Math.min(4, Math.ceil(((G.notes[p.nr] || "").length + 1) / 45))}" maxlength="500" placeholder="Notiz …" aria-label="Notiz zu Nr. ${p.nr}">${esc(G.notes[p.nr] || "")}</textarea>
+              ${(G.otherNotes[p.nr] || []).map(n => `<span class="small"><b>${esc(n.by)}:</b> ${esc(n.text)}</span>`).join("")}</div>`; }).join("")}</div>`
         : `<p class="small">Niemand als „da“ eingetragen.</p>`}</section>`;
   }
   async function setGrade(nr, area, value) {
@@ -399,6 +404,11 @@
     const r = await St().send("grades.php", { action: "set", id: T.tr.training.id, nr, area, value: value || 1, fill: present });
     if (!r.ok) return fail(r);
     LZ.render();
+  }
+  async function saveNote(nr, text) {
+    const r = await St().send("grades.php", { action: "note", id: T.tr.training.id, nr, text });
+    if (!r.ok) return fail(r);
+    T.tr.grades.notes[nr] = r.text;
   }
   const trState = r => { T.tr.present = r.present; T.tr.training.state = r.state; T.tr.training.expected = false; T.confirm = null; LZ.render(); };
   LZ.actions.tAll = async (b, v) => {
@@ -535,6 +545,7 @@
     else if (id === "cal-url") T.calInput = el.value;
     else if (id === "cal-season") T.seasonInput = el.value;
     else if (id.startsWith("gr-") && e.type === "change") { const [, nr, area] = id.split("-"); setGrade(+nr, area, +el.value || null); }
+    else if (id.startsWith("gn-") && T.tr && T.tr.grades) { const nr = +id.slice(3); T.tr.grades.notes[nr] = el.value; if (e.type === "change") saveNote(nr, el.value); }
     else if (id === "t-date") T.newT.date = el.value;
     else if (id === "t-time") T.newT.time = el.value;
     else if (id === "t-note") T.newT.note = el.value;

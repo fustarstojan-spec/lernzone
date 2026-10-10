@@ -2,6 +2,13 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.29.0 – 2026-10-10
+- **Bewertung nach dem Training:** Bereich „Einstellung“ entfällt, dafür **Notizen** – jeder Trainer schreibt pro Spieler eine kurze Notiz (max. 500 Zeichen, wird beim Verlassen des Feldes gespeichert); Notizen der anderen Trainer stehen darunter
+  - Spieler-Profil (Trainer): Tabelle ohne „Einstellung“, darunter die letzten Notizen mit Datum und Trainer
+  - Alte Noten „Einstellung“ bleiben in der Datenbank, werden aber nicht mehr gezeigt
+  - Nur für Trainer, keine Gesundheitsdaten; beim Löschen eines Spielers oder Termins werden die Notizen mitgelöscht
+- Datenschutzerklärung angepasst
+
 ## 0.28.1 – 2026-10-10
 - Trainer-Startseite: Bei „Nächste Termine“ steht keine Adresse mehr; sie erscheint (mit Link zu Google Maps), wenn man den Termin öffnet
 

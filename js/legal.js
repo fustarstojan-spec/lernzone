@@ -86,7 +86,7 @@
         <li>Trainingsbeteiligung und Absagen (Grund aus einer festen Auswahl, kein Freitext)</li>
         <li>Aufstellungen, Taktiktafeln und Spielminuten</li>
         <li>Individueller Entwicklungsplan: Ziele und Zeitplan (sieht auch das Kind); Einschätzungen und Notizen der Trainer (nur Trainer)</li>
-        <li>Bewertungen nach dem Training in Verhalten, Umsetzung, Einstellung, Soziales (nur Trainer)</li></ul>
+        <li>Bewertungen nach dem Training in Verhalten, Umsetzung, Soziales und kurze Notizen der Trainer (nur Trainer)</li></ul>
       <h3>Nur mit Einwilligung der Eltern</h3>
       <ul><li>Profil: Vor- und Nachname, starker Fuß, Wunschposition, Vorbild, Saisonziel, Trikot- und Schuhgröße, Schulschluss</li>
         <li>Befindens-Barometer: Laune, Schlaf, Energie, Hinweis „nicht fit“, Belastung nach dem Training, freiwilliger Kommentar</li>
