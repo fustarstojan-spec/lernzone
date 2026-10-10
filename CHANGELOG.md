@@ -2,6 +2,9 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.28.1 – 2026-10-10
+- Trainer-Startseite: Bei „Nächste Termine“ steht keine Adresse mehr; sie erscheint (mit Link zu Google Maps), wenn man den Termin öffnet
+
 ## 0.28.0 – 2026-10-10
 - **Layout links ausgerichtet und breiter:** Inhalt bis 1100 px statt 640 px mittig
 - **Inhaltsverzeichnis als linke Spalte:** schmale Leiste mit Mini-Icons, ☰ (oben links) oder » klappt sie mit Namen aus; Gruppen (Lernzone, Spielphasen, Module) auf- und zuklappbar; Einstellung wird im Browser gemerkt
