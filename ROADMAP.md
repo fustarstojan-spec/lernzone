@@ -12,7 +12,7 @@ Pflege: neue Ideen hier eintragen, Erledigtes streichen und ins CHANGELOG übern
 - [ ] „Abschluss gegen eine Viererkette“: Nummern 3/7/9/10/11 durch Positionskürzel ersetzen?
 - [ ] Dauer bei 4 Übungen ergänzen
 - [ ] IEP: Zuordnung Nr. 18 bestätigen; Nr. 20 und Nr. 23 haben noch keinen IEP
-- [ ] Plattformname festlegen
+- [x] ~~Plattformname festlegen~~ → FU-STARS Lernzone (0.30.0)
 - [ ] Trainer-Wissen prüfen: 4 Seiten (Entwurf) durchsehen, Entwurf-Häkchen entfernen; Drive-Ordner für die anderen Trainer freigeben
 
 ## Als Nächstes (besprochen)

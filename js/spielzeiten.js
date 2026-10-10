@@ -43,7 +43,7 @@
     if (SZ.sort === "min") list.sort((a, b) => b.minutes - a.minutes || a.nr - b.nr);
     if (SZ.sort === "pct") list.sort((a, b) => (a.pct ?? 101) - (b.pct ?? 101) || a.nr - b.nr);
     const rec = (SZ.games || []).filter(g => g.recorded).length;
-    return `${LZ.coachNav("spielzeiten")}<section><p class="eyebrow">Trainer-Bereich</p><h1>Spielzeiten</h1>
+    return `${LZ.coachNav("spielzeiten")}<section>${LZ.area("Trainer-Bereich")}<h1>Spielzeiten</h1>
       <p class="lede">Wer hat wie viel gespielt? Pro Spiel Startelf, Bank und Wechsel eintragen – die Minuten rechnet die App.</p></section>
       ${SZ.err ? `<p class="err" style="text-align:left">${esc(SZ.err)}</p>` : ""}
       <section class="card stack"><h2>Spiele</h2>

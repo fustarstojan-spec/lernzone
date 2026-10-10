@@ -36,9 +36,9 @@ p{margin:0}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--rule)}
 .top-in{padding:8px 16px;display:flex;align-items:center;gap:12px}
 .top-in .shirt-btn{margin-left:auto}
-.brand{background:none;border:0;padding:0;text-align:left;display:grid}
-.brand b{font-family:var(--display);font-size:1.5rem;text-transform:uppercase;color:var(--accent);line-height:1}
-.brand span{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.brand{background:none;border:0;padding:0;text-align:left;display:flex;align-items:baseline;gap:8px}
+.brand b{font-family:var(--display);font-size:1.7rem;text-transform:uppercase;color:var(--accent);line-height:1;letter-spacing:.02em}
+.brand span{font-family:var(--display);font-size:1.15rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600;line-height:1}
 .shirt-btn{background:none;border:0;padding:0;width:52px;height:50px;display:grid;place-items:center}
 .shirt-btn svg{width:52px;height:50px}
 
@@ -568,3 +568,7 @@ body:not(.side-open):not(.side-mob) .side .sitem{justify-content:center;padding-
 .gnotes{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .gnotes li{border-bottom:1px solid var(--rule);padding-bottom:6px}
 .gnotes li .small{display:block}
+
+/* 0.30.0 FU-STARS: Verein und Mannschaft neben der Bereichs-Überschrift */
+.areahead{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.teamtag{display:inline-block;padding:2px 9px;border-radius:99px;background:var(--accent-soft);color:var(--accent);letter-spacing:.06em}

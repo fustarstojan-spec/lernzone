@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.29.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.30.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -68,7 +68,7 @@
     <span class="eyebrow">Phase ${ph.nr}</span><span class="t">${esc(ph.title)}</span>
     <span class="small">${p.quiz[ph.id] ? `Bestes Quiz: ${p.quiz[ph.id].best}/${p.quiz[ph.id].of}` : "Quiz noch offen"}</span>
     <span class="meter"><b style="width:${pc(ph.id)}%"></b></span></button>`;
-    return `${LZ.coachMode() && LZ.coachNav ? LZ.coachNav("lernzone") : ""}<section><p class="eyebrow">${S.user ? `Angemeldet als Nr. ${S.user.nr}` : "Spielphasenmodell"}</p>
+    return `${LZ.coachMode() && LZ.coachNav ? LZ.coachNav("lernzone") : ""}<section>${LZ.coachMode() ? LZ.area("Lernzone") : S.user ? LZ.area(`Angemeldet als Nr. ${S.user.nr}`) : `<p class="eyebrow">Spielphasenmodell</p>`}
     <h1>${S.user ? "Weiter geht's" : "Lernen, wie wir spielen"}</h1>
     <p class="lede">Das Spiel hat vier Phasen, die sich immer wieder abwechseln. Dazu kommen die Standards, wenn das Spiel ruht. Für jede Phase gibt es Grundlagen, Lernmaterial und ein Quiz.</p></section>
   ${(LZ.hooks.homeTop || []).map(f => f()).join("")}
@@ -242,7 +242,6 @@
     const gate = Store.gate ? Store.gate() : null;          // Weg B: erst anmelden
     document.getElementById("shirtBtn").innerHTML = gate ? "" : shirt(S.user ? S.user.nr : Store.coach.active ? "T" : LZ.adminOnly() ? "A" : "?");
     document.getElementById("shirtBtn").hidden = !!gate;
-    const brand = document.querySelector(".brand span"); if (brand) brand.textContent = teamLabel();
     renderSide(gate);
     if (gate && LZ.views[gate] && !(LZ.legalPages || []).includes(S.view)) { app.innerHTML = LZ.views[gate](); return; }   // Impressum & Co. auch ohne Anmeldung
     // Trainer ohne Spieler-Anmeldung: eigene Startseite (js/dashboard.js), Lerninhalte unter „Lernzone“
@@ -417,6 +416,8 @@
   /* ---------- Schnittstelle für Erweiterungen ---------- */
   const LZ = window.LZ = {
     S, views: {}, actions: {}, inputs: [], hooks: {}, teamLabel,
+    // Überschrift-Zeile mit Verein und Mannschaft, z. B. „Trainer-Bereich  [SV Heimstetten · U14]“ (ab 0.30.0)
+    area(label) { const t = teamLabel(); return `<p class="eyebrow areahead">${esc(label)}${t ? `<span class="teamtag">${esc(t)}</span>` : ""}</p>`; },
     get C() { return C; }, get Store() { return Store; },
     esc, rand, shirt, pad, dots, posName, posSelect, gkNrs, render, go, weekKey,
     on(name, fn) { (this.hooks[name] = this.hooks[name] || []).push(fn); },

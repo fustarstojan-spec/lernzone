@@ -2,6 +2,10 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.30.0 – 2026-10-10
+- **Name: FU-STARS Lernzone** – oben „FU-STARS“ mit „Lernzone“ daneben, Fenstertitel, Impressum, Datenschutz und Einwilligung
+- **Verein und Mannschaft** (z. B. „SV Heimstetten · U14“) stehen jetzt als Kennzeichen neben „Trainer-Bereich“ bzw. „Verwaltung“, bei Spielern neben „Angemeldet als Nr. …“ – statt klein in der Kopfzeile
+
 ## 0.29.0 – 2026-10-10
 - **Bewertung nach dem Training:** Bereich „Einstellung“ entfällt, dafür **Notizen** – jeder Trainer schreibt pro Spieler eine kurze Notiz (max. 500 Zeichen, wird beim Verlassen des Feldes gespeichert); Notizen der anderen Trainer stehen darunter
   - Spieler-Profil (Trainer): Tabelle ohne „Einstellung“, darunter die letzten Notizen mit Datum und Trainer

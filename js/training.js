@@ -83,7 +83,7 @@
         `<li class="trow2"><button class="linkbtn" data-act="trDrill" data-v="${d.id}">${esc(d.title)}</button><span class="small">${esc([d.topic, d.minutes ? d.minutes + " Min." : ""].filter(Boolean).join(" · "))}${d.draft ? ` <span class="badge muted">Entwurf</span>` : ""}</span></li>`).join("")}</ul></section>` : ""; }).join("")
       || `<p class="small">${q ? "Nichts gefunden." : "Noch keine Übungen."}</p>`}`;
   }
-  LZ.views.training = () => `${LZ.coachNav("training")}<section><p class="eyebrow">Trainer-Bereich</p><h1>Training</h1></section>
+  LZ.views.training = () => `${LZ.coachNav("training")}<section>${LZ.area("Trainer-Bereich")}<h1>Training</h1></section>
     <nav class="seg"><button aria-pressed="${P.tab === "einheiten"}" data-act="trTab" data-v="einheiten">Einheiten</button><button aria-pressed="${P.tab === "uebungen"}" data-act="trTab" data-v="uebungen">Übungen</button></nav>
     ${errBox()}${P.tab === "einheiten" ? sessionsTab() : drillsTab()}`;
   LZ.actions.trTab = (b, v) => { P.tab = v; if (v === "uebungen" && !P.drills) loadDrills(); LZ.render(); };

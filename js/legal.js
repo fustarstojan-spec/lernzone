@@ -52,7 +52,7 @@
       <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
       ${opBlock()}
       <h2>Inhalte der Vereine</h2>
-      <p>Die Lernzone ist eine Plattform für Fußballvereine. Für die Daten und Inhalte ihrer Mannschaften (Kader, Termine, Trainingsinhalte, Bewertungen) ist der jeweilige Verein verantwortlich – siehe <button class="linkbtn" data-act="legal" data-v="datenschutz">Datenschutzerklärung</button>.</p>
+      <p>Die FU-STARS Lernzone ist eine Plattform für Fußballvereine. Für die Daten und Inhalte ihrer Mannschaften (Kader, Termine, Trainingsinhalte, Bewertungen) ist der jeweilige Verein verantwortlich – siehe <button class="linkbtn" data-act="legal" data-v="datenschutz">Datenschutzerklärung</button>.</p>
       <h2>Schriften</h2>
       <p class="small">Barlow Condensed und Source Sans 3, SIL Open Font License 1.1, lokal eingebunden.</p>
     </section>`;
@@ -63,7 +63,7 @@
     const o = op(), d = L.data || {};
     return `${head("Rechtliches", "Datenschutz")}${loading()}
     <section class="card stack legal">
-      <p class="lede">Die Lernzone ist für Kinder und Jugendliche gemacht. Deshalb speichern wir so wenig wie möglich, zeigen Kindern nie die Daten anderer Kinder und verzichten auf Werbung, Tracking und Analyse-Werkzeuge.</p>
+      <p class="lede">Die FU-STARS Lernzone ist für Kinder und Jugendliche gemacht. Deshalb speichern wir so wenig wie möglich, zeigen Kindern nie die Daten anderer Kinder und verzichten auf Werbung, Tracking und Analyse-Werkzeuge.</p>
       ${d.updated ? `<p class="small">Stand: ${esc(d.updated)}</p>` : ""}
 
       <h2>1. Verantwortlich</h2>
@@ -71,7 +71,7 @@
       ${myClubs().map(clubBlock).join("") || `<p>${missing("Der Verein")}</p>`}
 
       <h2>2. Betreiber der Plattform</h2>
-      <p>Die Lernzone wird technisch betrieben von:</p>${opBlock()}
+      <p>Die FU-STARS Lernzone wird technisch betrieben von:</p>${opBlock()}
       <p>Der Betreiber verarbeitet die Daten nur im Auftrag der Vereine (Art. 28 DSGVO) und nutzt sie nicht für eigene Zwecke.</p>
       <p>Hosting: ${o.host ? nl(o.host) : missing("Der Hosting-Anbieter")}</p>
 
@@ -163,7 +163,7 @@
     <div class="noprint chiprow">${clubs.length > 1 ? `<label class="small">Verein <select id="consent-club">${clubs.map(c => `<option value="${c.id}" ${club && c.id === club.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>` : ""}
       <button class="btn" data-act="legalPrint">Drucken</button></div>
     <section class="card stack legal printable">
-      <h2>Einwilligung in die Nutzung der Lernzone</h2>
+      <h2>Einwilligung in die Nutzung der FU-STARS Lernzone</h2>
       <p><b>Verein:</b> ${club ? esc(club.legalName || club.name) : "______________________________"} &nbsp; <b>Mannschaft:</b> ${team && club && team.clubId === club.id ? esc(team.name) : "__________"}</p>
       ${line("Vor- und Nachname des Kindes")}
       <p>Die Lernzone wird im Training ohne diese Einwilligung genutzt (Lerninhalte, Termine, Absagen, Trainingsbeteiligung). Die folgenden Bereiche schaltet der Trainer <b>erst nach dieser Einwilligung</b> frei:</p>
@@ -173,7 +173,7 @@
       <p>Diese Angaben sehen nur die Trainer der Mannschaft und die Vereinsadmins (z. B. Jugendleitung) – nie andere Kinder. Sie dienen der sportlichen Betreuung und werden gelöscht, wenn das Kind die Mannschaft verlässt.</p>
       <label class="check"><span class="box">☐</span> Ich willige / Wir willigen ein, dass die oben genannten Angaben in der Lernzone verarbeitet werden (Art. 6 Abs. 1 lit. a DSGVO).</label>
       <label class="check"><span class="box">☐</span> Ich willige / Wir willigen ausdrücklich ein, dass dabei auch der Hinweis „nicht fit“ verarbeitet wird – eine Angabe mit Gesundheitsbezug (Art. 9 Abs. 2 lit. a DSGVO). Diagnosen oder Krankheiten werden nicht abgefragt.</label>
-      <p>Die Einwilligung ist freiwillig. Ohne sie entstehen keine Nachteile – das Kind kann die Lernzone und das Training ganz normal nutzen. Sie kann jederzeit ohne Angabe von Gründen beim Trainer oder beim Verein für die Zukunft widerrufen werden. Weitere Informationen: Datenschutzerklärung der Lernzone.</p>
+      <p>Die Einwilligung ist freiwillig. Ohne sie entstehen keine Nachteile – das Kind kann die Lernzone und das Training ganz normal nutzen. Sie kann jederzeit ohne Angabe von Gründen beim Trainer oder beim Verein für die Zukunft widerrufen werden. Weitere Informationen: Datenschutzerklärung der FU-STARS Lernzone.</p>
       <div class="sigrow">${line("Ort, Datum")}${line("Unterschrift Erziehungsberechtigte/r")}</div>
       <div class="sigrow">${line("")}${line("Unterschrift zweite/r Erziehungsberechtigte/r")}</div>
       <div class="sigrow">${line("Kenntnis genommen: Unterschrift des Kindes")}</div>

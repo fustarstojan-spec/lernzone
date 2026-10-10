@@ -73,7 +73,7 @@
     const name = (LZ.Store.coach && LZ.Store.coach.name) || "";
     const d = D.data;
     return `${LZ.coachNav("home")}
-      <section><p class="eyebrow">Trainer-Bereich</p><h1>Hallo${name ? " " + esc(name) : ""}</h1></section>
+      <section>${LZ.area("Trainer-Bereich")}<h1>Hallo${name ? " " + esc(name) : ""}</h1></section>
       ${D.err ? `<p class="err" style="text-align:left">${esc(D.err)}</p>` : ""}
       ${d ? eventsCard(d) + playersCard(d) : `<p class="small">Lade …</p>`}
       ${teamCard()}
@@ -100,7 +100,7 @@
   };
 
   /* ---------- Platzhalter bis 0.14.0 / 0.15.0 ---------- */
-  const soon = (k, title, text) => () => `${LZ.coachNav(k)}<section><p class="eyebrow">Trainer-Bereich</p><h1>${title}</h1><p class="lede">${text}</p></section>`;
+  const soon = (k, title, text) => () => `${LZ.coachNav(k)}<section>${LZ.area("Trainer-Bereich")}<h1>${title}</h1><p class="lede">${text}</p></section>`;
   if (!LZ.views.taktik) LZ.views.taktik = soon("taktik", "Taktik", "Taktiktafel und Aufstellungen kommen mit der nächsten Version.");
   if (!LZ.views.spielzeiten) LZ.views.spielzeiten = soon("spielzeiten", "Spielzeiten", "Minuten pro Spiel und Saison-Übersicht kommen mit einer der nächsten Versionen.");
 })();

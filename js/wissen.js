@@ -74,7 +74,7 @@
     </section>`;
   }
   LZ.views.wissen = () => {
-    const head = `${LZ.coachNav("wissen")}<section><p class="eyebrow">Trainer-Bereich</p><h1>Trainer-Wissen</h1>
+    const head = `${LZ.coachNav("wissen")}<section>${LZ.area("Trainer-Bereich")}<h1>Trainer-Wissen</h1>
       <p class="lede">Was in welcher Altersstufe wichtig ist – und wo das Material dazu liegt.</p></section>
       <nav class="seg wstages">${STAGES.map(([k, l, a]) => `<button aria-pressed="${W.stage === k}" data-act="wiStage" data-v="${k}">${l}<span class="wage">${a}</span></button>`).join("")}</nav>${errBox()}`;
     if (!W.data) return head + (W.err ? "" : `<p class="small">Lade …</p>`);

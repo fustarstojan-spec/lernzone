@@ -161,9 +161,9 @@
     const d = A.data, acc = LZ.Store.account || {};
     const top = LZ.coachMode() ? LZ.coachNav("verwaltung")
       : `<div class="coachbar"><span>Angemeldet: <b>${esc(acc.username || "")}</b></span><span class="coachbar-links"><button class="linkbtn" data-act="pwStart">Passwort ändern</button><button class="linkbtn" data-act="logout">Abmelden</button></span></div>`;
-    if (!d) return `${top}<section><p class="eyebrow">Verwaltung</p><h1>Verein</h1></section>${errBox() || `<p class="small">Lade …</p>`}`;
+    if (!d) return `${top}<section>${LZ.area("Verwaltung")}<h1>Verein</h1></section>${errBox() || `<p class="small">Lade …</p>`}`;
     const clubs = d.clubs.filter(c => c.own || c.id === A.club);
-    return `${top}<section><p class="eyebrow">Verwaltung</p><h1>${d.platform ? "Vereine" : "Verein"}</h1></section>
+    return `${top}<section>${LZ.area("Verwaltung")}<h1>${d.platform ? "Vereine" : "Verein"}</h1></section>
       ${noteBox()}${errBox()}
       ${d.platform ? platformCard(d) : ""}
       ${clubs.map(clubCard).join("")}

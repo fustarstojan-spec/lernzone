@@ -55,7 +55,7 @@
       <ul class="blist">${TB.games.map(g => `<li><button data-act="tbNewLineup" data-v="${g.id}"><span><b>${esc(g.title)}</b><span class="small">${esc(gameText(g))}</span></span>${LZ.calendar ? LZ.calendar.chip(g.kind) : ""}</button></li>`).join("")}
         <li><button data-act="tbNewLineup" data-v="0"><span><b>Ohne Spiel</b><span class="small">z. B. für ein Testspiel oder zum Ausprobieren</span></span></button></li></ul>`;
     const L = TB.list;
-    return `${LZ.coachNav("taktik")}<section><p class="eyebrow">Trainer-Bereich</p><h1>Taktik</h1>
+    return `${LZ.coachNav("taktik")}<section>${LZ.area("Trainer-Bereich")}<h1>Taktik</h1>
       <p class="lede">Taktiktafel und Aufstellungen. Freigegebene Tafeln sehen die Spieler auf ihrer Startseite.</p></section>
       <div class="row"><button class="btn" data-act="tbNew">Neue Taktiktafel</button><button class="btn ghost" data-act="tbPickGame">Neue Aufstellung</button></div>
       ${TB.err ? `<p class="err" style="text-align:left">${esc(TB.err)}</p>` : ""}

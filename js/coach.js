@@ -82,7 +82,7 @@
     const s = T.step;
     if (!Co().active) return "";
     // ab hier angemeldet
-    if (s === "kader") return `${backGrid}<section><p class="eyebrow">Trainer-Bereich</p><h1>Kader</h1><p class="lede">Tippe auf ein Trikot für Profil, Positionen, Einwilligung und PIN. Ein roter Punkt heißt: bitte ansprechen.</p></section>${tabs()}
+    if (s === "kader") return `${backGrid}<section>${LZ.area("Trainer-Bereich")}<h1>Kader</h1><p class="lede">Tippe auf ein Trikot für Profil, Positionen, Einwilligung und PIN. Ein roter Punkt heißt: bitte ansprechen.</p></section>${tabs()}
       <div class="nrgrid">${LZ.C.players.map(p => `<button class="nr ${p.flag ? "flag" : ""}" data-act="cPlayer" data-v="${p.nr}" aria-label="Nummer ${p.nr}${p.name ? ", " + esc(p.name) : ""}">${LZ.shirt(p.nr)}<span>${esc((p.name || "").split(" ")[0] || [p.posOff, p.posDef].filter(Boolean).join(" / ") || "–")}</span></button>`).join("")}
       <button class="nr add" data-act="cAdd" aria-label="Neuen Spieler anlegen">${LZ.shirt("+", "add")}<span>Neu</span></button></div>`;
 
@@ -149,7 +149,7 @@
     }
     if (s === "trainings") {
       const n = T.newT;
-      return `${backGrid}<section><p class="eyebrow">Trainer-Bereich</p><h1>Trainings</h1><p class="lede">Termine aus dem Google-Kalender erscheinen hier automatisch. Tippe einen an für Anwesenheit und Befinden.</p></section>${tabs()}
+      return `${backGrid}<section>${LZ.area("Trainer-Bereich")}<h1>Trainings</h1><p class="lede">Termine aus dem Google-Kalender erscheinen hier automatisch. Tippe einen an für Anwesenheit und Befinden.</p></section>${tabs()}
       <section class="card stack"><h2>Zusätzliches Training anlegen</h2>
         <div class="grid2"><div class="fld"><label for="t-date">Datum</label><input type="date" id="t-date" value="${esc(n.date)}"></div>
         <div class="fld"><label for="t-time">Uhrzeit</label><input type="time" id="t-time" value="${esc(n.time)}"></div></div>
@@ -195,7 +195,7 @@
     if (s === "coaches") {
       const me = Co();
       const list = me.isAdmin ? T.coaches : T.coaches.filter(c => c.id === me.id);
-      return `${backGrid}<section><p class="eyebrow">Trainer-Bereich</p><h1>${me.isAdmin ? "Trainer" : "Mein Konto"}</h1>${me.isAdmin ? `<p class="lede">Cheftrainer legen Co-Trainer an und dürfen Spieler löschen. Neue Mannschaften legt der Vereinsadmin an.</p>` : ""}</section>${tabs()}
+      return `${backGrid}<section>${LZ.area("Trainer-Bereich")}<h1>${me.isAdmin ? "Trainer" : "Mein Konto"}</h1>${me.isAdmin ? `<p class="lede">Cheftrainer legen Co-Trainer an und dürfen Spieler löschen. Neue Mannschaften legt der Vereinsadmin an.</p>` : ""}</section>${tabs()}
       <section class="stack">${list.map(c => `<button class="trow" data-act="cEdit" data-v="${c.id}"><span class="tdate">${esc(c.name)}${c.id === me.id ? " (du)" : ""}</span><span class="small">${esc(c.username || "")}</span>${c.isAdmin ? `<span class="badge">Cheftrainer</span>` : ""}</button>`).join("")}</section>
       ${me.isAdmin ? `<section class="card stack"><h2>Trainer hinzufügen</h2>
         <div class="fld"><label for="cf-name">Vorname</label><input id="cf-name" maxlength="30" value="${esc(T.cf.name)}"></div>

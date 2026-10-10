@@ -1,4 +1,4 @@
-# Heimstetten Lernzone
+# FU-STARS Lernzone
 
 Lern-App für die U14 des SV Heimstetten: Spielphasenmodell, Zonen-Trainer, Quiz, persönlicher Bereich und Trainer-Bereich. Mit PHP nur nach Anmeldung (Benutzername + Passwort).
 
