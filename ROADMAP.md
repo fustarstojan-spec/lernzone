@@ -13,6 +13,7 @@ Pflege: neue Ideen hier eintragen, Erledigtes streichen und ins CHANGELOG übern
 - [ ] Dauer bei 4 Übungen ergänzen
 - [ ] IEP: Zuordnung Nr. 18 bestätigen; Nr. 20 und Nr. 23 haben noch keinen IEP
 - [ ] Plattformname festlegen
+- [ ] Trainer-Wissen prüfen: 4 Seiten (Entwurf) durchsehen, Entwurf-Häkchen entfernen; Drive-Ordner für die anderen Trainer freigeben
 
 ## Als Nächstes (besprochen)
 
@@ -46,6 +47,7 @@ Pflege: neue Ideen hier eintragen, Erledigtes streichen und ins CHANGELOG übern
 ## Ideen (noch nicht besprochen)
 
 - [ ] Namen der Spieler durch den Trainer eintragen (bisher nur über das Profil des Kindes) – dann zeigen Teilnehmerlisten Namen statt nur Nummern
+- [ ] Wissenskarten für Kinder (kurz, kindgerecht, z. B. Schlaf, Trinken, Aufwärmen) aus dem Trainer-Wissen
 - [ ] Übungen ebenfalls einem Schwerpunkt aus der Spielphasen-Referenz zuordnen und danach filtern
 
 - [ ] Eltern-Zugang; Einwilligung digital statt Papier

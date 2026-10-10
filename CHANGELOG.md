@@ -2,6 +2,14 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.27.0 – 2026-10-10
+- **Trainer-Wissen** (neuer Reiter „Wissen“, gilt für den ganzen Verein): Altersstufen Grundlagen U8–U11 · Aufbau U12–U16 · Leistung U17+ · Alle
+  - **Seiten** je Stufe mit den Abschnitten Entwicklung · Technik · Taktik · Athletik · Belastung · Methodik · Ernährung und Erholung · Material; eigene Zusammenfassungen, bearbeitbar, druckbar, Kennzeichen „Entwurf“
+  - **Bibliothek:** Verweise auf Material (z. B. Coaches' Voice Academy, DFB, FIFA 11+ im Google Drive des Trainers), Filter nach Bereich und Spielphase (A1–D2 aus der Spielphasen-Referenz), Suche; Dateien werden nicht kopiert, nur verlinkt
+  - Anlegen und Ändern alle Trainer, Löschen Cheftrainer und Vereinsadmins
+  - Inhalte über `tools/import_wissen.php storage/wissen-import.json` (nicht im Repository); erste Fassung: 4 Seiten (Entwurf) und 141 Verweise
+- Datenschutzerklärung: Trainer-Wissen ergänzt
+
 ## 0.26.0 – 2026-10-10
 - **Einheit anlegen: erst wählen** – „Aus Übungen zusammenstellen“ oder „PDF hochladen“ (Trainingsplan als PDF, höchstens 15 MB, geschützt in `storage/sessions/`, Öffnen und Herunterladen nur für Trainer der Mannschaft)
 - **Trainingsart:** Mannschafts-, Individual-, Positions-, Kleingruppen- oder Techniktraining

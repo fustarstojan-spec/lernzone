@@ -491,3 +491,21 @@ footer.legal .linkbtn{font-size:.85rem;color:var(--muted)}
 .plist{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.3rem .8rem;font-size:.92rem}
 .pnr{display:inline-block;min-width:1.9rem;font-weight:700;color:var(--muted)}
 .parts h3{font-size:1rem;margin-top:.4rem}
+/* Trainer-Wissen (0.27.0) */
+.wstages button{display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.15}
+.wage{font-size:.72rem;font-weight:500;opacity:.8}
+.wpage{display:grid;gap:3px;text-align:left;width:100%;background:var(--bg);border:1px solid var(--rule);border-radius:12px;padding:12px 14px;color:var(--fg);font:inherit;cursor:pointer}
+.wpage:hover{border-color:var(--accent)}
+.wfilter{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:520px){.wfilter{grid-template-columns:1fr}}
+.wgroup{border-bottom:1px solid var(--rule)}
+.wgroup summary{cursor:pointer;padding:10px 0;font-size:1.05rem}
+.wgroup .wlink:last-child{border-bottom:0}
+.wlist{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.wlink{display:grid;grid-template-columns:1fr auto;gap:0 10px;padding:8px 0;border-bottom:1px solid var(--rule)}
+.wlink a{color:var(--accent);font-weight:700;text-underline-offset:2px}
+.wlink .small{grid-column:1}
+.wlink .linkbtn{grid-column:2;grid-row:1/span 2;align-self:center;font-weight:500}
+.wsec h2{margin-top:0}
+.wsec ul{margin:0;padding-left:1.2rem;display:grid;gap:4px}
+.wpage .badge{justify-self:start}

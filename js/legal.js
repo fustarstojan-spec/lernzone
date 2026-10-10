@@ -94,7 +94,8 @@
       <p>Bis die Einwilligung da ist, sind diese Bereiche gesperrt. „Nicht fit“ ist nur ein Hinweis an den Trainer – Krankheiten oder Diagnosen werden nicht abgefragt.</p>
       <h3>Trainerinnen und Trainer</h3>
       <ul><li>Vorname, Benutzername, Mannschaften, Abwesenheiten bei Terminen</li>
-        <li>Trainingspläne und Übungen, auch als hochgeladenes PDF</li></ul>
+        <li>Trainingspläne und Übungen, auch als hochgeladenes PDF</li>
+        <li>Einträge im Trainer-Wissen (wer zuletzt geändert hat); Verweise auf Material öffnen die Seite des jeweiligen Anbieters, z. B. Google Drive</li></ul>
 
       <h2>4. Wozu und auf welcher Rechtsgrundlage</h2>
       <ul><li><b>Trainings- und Spielbetrieb, sportliche Ausbildung</b> im Rahmen der Vereinsmitgliedschaft: Art. 6 Abs. 1 lit. b DSGVO; Organisation und Planung durch den Verein: Art. 6 Abs. 1 lit. f DSGVO</li>

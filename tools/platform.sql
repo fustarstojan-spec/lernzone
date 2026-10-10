@@ -95,6 +95,26 @@ CREATE TABLE IF NOT EXISTS drills (
 );
 CREATE INDEX IF NOT EXISTS drills_club ON drills (club_id, active);
 
+-- Trainer-Wissen des Vereins (ab 0.27.0): Seiten pro Altersstufe und Materialbibliothek (Links, z. B. ins Google Drive des Trainers)
+CREATE TABLE IF NOT EXISTS knowledge (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  club_id     INTEGER NOT NULL,
+  kind        TEXT    NOT NULL DEFAULT 'link',      -- page | link
+  stage       TEXT    NOT NULL DEFAULT 'alle',      -- grundlagen (U8–U11) | aufbau (U12–U16) | leistung (U17+) | alle
+  category    TEXT    NOT NULL DEFAULT '',
+  phase       TEXT    NOT NULL DEFAULT '',          -- Spielphase aus data/schwerpunkte.json, z. B. „A1“
+  title       TEXT    NOT NULL,
+  body        TEXT    NOT NULL DEFAULT '',          -- Seiten: „## Überschrift“ und „- Punkt“ je Zeile
+  url         TEXT    NOT NULL DEFAULT '',          -- Links: https-Adresse
+  source      TEXT    NOT NULL DEFAULT '',
+  draft       INTEGER NOT NULL DEFAULT 0,
+  sort        INTEGER NOT NULL DEFAULT 0,
+  active      INTEGER NOT NULL DEFAULT 1,
+  updated_by  INTEGER,
+  updated_at  TEXT    NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS knowledge_club ON knowledge (club_id, active, stage);
+
 CREATE TABLE IF NOT EXISTS platform_settings (
   name   TEXT PRIMARY KEY,
   value  TEXT NOT NULL

@@ -9,7 +9,7 @@
   const D = { data: null, at: 0, sort: "nr", busy: false, err: "" };
 
   /* ---------- Reiter für Trainer ---------- */
-  const TABS = [["home", "Übersicht"], ["training", "Training"], ["lernzone", "Lernzone"], ["taktik", "Taktik"], ["spielzeiten", "Spielzeiten"]];
+  const TABS = [["home", "Übersicht"], ["training", "Training"], ["wissen", "Wissen"], ["lernzone", "Lernzone"], ["taktik", "Taktik"], ["spielzeiten", "Spielzeiten"]];
   LZ.coachNav = active => `<nav class="seg coachnav" aria-label="Trainer-Bereich">${TABS.concat(LZ.isAdmin() ? [["verwaltung", "Verwaltung"]] : []).map(([k, l]) =>
     `<button aria-pressed="${active === k}" data-act="${k === "home" ? "home" : "cnav"}" data-v="${k}">${l}</button>`).join("")}</nav>`;
   LZ.actions.cnav = (b, v) => LZ.go(v);
