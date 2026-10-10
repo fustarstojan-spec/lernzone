@@ -97,14 +97,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $sessions = array_map($sessionOut, db()->query('SELECT * FROM sessions ORDER BY date DESC, id DESC')->fetchAll(PDO::FETCH_ASSOC));
     $byTraining = [];
     foreach ($sessions as $s) if ($s['trainingId']) $byTraining[$s['trainingId']] ??= $s['id'];
-    $st = db()->prepare("SELECT t.id, t.date, t.time, t.end_time, t.title, t.att_done, (SELECT COUNT(*) FROM attendance a WHERE a.training_id = t.id) AS present
+    $st = db()->prepare("SELECT t.id, t.date, t.time, t.end_time, t.title, t.att_done, (SELECT COUNT(*) FROM attendance a WHERE a.training_id = t.id) AS present,
+                         (SELECT COUNT(*) FROM absences ab WHERE ab.training_id = t.id) AS absent
                          FROM trainings t WHERE t.kind = 'training' AND t.date >= ? AND t.date <= ? ORDER BY t.date, t.time");
     $st->execute([date('Y-m-d', strtotime('-21 days')), date('Y-m-d', strtotime('+21 days'))]);
+    $squad = (int)db()->query('SELECT COUNT(*) FROM players')->fetchColumn();
     json_out(['ok' => true,
         'sessions' => array_map(fn($s) => ['id' => $s['id'], 'trainingId' => $s['trainingId'], 'date' => $s['date'], 'title' => $s['title'], 'focus' => $s['focus'], 'minutes' => $s['minutes'],
                                            'kind' => $s['kind'], 'trainType' => $s['trainType'], 'focusKey' => $s['focusKey']], $sessions),
         'trainings' => array_map(fn($t) => ['id' => (int)$t['id'], 'date' => $t['date'], 'time' => $t['time'], 'endTime' => $t['end_time'], 'title' => $t['title'] ?: 'Training',
-                                            'session' => $byTraining[(int)$t['id']] ?? null, 'state' => (int)$t['att_done'], 'present' => (int)$t['present']], $st->fetchAll(PDO::FETCH_ASSOC))]);
+                                            'session' => $byTraining[(int)$t['id']] ?? null, 'state' => (int)$t['att_done'], 'present' => (int)$t['present'],
+                                            'expected' => max(0, $squad - (int)$t['absent'])], $st->fetchAll(PDO::FETCH_ASSOC))]);
 }
 
 require_method('POST');

@@ -2,6 +2,10 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.30.1 – 2026-10-10
+- Training → Einheiten: Liste mit festen Spalten (Tag · Uhrzeit · Teilnehmer · Plan); Teilnehmer immer an derselben Stelle („18 da“, „22 erwartet“ oder „fällt aus“)
+- Statt des Themas steht nur noch „Plan“ bzw. „+ Plan hinzufügen“
+
 ## 0.30.0 – 2026-10-10
 - **Name: FU-STARS Lernzone** – oben „FU-STARS“ mit „Lernzone“ daneben, Fenstertitel, Impressum, Datenschutz und Einwilligung
 - **Verein und Mannschaft** (z. B. „SV Heimstetten · U14“) stehen jetzt als Kennzeichen neben „Trainer-Bereich“ bzw. „Verwaltung“, bei Spielern neben „Angemeldet als Nr. …“ – statt klein in der Kopfzeile

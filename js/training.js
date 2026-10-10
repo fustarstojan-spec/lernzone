@@ -60,16 +60,19 @@
     if (!L) return `<p class="small">Lade …</p>`;
     const today = new Date().toISOString().slice(0, 10);
     const up = L.trainings.filter(t => t.date >= today), past = L.trainings.filter(t => t.date < today).reverse();
+    // Eine Zeile pro Training, Spalten immer gleich: Tag · Uhrzeit · Teilnehmer · Plan (ab 0.30.1)
     const row = t => {
       const s = t.session ? L.sessions.find(x => x.id === t.session) : null;
-      return `<li class="trow2"><span><b>${esc(cal().dayName(t.date))}</b> <span class="small">${esc(cal().timeText(t))}</span></span>
-        ${t.state === 1 ? `<span class="small">${t.present} da</span>` : t.state === 2 ? `<span class="small">fällt aus</span>` : ""}
-        ${s ? `<button class="linkbtn" data-act="trSess" data-v="${s.id}">${s.kind === "pdf" ? "📄 " : ""}${esc(s.title)}${s.minutes ? ` · ${s.minutes} Min.` : ""}${s.trainType && s.trainType !== "Mannschaftstraining" ? ` <span class="badge muted">${esc(s.trainType)}</span>` : ""}</button>`
-            : `<button class="btn ghost small" data-act="trNew" data-v="${t.id}">+ Plan</button>`}</li>`;
+      const who = t.state === 2 ? `<span class="tcount off">fällt aus</span>`
+        : t.state === 1 ? `<span class="tcount"><b>${t.present}</b> da</span>`
+        : `<span class="tcount"><b>${t.expected ?? "–"}</b> erwartet</span>`;
+      return `<li class="trow3"><b class="tday">${esc(cal().dayName(t.date))}</b><span class="small ttime">${esc(cal().timeText(t))}</span>${who}
+        ${s ? `<button class="btn ghost small tplan" data-act="trSess" data-v="${s.id}">${s.kind === "pdf" ? "📄 " : "📋 "}Plan</button>`
+            : `<button class="btn ghost small tplan add" data-act="trNew" data-v="${t.id}">+ Plan hinzufügen</button>`}</li>`;
     };
     const free = L.sessions.filter(s => !s.trainingId);
-    return `<section class="card stack"><h2>Nächste Trainings</h2><ul class="tlist">${up.map(row).join("") || `<li class="small">Keine Trainings in den nächsten 3 Wochen.</li>`}</ul></section>
-      ${past.length ? `<section class="card stack"><h2>Letzte Trainings</h2><ul class="tlist">${past.map(row).join("")}</ul></section>` : ""}
+    return `<section class="card stack"><h2>Nächste Trainings</h2><ul class="tlist tlist3">${up.map(row).join("") || `<li class="small">Keine Trainings in den nächsten 3 Wochen.</li>`}</ul></section>
+      ${past.length ? `<section class="card stack"><h2>Letzte Trainings</h2><ul class="tlist tlist3">${past.map(row).join("")}</ul></section>` : ""}
       <section class="card stack"><div class="rowspread"><h2>Ohne Termin</h2><button class="btn ghost small" data-act="trNew" data-v="">+ Einheit</button></div>
         <ul class="tlist">${free.map(s => `<li class="trow2"><span>${esc(s.date ? fmtDate(s.date) : "ohne Datum")}</span><button class="linkbtn" data-act="trSess" data-v="${s.id}">${esc(s.title)}</button></li>`).join("") || `<li class="small">Vorlagen oder Einheiten ohne Kalendertermin.</li>`}</ul></section>`;
   }
