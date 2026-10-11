@@ -2,6 +2,13 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.32.0 – 2026-10-11
+- **Halbzeitpausen je Spielart** (Trainer → Trainer → „Spielzeit und Halbzeitpausen je Spielart“): z. B. Ligaspiel 1 Pause = 2 Halbzeiten, Turnier 0 Pausen; steht auch beim Kader des Spiels
+- **Matchplan** (Spielzeiten → Spiel → „Matchplan“): pro Spieler im Kader Position und Soll-Minuten eintragen (Vorschlag: Position aus der Aufstellung bzw. Spielerposition, Minuten je Position gleich verteilt), Wechselraster 5/10/15 Min. wählen → „Matchplan berechnen“
+  - Ergebnis: Startelf, Wechselplan nach Minute (Wechsel bevorzugt in der Halbzeitpause, möglichst wenige Wechsel während des Spiels), Zeitleiste je Spieler, geplante Minuten neben dem Soll; Hinweise, wenn die Minuten einer Position nicht aufgehen oder Spieler fehlen
+  - „Als Wechsel übernehmen“ trägt Startelf und Wechsel in die Spielzeiten ein (danach „Speichern“)
+  - Eingaben werden je Spiel gespeichert; Rechnung im Browser (`js/matchplan.js`)
+
 ## 0.31.0 – 2026-10-11
 - **Kader für Spiele** (Trainer → Termin des Spiels → „Kader“): jeder Spieler „Im Kader“ oder „Nicht dabei“, dazu ein Grund aus einer festen Liste (Rotation, Trainingsbeteiligung, Abgesagt, Verhalten/Pünktlichkeit, andere Mannschaft, Pause, Gespräch) und eine Notiz nur für Trainer; „Alle in den Kader“, „Aus Aufstellung übernehmen“
   - **Kader bekannt geben:** Danach sieht jedes Kind in „Mein Bereich“ und auf der Startseite nur seinen eigenen Status – „Du bist im Kader“ oder „Diesmal bist du nicht dabei“ mit Grund. Keine Namen anderer Kinder, keine Notizen, Startelf erst mit der freigegebenen Aufstellung

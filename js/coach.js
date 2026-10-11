@@ -426,7 +426,7 @@
           <input id="kn-${p.nr}" maxlength="300" value="${esc(x.note || "")}" placeholder="Notiz – nur für Trainer" aria-label="Notiz Nr. ${p.nr}"></div>` : ""}</div>`; };
     return `<section class="card stack" id="kader"><div class="rowspread"><h2>Kader</h2><span class="small"><b>${inK}</b> im Kader · ${outK} nicht dabei</span></div>
       <div class="row wrow"><div class="fld"><label for="k-type">Spielart</label><select id="k-type">${Object.entries(K.types).map(([k, l]) => `<option value="${k}" ${k === K.game.type ? "selected" : ""}>${esc(l)}${K.game.typeAuto && k === K.game.type ? " (erkannt)" : ""}</option>`).join("")}</select></div>
-        <p class="small">Spielzeit laut Einstellung: <b>${K.game.duration} Min.</b></p></div>
+        <p class="small">Laut Einstellung: <b>${K.game.duration} Min.</b>, ${K.game.pauses} ${K.game.pauses === 1 ? "Halbzeitpause" : "Halbzeitpausen"}</p></div>
       <p class="${K.announced ? "okmsg" : "small"}">${K.announced ? `Bekannt gegeben am ${esc(K.announcedAt || "")} – jeder Spieler sieht in „Mein Bereich“ nur, ob er dabei ist (und den Grund).` : "Noch nicht bekannt gegeben – die Spieler sehen noch nichts."}</p>
       <div class="row">${L && (L.starters.length || L.bench.length) ? `<button class="btn ghost small" data-act="kLineup">Aus Aufstellung übernehmen (${L.starters.length} + ${L.bench.length})</button>` : ""}
         <button class="btn ghost small" data-act="kAll" data-v="kader">Alle in den Kader</button><button class="btn ghost small" data-act="kAll" data-v="">Zurücksetzen</button></div>
@@ -465,18 +465,22 @@
   async function loadDurations() { const r = await St().get("kader.php?settings=1"); if (r && r.ok) { T.dur = r; LZ.render(); } }
   function durCard() {
     const D = T.dur; if (!D) return "";
-    return `<section class="card stack"><h2>Spielzeit je Spielart</h2>
+    return `<section class="card stack"><h2>Spielzeit und Halbzeitpausen je Spielart</h2>
       <p class="small">Wird bei „Spielzeiten“ für neue Spiele übernommen. Die Spielart erkennt die App am Kalendertitel („Pokal“, „Freundschaftsspiel“/„Test“, Turnier), sonst Ligaspiel – beim Spiel unter „Kader“ änderbar.</p>
-      <div class="durgrid">${Object.entries(D.types).map(([k, l]) => `<div class="fld"><label for="dur-${k}">${esc(l)} (Min.)</label><input id="dur-${k}" type="number" min="1" max="240" inputmode="numeric" value="${D.durations[k]}"></div>`).join("")}</div>
+      <div class="durtable"><span></span><b>Spielzeit (Min.)</b><b>Halbzeitpausen</b>${Object.entries(D.types).map(([k, l]) => `<span>${esc(l)}</span>
+        <input id="dur-${k}" type="number" min="1" max="240" inputmode="numeric" value="${D.durations[k]}" aria-label="${esc(l)} Spielzeit">
+        <input id="pz-${k}" type="number" min="0" max="5" inputmode="numeric" value="${(D.pauses || {})[k] ?? 1}" aria-label="${esc(l)} Halbzeitpausen">`).join("")}</div>
+      <p class="small">1 Pause = 2 Halbzeiten, 2 Pausen = 3 Drittel, 0 = durchgehend (z. B. Turnier). Der Matchplan legt Wechsel bevorzugt in die Pausen.</p>
       <div class="row"><button class="btn" data-act="durSave" ${T.busy ? "disabled" : ""}>Speichern</button></div></section>`;
   }
   LZ.actions.durSave = async () => {
     const durations = Object.fromEntries(Object.keys(T.dur.types).map(k => [k, +((document.getElementById("dur-" + k) || {}).value || 0)]));
     T.busy = true; LZ.render();
-    const r = await St().send("kader.php", { action: "durations", durations });
+    const pauses = Object.fromEntries(Object.keys(T.dur.types).map(k => [k, +((document.getElementById("pz-" + k) || {}).value || 0)]));
+    const r = await St().send("kader.php", { action: "durations", durations, pauses });
     T.busy = false;
     if (!r.ok) return fail(r);
-    T.dur.durations = r.durations; T.err = ""; T.msg = "Spielzeiten gespeichert."; LZ.render();
+    T.dur.durations = r.durations; T.dur.pauses = r.pauses; T.err = ""; T.msg = "Spielzeiten und Halbzeitpausen gespeichert."; LZ.render();
   };
   const trState = r => { T.tr.present = r.present; T.tr.training.state = r.state; T.tr.training.expected = false; T.confirm = null; LZ.render(); };
   LZ.actions.tAll = async (b, v) => {

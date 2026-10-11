@@ -112,6 +112,13 @@ CREATE TABLE IF NOT EXISTS match_call_players (
   note         TEXT    NOT NULL DEFAULT '',        -- nur für Trainer
   PRIMARY KEY (training_id, nr)
 );
+-- Matchplan (ab 0.32.0): Eingaben des Trainers je Spiel (Raster, Spieler mit Position und Soll-Minuten); der Plan selbst wird im Browser berechnet
+CREATE TABLE IF NOT EXISTS match_plans (
+  training_id  INTEGER PRIMARY KEY,
+  data         TEXT    NOT NULL,
+  updated_by   INTEGER,
+  updated_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 CREATE TABLE IF NOT EXISTS match_subs (
   id           INTEGER PRIMARY KEY AUTOINCREMENT,
   training_id  INTEGER NOT NULL,

@@ -2,6 +2,7 @@
  * Lernzone – Spielzeiten (nur Trainer, Reiter „Spielzeiten“)
  * Pro Spiel: Spielzeit (Vorgabe je Spielart aus den Einstellungen, ab 0.31.0), Ergebnis, Spieltagskader (Startelf / Einwechselspieler,
  *   aus Aufstellung und Kader), Wechsel mit Minute
+ * Matchplan (ab 0.32.0): Position + Soll-Minuten je Spieler → Wechselplan (Rechnung in js/matchplan.js), als Wechsel übernehmbar
  * → Minuten pro Spieler; Saison-Übersicht (Spiele, Startelf, Einsätze, Minuten, Anteil an möglichen Minuten)
  * Daten: api/matches.php
  */
@@ -69,9 +70,11 @@
     const r = await LZ.Store.get("matches.php?id=" + v);
     if (!r.ok) { SZ.err = r.error; SZ.cur = null; LZ.render(); return; }
     SZ.cur = { game: r.game, lineup: r.lineup || [], bench: r.bench || [], kader: r.kader || [], defDur: r.defaultDuration || 70,
+      pauses: r.pauses ?? 1, slots: (r.slots || []).filter(s => s.lab), savedPlan: r.plan, plan: null,
       m: r.match || { duration: r.defaultDuration || 70, gf: null, ga: null, squad: [], subs: [] }, recorded: !!r.match };
     if (!r.match && (SZ.cur.lineup.length || SZ.cur.kader.length)) fromLineup();
     SZ.f = { minute: "", out: "", in: "" }; SZ.msg = ""; SZ.err = ""; SZ.dirty = !r.match;
+    initPlan();
     LZ.render(); LZ.top();
   };
   // Startelf aus der Aufstellung, Einwechselspieler aus Aufstellung und Kader (ab 0.31.0)
@@ -81,6 +84,89 @@
     m.squad = [...start].map(nr => ({ nr, starter: true })).concat([...subs].map(nr => ({ nr, starter: false })));
     if (!subs.size && !c.kader.length) (LZ.C.players || []).filter(p => !start.has(p.nr)).forEach(p => m.squad.push({ nr: p.nr, starter: false }));
   }
+  /* ---------- Matchplan: Position + Soll-Minuten → wann wird gewechselt (ab 0.32.0) ---------- */
+  const DEFAULT_SLOTS = ["TW", "RV", "IV", "IV", "LV", "6", "8", "8", "RA", "LA", "ST"];
+  const slotLabs = () => SZ.cur.slots.length ? SZ.cur.slots.map(s => s.lab) : DEFAULT_SLOTS;
+  function initPlan() {
+    const c = SZ.cur, saved = c.savedPlan, labs = slotLabs();
+    const bySlot = Object.fromEntries(c.slots.filter(s => s.nr).map(s => [s.nr, s.lab]));
+    const sp = saved ? Object.fromEntries(saved.players.map(p => [p.nr, p])) : {};
+    const P = { grid: saved ? saved.grid : 10, rows: {}, result: null, dirty: false };
+    c.m.squad.forEach(s => {
+      const pl = (LZ.C.players || []).find(p => p.nr === s.nr) || {};
+      const pos = sp[s.nr] ? sp[s.nr].pos : bySlot[s.nr] || [pl.posOff, pl.posDef].find(x => labs.includes(x)) || "";
+      P.rows[s.nr] = { pos, target: sp[s.nr] ? sp[s.nr].target : null };
+    });
+    c.plan = P;
+    if (Object.values(P.rows).some(r => r.target === null)) evenOut();
+  }
+  function planInput() {
+    const c = SZ.cur, P = c.plan;
+    return { duration: c.m.duration, periods: (c.pauses || 0) + 1, grid: P.grid, slots: slotLabs(),
+      players: c.m.squad.filter(s => P.rows[s.nr]).map(s => ({ nr: s.nr, pos: P.rows[s.nr].pos, target: +P.rows[s.nr].target || 0, starter: s.starter })) };
+  }
+  function evenOut() {
+    const P = SZ.cur.plan, t = window.LZMatchplan.evenTargets(planInput());
+    Object.entries(P.rows).forEach(([nr, r]) => { r.target = t[nr] ?? 0; });
+  }
+  function syncRows() {   // Kader geändert → Zeilen ergänzen/entfernen
+    const c = SZ.cur, P = c.plan, labs = slotLabs();
+    c.m.squad.forEach(s => { if (!P.rows[s.nr]) { const pl = (LZ.C.players || []).find(p => p.nr === s.nr) || {}; P.rows[s.nr] = { pos: [pl.posOff, pl.posDef].find(x => labs.includes(x)) || "", target: 0 }; } });
+    Object.keys(P.rows).forEach(nr => { if (!c.m.squad.some(s => s.nr === +nr)) delete P.rows[nr]; });
+  }
+  function stints(res, nr, dur) {   // Einsatzzeiten eines Spielers aus Startelf + Wechseln
+    const out = []; let from = res.starters.includes(nr) ? 0 : null;
+    res.subs.forEach(s => { if (s.out === nr && from !== null) { out.push([from, s.minute]); from = null; } if (s.in === nr && from === null) from = s.minute; });
+    if (from !== null) out.push([from, dur]);
+    return out;
+  }
+  function planCard() {
+    const c = SZ.cur, P = c.plan, m = c.m; if (!P) return "";
+    syncRows();
+    const labs = [...new Set(slotLabs())], periods = (c.pauses || 0) + 1, inp = planInput();
+    const groups = labs.map(lab => { const n = slotLabs().filter(x => x === lab).length, ps = inp.players.filter(p => p.pos === lab);
+      return { lab, need: n * m.duration, planned: ps.reduce((s, p) => s + p.target, 0), n, count: ps.length }; });
+    const res = P.result, name = nr => { const p = (LZ.C.players || []).find(x => x.nr === nr); return p && p.name ? p.name.split(" ")[0] : ""; };
+    const row = s => { const r = P.rows[s.nr]; return `<div class="mprow"><span class="knr">${LZ.shirt(s.nr)}<span>${esc(name(s.nr) || "Nr. " + s.nr)}</span></span>
+      <span class="small">${s.starter ? "Start" : "Einw."}</span>
+      <select id="mp-pos-${s.nr}" aria-label="Position Nr. ${s.nr}"><option value="">–</option>${labs.map(l => `<option ${l === r.pos ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>
+      <span class="mpmin"><input id="mp-t-${s.nr}" type="number" min="0" max="${m.duration}" step="5" inputmode="numeric" value="${r.target ?? 0}" aria-label="Soll-Minuten Nr. ${s.nr}"> Min.</span>
+      ${res ? `<span class="small ${Math.abs((res.minutes[s.nr] || 0) - (r.target || 0)) > 0 ? "warnc" : "okc"}">Plan ${res.minutes[s.nr] || 0}'</span>` : "<span></span>"}</div>`; };
+    const timeline = res ? (() => {
+      const pct = v => (v / m.duration * 100).toFixed(2) + "%", breaks = res.blocks.filter(b => b.brk).map(b => b.from);
+      const order = m.squad.slice().sort((a, b) => labs.indexOf(P.rows[a.nr].pos) - labs.indexOf(P.rows[b.nr].pos) || a.nr - b.nr);
+      return `<div class="mptl">${order.map(s => `<div class="mptlrow"><span class="small">${esc(P.rows[s.nr].pos || "–")} · ${s.nr}</span><span class="mpbar">${breaks.map(b => `<i class="mpbrk" style="left:${pct(b)}"></i>`).join("")}${stints(res, s.nr, m.duration).map(([a, b]) => `<b style="left:${pct(a)};width:${pct(b - a)}">${b - a}'</b>`).join("")}</span></div>`).join("")}</div>`;
+    })() : "";
+    const byMin = {}; if (res) res.subs.forEach(s => { (byMin[s.minute] = byMin[s.minute] || []).push(s); });
+    return `<section class="card stack" id="matchplan"><div class="rowspread"><h2>Matchplan</h2><span class="small">${m.duration} Min. · ${periods} ${periods === 1 ? "Abschnitt" : periods === 2 ? "Halbzeiten" : "Abschnitte"} (${c.pauses || 0} ${c.pauses === 1 ? "Pause" : "Pausen"})</span></div>
+      <p class="small">Position und Soll-Minuten je Spieler eintragen – die App schlägt vor, wann gewechselt wird. Wechsel in der Pause werden bevorzugt, Startelf-Spieler beginnen.</p>
+      <div class="row wrow"><div class="fld"><label for="mp-grid">Wechsel möglich alle</label><select id="mp-grid">${[5, 10, 15].map(g => `<option value="${g}" ${g === P.grid ? "selected" : ""}>${g} Min.</option>`).join("")}</select></div>
+        <button class="btn ghost small" data-act="mpEven">Minuten je Position gleich verteilen</button></div>
+      <div class="mplist">${m.squad.length ? m.squad.slice().sort((a, b) => b.starter - a.starter || a.nr - b.nr).map(row).join("") : `<p class="small">Erst den Kader festlegen.</p>`}</div>
+      <div class="mpgroups">${groups.map(g => `<span class="mpg ${g.count < g.n ? "bad" : g.planned === g.need ? "ok" : "warn"}" title="${g.n} ${g.n === 1 ? "Platz" : "Plätze"} · ${g.count} Spieler"><b>${esc(g.lab)}</b> ${g.planned}/${g.need}</span>`).join("")}</div>
+      <p class="small">Pro Position muss die Summe der Soll-Minuten den Plätzen × Spielzeit entsprechen (grün).</p>
+      <div class="row"><button class="btn" data-act="mpCalc" ${m.squad.length ? "" : "disabled"}>Matchplan berechnen</button></div>
+      ${res ? `${res.warnings.length ? `<ul class="alert mpwarn">${res.warnings.map(w => `<li>${esc(w)}</li>`).join("")}</ul>` : ""}
+        <h3>Wechselplan</h3>
+        <ul class="sublist mpsubs"><li><b>0'</b><span>Start: ${res.starters.map(n => "Nr. " + n).join(", ")}</span></li>
+          ${Object.entries(byMin).map(([mi, l]) => `<li><b>${mi}'</b><span>${l[0].brk ? "<em>in der Pause</em> " : ""}${l.map(s => `↓ ${s.out} ↑ ${s.in ?? "–"} <span class="small">(${esc(s.pos)})</span>`).join(" · ")}</span></li>`).join("") || `<li><span>Keine Wechsel nötig.</span></li>`}</ul>
+        ${timeline}
+        <div class="row"><button class="btn ghost" data-act="mpApply">Als Wechsel übernehmen</button></div>` : ""}</section>`;
+  }
+  LZ.actions.mpEven = () => { evenOut(); SZ.cur.plan.result = null; LZ.render(); };
+  LZ.actions.mpCalc = async () => {
+    const c = SZ.cur, P = c.plan;
+    P.result = window.LZMatchplan.plan(planInput()); LZ.render();
+    const r = await LZ.Store.send("matches.php", { action: "plan", id: c.game.id, plan: { grid: P.grid, players: planInput().players.map(p => ({ nr: p.nr, pos: p.pos, target: p.target })) } });
+    if (!r.ok) { SZ.err = r.error || "Matchplan konnte nicht gespeichert werden."; LZ.render(); }
+  };
+  LZ.actions.mpApply = () => {
+    const c = SZ.cur, res = c.plan.result; if (!res) return;
+    c.m.squad.forEach(s => { s.starter = res.starters.includes(s.nr); });
+    c.m.subs = res.subs.map(s => ({ minute: s.minute, out: s.out, in: s.in ?? null }));
+    changed(); SZ.msg = "Wechsel aus dem Matchplan übernommen – zum Festhalten unten „Speichern“."; LZ.render();
+  };
+
   function gameView() {
     const c = SZ.cur;
     if (c.loading) return `${LZ.coachNav("spielzeiten")}<p class="small">Lade …</p>`;
@@ -100,6 +186,7 @@
         <p class="small">Antippen wechselt: nicht dabei → Startelf → Einwechselspieler → nicht dabei.</p>
         ${c.lineup.length || c.kader.length ? `<button class="linkbtn" data-act="szLineup">Aus Aufstellung und Kader übernehmen (Startelf ${c.lineup.length}${c.kader.length ? ` · Kader ${c.kader.length}` : ""})</button>` : ""}
         <div class="squad">${(LZ.C.players || []).map(p => `<button class="sq-${st[p.nr] || "none"}" data-act="szCycle" data-v="${p.nr}" aria-label="Nummer ${p.nr}: ${st[p.nr] === "start" ? "Startelf" : st[p.nr] === "bank" ? "Einwechselspieler" : "nicht dabei"}">${LZ.shirt(p.nr)}<span>${st[p.nr] === "start" ? "Start" : st[p.nr] === "bank" ? "Einw." : "–"}</span></button>`).join("")}</div></section>
+      ${planCard()}
       <section class="card stack"><h2>Wechsel</h2>
         <div class="row wrow">
           <div class="fld"><label for="sz-min">Minute</label><input id="sz-min" type="number" min="0" max="${m.duration}" inputmode="numeric" value="${esc(SZ.f.minute)}" style="width:5em"></div>
@@ -159,6 +246,9 @@
     else if (id === "sz-ga") { m.ga = num(0, 99); changed(); }
     else if (id === "sz-min") { SZ.f.minute = v; if (e.type === "change") LZ.render(); }   // Auswahl „Raus“ hängt von der Minute ab
     else if (id === "sz-out") SZ.f.out = v;
+    else if (id === "mp-grid") { SZ.cur.plan.grid = +v; SZ.cur.plan.result = null; LZ.render(); }
+    else if (id.startsWith("mp-pos-")) { SZ.cur.plan.rows[+id.slice(7)].pos = v; SZ.cur.plan.result = null; LZ.render(); }
+    else if (id.startsWith("mp-t-")) { const r = SZ.cur.plan.rows[+id.slice(5)]; r.target = num(0, m.duration) ?? 0; if (e.type === "change") { SZ.cur.plan.result = null; LZ.render(); } }
     else if (id === "sz-in") SZ.f.in = v;
   });
 })();

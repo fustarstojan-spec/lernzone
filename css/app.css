@@ -613,3 +613,28 @@ body:not(.side-open):not(.side-mob) .side .sitem{justify-content:center;padding-
 .dragghost{position:fixed;z-index:50;pointer-events:none;transform:translate(-50%,-50%) scale(1.1);opacity:.9;background:var(--surface);border:2px solid var(--accent);border-radius:12px;padding:4px;display:grid;justify-items:center;box-shadow:0 8px 20px rgba(0,0,0,.25)}
 .dragghost svg{width:36px;height:34px}
 body.dragging{cursor:grabbing}
+
+/* 0.32.0 Halbzeitpausen, Matchplan */
+.durtable{display:grid;grid-template-columns:minmax(8rem,1fr) 9rem 9rem;gap:8px 12px;align-items:center}
+.durtable>b{font-size:.8rem;color:var(--muted)}
+.durtable input{font:inherit;font-size:1.05rem;padding:8px 10px;border:1.5px solid var(--rule);border-radius:10px;background:var(--surface);color:var(--fg);width:100%;box-sizing:border-box}
+@media (max-width:520px){.durtable{grid-template-columns:1fr 5.5rem 5.5rem}}
+.mplist{display:grid}
+.mprow{display:grid;grid-template-columns:minmax(7rem,11rem) 3rem 5rem 7rem 1fr;align-items:center;gap:6px 10px;padding:6px 0;border-bottom:1px solid var(--rule)}
+.mprow select,.mpmin input{font:inherit;padding:6px 8px;border:1.5px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--fg)}
+.mpmin{display:flex;align-items:center;gap:4px;white-space:nowrap}
+.mpmin input{width:4.2em}
+@media (max-width:599px){.mprow{grid-template-columns:1fr auto auto}.mprow>.small:first-of-type{display:none}.mprow>span:last-child{grid-column:1/-1}}
+.okc{color:var(--ok);font-weight:700}.warnc{color:var(--bad);font-weight:700}
+.mpgroups{display:flex;flex-wrap:wrap;gap:6px}
+.mpg{font-size:.85rem;padding:3px 9px;border-radius:99px;border:1px solid var(--rule);font-variant-numeric:tabular-nums}
+.mpg.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.mpg.warn{background:var(--set-chip);color:var(--set-ink);border-color:transparent}
+.mpg.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.mpwarn{margin:0;padding-left:1.2rem}
+.mpsubs em{font-style:normal;font-weight:700;color:var(--accent)}
+.mptl{display:grid;gap:4px;margin-top:4px}
+.mptlrow{display:grid;grid-template-columns:5.5rem 1fr;align-items:center;gap:8px}
+.mpbar{position:relative;height:20px;background:var(--rule);border-radius:6px;overflow:hidden}
+.mpbar b{position:absolute;top:0;bottom:0;background:var(--shirt);color:#fff;font-size:.7rem;display:grid;place-items:center;border-radius:4px;font-weight:700}
+.mpbrk{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--bg);z-index:1}

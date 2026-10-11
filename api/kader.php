@@ -4,13 +4,13 @@
  * Trainer:
  *   GET ?id=5        → {ok, game:{id, date, time, title, kind, type, typeAuto}, announced, announcedAt, players:[{nr, status, reason, note}],
  *                       reasons:{key:text}, types:{key:text}, lineup:{starters:[nr], bench:[nr]}|null}
- *   GET ?settings=1  → {ok, durations:{liga, freundschaft, pokal, turnier}, types}
+ *   GET ?settings=1  → {ok, durations:{liga, freundschaft, pokal, turnier}, pauses:{…}, types}
  *   POST {action:"set", id, nr, status:"kader"|"out"|"", reason, note}
  *   POST {action:"all", id, status:"kader"|""}        alle Spieler auf einmal
  *   POST {action:"lineup", id}                         aus der Aufstellung übernehmen
  *   POST {action:"announce", id, on}                   bekannt geben / zurücknehmen
  *   POST {action:"type", id, type}                     Spielart für dieses Spiel ('' = automatisch)
- *   POST {action:"durations", durations:{…}}           Spielzeit je Spielart (Cheftrainer)
+ *   POST {action:"durations", durations:{…}, pauses:{…}}  Spielzeit und Halbzeitpausen je Spielart (Cheftrainer)
  * Spieler sehen ihren eigenen Status über api/my.php (games), nie Notizen und nie andere Kinder.
  */
 require __DIR__ . '/config.php';
@@ -34,14 +34,15 @@ $fail = fn(string $m, int $c = 400) => json_out(['ok' => false, 'error' => $m], 
 $touch = fn(int $id) => db()->prepare('INSERT INTO match_calls (training_id, updated_by) VALUES (?, ?) ON CONFLICT(training_id) DO UPDATE SET updated_by = excluded.updated_by, updated_at = CURRENT_TIMESTAMP')->execute([$id, $me['id']]);
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    if (isset($_GET['settings'])) json_out(['ok' => true, 'durations' => game_durations(), 'types' => GAME_TYPES]);
+    if (isset($_GET['settings'])) json_out(['ok' => true, 'durations' => game_durations(), 'pauses' => game_pauses(), 'types' => GAME_TYPES]);
     $id = (int)($_GET['id'] ?? 0); $g = $game($id);
     if (!$g) $fail('Dieses Spiel gibt es nicht.', 404);
     $st = db()->prepare('SELECT nr, status, reason, note FROM match_call_players WHERE training_id = ? ORDER BY nr'); $st->execute([$id]);
     $players = array_map(fn($r) => ['nr' => (int)$r['nr'], 'status' => $r['status'], 'reason' => $r['reason'], 'note' => $r['note']], $st->fetchAll(PDO::FETCH_ASSOC));
     json_out(['ok' => true,
         'game' => ['id' => (int)$g['id'], 'date' => $g['date'], 'time' => $g['time'], 'title' => $g['title'] ?: 'Spiel', 'kind' => $g['kind'],
-                   'type' => game_type($g['kind'], (string)$g['title'], $g['gtype']), 'typeAuto' => $g['gtype'] === '', 'duration' => game_durations()[game_type($g['kind'], (string)$g['title'], $g['gtype'])]],
+                   'type' => game_type($g['kind'], (string)$g['title'], $g['gtype']), 'typeAuto' => $g['gtype'] === '', 'duration' => game_durations()[game_type($g['kind'], (string)$g['title'], $g['gtype'])],
+                   'pauses' => game_pauses()[game_type($g['kind'], (string)$g['title'], $g['gtype'])]],
         'announced' => (bool)$g['announced'], 'announcedAt' => $g['announced_at'], 'players' => $players,
         'reasons' => KADER_REASONS, 'types' => GAME_TYPES, 'lineup' => $lineup($id)]);
 }
@@ -52,8 +53,11 @@ if ($action === 'durations') {
     if (!$me['isAdmin']) $fail('Das dürfen Cheftrainer.', 403);
     $d = [];
     foreach (GAME_DURATION_DEFAULT as $k => $def) { $v = int_in($in['durations'][$k] ?? null, 1, 240); if ($v === null) $fail('Spielzeit bitte zwischen 1 und 240 Minuten.'); $d[$k] = $v; }
-    db()->prepare("INSERT INTO settings (name, value) VALUES ('match_durations', ?) ON CONFLICT(name) DO UPDATE SET value = excluded.value")->execute([json_encode($d)]);
-    json_out(['ok' => true, 'durations' => game_durations()]);
+    $pz = [];
+    foreach (GAME_PAUSES_DEFAULT as $k => $def) { $v = int_in($in['pauses'][$k] ?? $def, 0, 5); if ($v === null) $fail('Halbzeitpausen bitte zwischen 0 und 5.'); $pz[$k] = $v; }
+    $set = db()->prepare("INSERT INTO settings (name, value) VALUES (?, ?) ON CONFLICT(name) DO UPDATE SET value = excluded.value");
+    $set->execute(['match_durations', json_encode($d)]); $set->execute(['match_pauses', json_encode($pz)]);
+    json_out(['ok' => true, 'durations' => game_durations(), 'pauses' => game_pauses()]);
 }
 $id = (int)($in['id'] ?? 0); $g = $game($id);
 if (!$g) $fail('Dieses Spiel gibt es nicht.', 404);
@@ -94,6 +98,6 @@ switch ($action) {
         $t = (string)($in['type'] ?? ''); if ($t !== '' && !isset(GAME_TYPES[$t])) $fail('Unbekannte Spielart.');
         $touch($id);
         db()->prepare('UPDATE match_calls SET gtype = ? WHERE training_id = ?')->execute([$t, $id]);
-        json_out(['ok' => true, 'type' => game_type($g['kind'], (string)$g['title'], $t), 'duration' => game_durations()[game_type($g['kind'], (string)$g['title'], $t)]]);
+        json_out(['ok' => true]);
 }
 $fail('Unbekannte Aktion');

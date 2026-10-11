@@ -6,9 +6,11 @@
  * GET ?id=5  → {ok, game, match:{duration, gf, ga, squad:[{nr, starter}], subs:[{minute, out, in}]}|null, lineup:[nr]|null, minutes:{nr: min}}
  * POST {action:"save", id, duration, gf, ga, squad:[{nr, starter}], subs:[{minute, out, in}]}
  * POST {action:"clear", id}   Erfassung löschen
+ * POST {action:"plan", id, plan:{grid, players:[{nr, pos, target}]}}   Matchplan-Eingaben speichern (ab 0.32.0)
+ * GET ?id= liefert zusätzlich pauses (Halbzeitpausen der Spielart), slots:[Positionen der Aufstellung] und plan
  */
 require __DIR__ . '/config.php';
-require_coach();
+$me = require_coach();
 require __DIR__ . '/lib/matchday.php';
 
 /* Minuten pro Spieler: Startelf ab 0, Wechsel in Minuten-Reihenfolge, Ende = Dauer */
@@ -60,9 +62,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $bench = db()->prepare("SELECT data FROM boards WHERE kind = 'lineup' AND training_id = ? ORDER BY updated_at DESC LIMIT 1"); $bench->execute([$id]);
         $bd = json_decode((string)$bench->fetchColumn(), true) ?: [];
         $kd = db()->prepare("SELECT nr FROM match_call_players WHERE training_id = ? AND status = 'kader' ORDER BY nr"); $kd->execute([$id]);
+        $slots = array_values(array_map(fn($i) => ['lab' => (string)($i['lab'] ?? ''), 'nr' => isset($i['nr']) ? (int)$i['nr'] : null], array_filter($bd['items'] ?? [], fn($i) => ($i['t'] ?? '') === 'own')));
+        $pl = db()->prepare('SELECT data FROM match_plans WHERE training_id = ?'); $pl->execute([$id]); $plan = json_decode((string)$pl->fetchColumn(), true);
         json_out(['ok' => true, 'game' => $g + ['type' => $type, 'typeLabel' => GAME_TYPES[$type]], 'match' => $match, 'lineup' => $lineupOf($id),
                   'bench' => array_map('intval', $bd['bench'] ?? []), 'kader' => array_map('intval', $kd->fetchAll(PDO::FETCH_COLUMN)),
-                  'defaultDuration' => game_durations()[$type], 'minutes' => (object)match_minutes($id)]);
+                  'defaultDuration' => game_durations()[$type], 'pauses' => game_pauses()[$type], 'slots' => $slots, 'formation' => (string)($bd['formation'] ?? ''),
+                  'plan' => $plan ?: null, 'minutes' => (object)match_minutes($id)]);
     }
     $season = (string)(db()->query("SELECT value FROM settings WHERE name = 'season_start'")->fetchColumn() ?: '2000-01-01');
     $st = db()->prepare("SELECT t.id, t.date, t.time, t.title, t.kind, m.duration, m.goals_for, m.goals_against
@@ -103,6 +108,19 @@ $id = (int)($in['id'] ?? 0);
 if (!$gameRow($id)) json_out(['ok' => false, 'error' => 'Dieses Spiel gibt es nicht.'], 404);
 if (($in['action'] ?? '') === 'clear') {
     foreach (['matches', 'match_squad', 'match_subs'] as $t) db()->prepare("DELETE FROM $t WHERE training_id = ?")->execute([$id]);
+    json_out(['ok' => true]);
+}
+if (($in['action'] ?? '') === 'plan') {
+    $known = array_map('intval', db()->query('SELECT nr FROM players')->fetchAll(PDO::FETCH_COLUMN));
+    $pin = is_array($in['plan'] ?? null) ? $in['plan'] : [];
+    $ps = [];
+    foreach (array_slice(is_array($pin['players'] ?? null) ? $pin['players'] : [], 0, 40) as $p) {
+        $nr = (int)($p['nr'] ?? 0); if (!in_array($nr, $known, true)) continue;
+        $ps[] = ['nr' => $nr, 'pos' => clean_text($p['pos'] ?? '', 4), 'target' => int_in($p['target'] ?? 0, 0, 240) ?? 0];
+    }
+    $plan = ['grid' => int_in($pin['grid'] ?? 10, 1, 45) ?? 10, 'players' => $ps];
+    db()->prepare('INSERT INTO match_plans (training_id, data, updated_by) VALUES (?, ?, ?) ON CONFLICT(training_id) DO UPDATE SET data = excluded.data, updated_by = excluded.updated_by, updated_at = CURRENT_TIMESTAMP')
+        ->execute([$id, json_encode($plan, JSON_UNESCAPED_UNICODE), $me['id']]);
     json_out(['ok' => true]);
 }
 if (($in['action'] ?? '') !== 'save') json_out(['ok' => false, 'error' => 'Unbekannte Aktion'], 400);

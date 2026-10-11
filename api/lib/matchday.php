@@ -5,6 +5,7 @@
  */
 const GAME_TYPES = ['liga' => 'Ligaspiel', 'freundschaft' => 'Freundschaftsspiel', 'pokal' => 'Pokalspiel', 'turnier' => 'Turnier'];
 const GAME_DURATION_DEFAULT = ['liga' => 70, 'freundschaft' => 70, 'pokal' => 70, 'turnier' => 20];
+const GAME_PAUSES_DEFAULT = ['liga' => 1, 'freundschaft' => 1, 'pokal' => 1, 'turnier' => 0];   // Halbzeitpausen (ab 0.32.0): Abschnitte = Pausen + 1
 // Gründe für „diesmal nicht im Kader“ – das Kind sieht nur diesen Text, nie die Trainer-Notiz. Keine Gesundheitsgründe.
 const KADER_REASONS = [
     'rotation'  => 'Rotation – diesmal sind andere dran',
@@ -30,6 +31,13 @@ function game_durations(): array {
     $d = $v ? (json_decode($v, true) ?: []) : [];
     $out = [];
     foreach (GAME_DURATION_DEFAULT as $k => $def) $out[$k] = isset($d[$k]) ? max(1, min(240, (int)$d[$k])) : $def;
+    return $out;
+}
+function game_pauses(): array {
+    $v = db()->query("SELECT value FROM settings WHERE name = 'match_pauses'")->fetchColumn();
+    $d = $v ? (json_decode($v, true) ?: []) : [];
+    $out = [];
+    foreach (GAME_PAUSES_DEFAULT as $k => $def) $out[$k] = isset($d[$k]) ? max(0, min(5, (int)$d[$k])) : $def;
     return $out;
 }
 function game_type_of(int $id): string {
