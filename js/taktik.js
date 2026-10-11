@@ -1,7 +1,8 @@
 /*
  * Lernzone – Taktiktafel und Aufstellungen (nur Weg B / PHP)
  * Trainer (Reiter „Taktik“): freie Tafel mit eigenen Spielern, Gegnern, Ball, Pässen, Laufwegen und Linien;
- *   Aufstellung pro Spiel (Spieler aus dem Kader den Positionen zuordnen, Rest = Bank); speichern; für Spieler freigeben.
+ *   Aufstellung pro Spiel: Spieler auf Positionen (Startelf) oder auf die Bank (Einwechselspieler, data.bench) ziehen oder tippen;
+ *   Speichern mit Spiel übernimmt Startelf + Einwechselspieler als Kader (api/kader.php, ab 0.31.0); für Spieler freigeben.
  * Spieler: freigegebene Tafeln ansehen (Startseite) – nur die eigene Nummer ist sichtbar, gelber Ring.
  * Daten: api/boards.php · Maße in Metern (68 × 105, Angriff nach oben)
  */
@@ -114,7 +115,9 @@
     const ownSlots = d.items.filter(i => i.t === "own");
     const used = new Set(d.items.filter(i => i.nr).map(i => i.nr));
     const players = LZ.C.players || [];
-    const bench = players.filter(p => !used.has(p.nr));
+    const benchSet = new Set((d.bench || []).filter(n => !used.has(n)));
+    const out = players.filter(p => !used.has(p.nr) && !benchSet.has(p.nr));
+    const chip = (p, cls) => `<button class="${cls} ${TB.pick === p.nr ? "picked" : ""}" data-act="tbSquad" data-v="${p.nr}" data-drag="${p.nr}" title="${esc([p.posOff, p.posDef].filter(Boolean).join(" / "))}">${LZ.shirt(p.nr)}<span>${esc((p.name || "").split(" ")[0] || [p.posOff, p.posDef].filter(Boolean).join("/") || "")}</span></button>`;
     const selIt = d.items.find(i => i.id === TB.sel);
     return `${LZ.coachNav("taktik")}<button class="back" data-act="tbBackList">‹ Taktik</button>
       <section class="stack"><p class="eyebrow">${c.kind === "lineup" ? "Aufstellung" : "Taktiktafel"}${TB.dirty ? " · nicht gespeichert" : ""}</p>
@@ -136,11 +139,17 @@
       ${pickP ? `<section class="card stack picker"><div class="rowspread"><h3>Nr. ${pickP.nr}${pickP.name ? " · " + esc(pickP.name.split(" ")[0]) : ""} – welche Position?</h3><button class="linkbtn" data-act="tbPickNo">abbrechen</button></div>
         ${pickP.posOff || pickP.posDef ? `<p class="small">Positionen laut Kader: ${esc([pickP.posOff, pickP.posDef].filter(Boolean).join(" / "))}</p>` : ""}
         <div class="slotgrid">${ownSlots.map(s => `<button class="${s.nr ? "taken" : ""} ${[pickP.posOff, pickP.posDef].includes(s.lab) ? "fit" : ""}" data-act="tbSlot" data-v="${s.id}"><b>${esc(s.lab || "?")}</b><span class="small">${s.nr ? (s.nr === pickP.nr ? "hier" : "Nr. " + s.nr) : "frei"}</span></button>`).join("")}</div>
-        ${used.has(pickP.nr) ? `<button class="linkbtn" data-act="tbUnplace">Vom Feld nehmen (Bank)</button>` : ""}</section>` : ""}
-      ${players.length ? `<section class="card stack"><div class="rowspread"><h3>${isL ? "Kader" : "Spieler zuordnen (optional)"}</h3>${isL ? `<button class="linkbtn" data-act="tbAuto">nach Positionen füllen</button>` : ""}</div>
+        ${isL ? `<div class="row">${benchSet.has(pickP.nr) ? "" : `<button class="btn ghost small" data-act="tbBench">Als Einwechselspieler</button>`}${used.has(pickP.nr) || benchSet.has(pickP.nr) ? `<button class="btn ghost small" data-act="tbOut">Nicht im Kader</button>` : ""}</div>`
+          : used.has(pickP.nr) ? `<button class="linkbtn" data-act="tbUnplace">Vom Feld nehmen</button>` : ""}</section>` : ""}
+      ${players.length && isL ? `<section class="card stack benchzone" id="tb-bench"><div class="rowspread"><h3>Einwechselspieler <span class="small">${benchSet.size}</span></h3></div>
+        ${benchSet.size ? `<div class="squad">${players.filter(p => benchSet.has(p.nr)).map(p => chip(p, "benched")).join("")}</div>` : `<p class="small droptext">Spieler hierher ziehen – oder Spieler antippen und „Als Einwechselspieler“ wählen.</p>`}</section>
+      <section class="card stack" id="tb-out"><div class="rowspread"><h3>Nicht im Kader <span class="small">${out.length}</span></h3><button class="linkbtn" data-act="tbAuto">Feld nach Positionen füllen</button></div>
+        <p class="small">Auf eine Position auf dem Feld oder zu den Einwechselspielern ziehen – oder antippen und auswählen. Zurück hierher ziehen nimmt den Spieler aus dem Kader.</p>
+        <div class="squad">${out.map(p => chip(p, "")).join("") || `<span class="small">Alle Spieler sind im Kader.</span>`}</div>
+        <p class="small"><b>Startelf:</b> ${used.size} · <b>Einwechselspieler:</b> ${benchSet.size} · <b>Kader:</b> ${used.size + benchSet.size}${c.trainingId ? " – beim Speichern wird das der Kader für dieses Spiel." : ""}</p></section>`
+      : players.length ? `<section class="card stack"><div class="rowspread"><h3>Spieler zuordnen (optional)</h3></div>
         <p class="small">${selIt && selIt.t === "own" ? "Tippe eine Nummer an, um sie der ausgewählten Figur zu geben." : "Namen antippen und dann die Position wählen – oder erst eine Position auf dem Feld antippen."}</p>
-        <div class="squad">${players.map(p => `<button class="${used.has(p.nr) ? "used" : ""} ${TB.pick === p.nr ? "picked" : ""}" data-act="tbSquad" data-v="${p.nr}" title="${esc([p.posOff, p.posDef].filter(Boolean).join(" / "))}">${LZ.shirt(p.nr)}<span>${esc((p.name || "").split(" ")[0] || [p.posOff, p.posDef].filter(Boolean).join("/") || "")}</span></button>`).join("")}</div>
-        ${c.kind === "lineup" ? `<p class="small"><b>Startelf:</b> ${used.size} · <b>Bank:</b> ${bench.map(p => p.nr).join(", ") || "–"}</p>` : ""}</section>` : ""}
+        <div class="squad">${players.map(p => chip(p, used.has(p.nr) ? "used" : "")).join("")}</div></section>` : ""}
       <label class="check"><input type="checkbox" id="tb-shared" ${c.shared ? "checked" : ""}> Für Spieler sichtbar (sie sehen Positionen und nur ihre eigene Nummer)</label>
       ${TB.err ? `<p class="err" style="text-align:left">${esc(TB.err)}</p>` : ""}${TB.msg ? `<p class="okmsg">${esc(TB.msg)}</p>` : ""}
       <div class="row"><button class="btn" data-act="tbSave" ${TB.busy ? "disabled" : ""}>Speichern</button>
@@ -178,11 +187,25 @@
     TB.pick = TB.pick === +v ? null : +v; TB.err = ""; LZ.render();
   };
   LZ.actions.tbPickNo = () => { TB.pick = null; LZ.render(); };
+  /* Spieler an einen Ort setzen: Figur auf dem Feld (Startelf), "bench" (Einwechselspieler) oder "out" (nicht im Kader) */
+  function placeNr(nr, where) {
+    const d = TB.cur.data; d.bench = d.bench || [];
+    const from = d.items.find(i => i.nr === nr), wasBench = d.bench.includes(nr);
+    const target = where && where !== "bench" && where !== "out" ? d.items.find(i => i.id === where) : null;
+    const other = target && target.nr && target.nr !== nr ? target.nr : null;   // wer dort stand, tauscht den Platz
+    if (from) delete from.nr;
+    d.bench = d.bench.filter(n => n !== nr && n !== other);
+    if (where === "bench") d.bench.push(nr);
+    if (target) target.nr = nr;
+    if (other) { if (from) from.nr = other; else if (wasBench) d.bench.push(other); }
+    changed();
+  }
   LZ.actions.tbSlot = (b, id) => {
-    const d = TB.cur.data, s = d.items.find(i => i.id === id); if (!s) return;
-    d.items.forEach(i => { if (i.nr === TB.pick) delete i.nr; });       // Spieler nur einmal auf dem Feld
-    s.nr = TB.pick; TB.pick = null; changed(); LZ.render();
+    const s = TB.cur.data.items.find(i => i.id === id); if (!s) return;
+    placeNr(TB.pick, id); TB.pick = null; LZ.render();
   };
+  LZ.actions.tbBench = () => { placeNr(TB.pick, "bench"); TB.pick = null; LZ.render(); };
+  LZ.actions.tbOut = () => { placeNr(TB.pick, "out"); TB.pick = null; LZ.render(); };
   LZ.actions.tbUnplace = () => { TB.cur.data.items.forEach(i => { if (i.nr === TB.pick) delete i.nr; }); TB.pick = null; changed(); LZ.render(); };
   LZ.actions.tbEmpty = () => { TB.cur.data.items.forEach(i => { if (i.t === "own") delete i.nr; }); TB.sel = null; TB.pick = null; changed(); LZ.render(); };
   LZ.actions.tbAssign = (b, v) => {
@@ -190,7 +213,7 @@
     if (!it || it.t !== "own") { TB.err = "Erst eine eigene Figur auf dem Feld antippen."; LZ.render(); return; }
     const nr = +v; TB.err = "";
     TB.cur.data.items.forEach(i => { if (nr && i.nr === nr) delete i.nr; });   // Nummer nur einmal auf dem Feld
-    if (nr) it.nr = nr; else delete it.nr;
+    if (nr) { it.nr = nr; TB.cur.data.bench = (TB.cur.data.bench || []).filter(n => n !== nr); } else delete it.nr;
     // nächste eigene Figur ohne Nummer auswählen – schnelles Durchtippen
     const next = TB.cur.data.items.find(i => i.t === "own" && !i.nr);
     TB.sel = nr && next ? next.id : TB.sel;
@@ -211,7 +234,7 @@
     const r = await LZ.Store.send("boards.php", { action: "save", id: c.id, title: c.title, kind: c.kind, trainingId: c.trainingId, shared: c.shared, data: c.data });
     TB.busy = false;
     if (!r.ok) { TB.err = r.error || "Speichern hat nicht geklappt."; LZ.render(); return; }
-    c.id = r.id; TB.dirty = false; TB.msg = "Gespeichert."; LZ.render();
+    c.id = r.id; TB.dirty = false; TB.msg = r.kader ? "Gespeichert – Startelf und Einwechselspieler sind jetzt der Kader für dieses Spiel." : "Gespeichert."; LZ.render();
   };
   LZ.actions.tbCopy = () => { const c = clone(TB.cur); c.id = null; c.title = (c.title || "Tafel") + " (Kopie)"; c.shared = false; edit(c); };
   LZ.actions.tbDelAsk = () => { TB.confirm = true; LZ.render(); };
@@ -253,7 +276,7 @@
     if (TB.mode === "move") {
       if (!tok) { if (TB.sel) { TB.sel = null; LZ.render(); } return; }
       const it = d.items.find(i => i.id === tok.dataset.tok);
-      P = { kind: "drag", it, el: tok, start: pt, off: [it.x - pt[0], it.y - pt[1]], moved: false };
+      P = { kind: "drag", it, el: tok, start: pt, off: [it.x - pt[0], it.y - pt[1]], moved: false, ox: it.x, oy: it.y };
     } else {
       const ln = document.createElementNS("http://www.w3.org/2000/svg", "line");
       ln.setAttribute("class", TB.mode); ln.setAttribute("x1", pt[0]); ln.setAttribute("y1", pt[1]); ln.setAttribute("x2", pt[0]); ln.setAttribute("y2", pt[1]);
@@ -270,7 +293,7 @@
     const pt = svgPt(svg, e);
     if (P.kind === "drag") {
       if (!P.moved && Math.hypot(pt[0] - P.start[0], pt[1] - P.start[1]) < 0.8) return;
-      P.moved = true; P.it.x = +(pt[0] + P.off[0]).toFixed(2); P.it.y = +(pt[1] + P.off[1]).toFixed(2);
+      P.moved = true; P.cx = e.clientX; P.cy = e.clientY; P.it.x = +(pt[0] + P.off[0]).toFixed(2); P.it.y = +(pt[1] + P.off[1]).toFixed(2);
       P.el.setAttribute("transform", `translate(${P.it.x} ${P.it.y})`);
     } else { P.el.setAttribute("x2", pt[0]); P.el.setAttribute("y2", pt[1]); P.t = pt; }
   });
@@ -278,7 +301,11 @@
     if (!P) return;
     const p = P; P = null;
     if (p.kind === "drag") {
-      if (p.moved) changed(); else TB.sel = TB.sel === p.it.id ? null : p.it.id;
+      // Aufstellung: Figur mit Spieler zu den Einwechselspielern / aus dem Kader ziehen → Figur bleibt auf ihrer Position, Spieler wechselt
+      const over = p.moved && p.it.nr && TB.cur.kind === "lineup" && document.elementFromPoint(p.cx, p.cy);
+      const zone = over && (over.closest("#tb-bench") ? "bench" : over.closest("#tb-out") ? "out" : "");
+      if (zone) { p.it.x = p.ox; p.it.y = p.oy; placeNr(p.it.nr, zone); }
+      else if (p.moved) changed(); else TB.sel = TB.sel === p.it.id ? null : p.it.id;
       LZ.render();
     } else {
       if (p.t && Math.hypot(p.t[0] - p.f[0], p.t[1] - p.f[1]) > 2) { TB.cur.data.lines.push({ id: uid(), k: TB.mode, f: p.f.map(v => +(+v).toFixed(2)), t: p.t.map(v => +v.toFixed(2)) }); changed(); }
@@ -287,6 +314,50 @@
   };
   document.addEventListener("pointerup", end);
   document.addEventListener("pointercancel", end);
+
+  /* ---------- Aufstellung: Spieler-Kärtchen auf das Feld oder auf die Bank ziehen (ab 0.31.0) ---------- */
+  let D = null, noClick = false;
+  document.addEventListener("pointerdown", e => {
+    const b = e.target.closest("[data-drag]"); if (!b || !TB.cur || TB.cur.kind !== "lineup" || e.button > 0) return;
+    D = { nr: +b.dataset.drag, x: e.clientX, y: e.clientY, src: b, ghost: null };
+  });
+  document.addEventListener("pointermove", e => {
+    if (!D) return;
+    if (!D.ghost) {
+      if (Math.hypot(e.clientX - D.x, e.clientY - D.y) < 8) return;
+      D.ghost = D.src.cloneNode(true); D.ghost.className = "dragghost"; document.body.appendChild(D.ghost);
+      document.body.classList.add("dragging");
+    }
+    e.preventDefault();
+    D.ghost.style.left = e.clientX + "px"; D.ghost.style.top = e.clientY + "px";
+    const over = document.elementFromPoint(e.clientX, e.clientY);
+    document.querySelectorAll(".dropon").forEach(el => el.classList.remove("dropon"));
+    const z = over && (over.closest("#tb-bench") || over.closest("#tb-out") || over.closest("#tb-pitch [data-tok]"));
+    if (z) z.classList.add("dropon");
+  }, { passive: false });
+  const dropEnd = e => {
+    if (!D) return;
+    const d = D; D = null;
+    document.querySelectorAll(".dropon").forEach(el => el.classList.remove("dropon"));
+    document.body.classList.remove("dragging");
+    if (!d.ghost) return;
+    d.ghost.remove(); noClick = true; setTimeout(() => { noClick = false; }, 0);
+    if (e.type === "pointercancel") return;
+    const over = document.elementFromPoint(e.clientX, e.clientY); if (!over) return;
+    const tok = over.closest("#tb-pitch [data-tok]"), svg = over.closest("#tb-pitch svg");
+    let where = over.closest("#tb-bench") ? "bench" : over.closest("#tb-out") ? "out" : null;
+    if (!where && tok) { const it = TB.cur.data.items.find(i => i.id === tok.dataset.tok); if (it && it.t === "own") where = it.id; }
+    if (!where && svg) {   // freie Stelle: nächste eigene Position in der Nähe
+      const pt = svgPt(svg, e); let best = null, bd = 9;
+      TB.cur.data.items.filter(i => i.t === "own").forEach(i => { const dd = Math.hypot(i.x - pt[0], i.y - pt[1]); if (dd < bd) { bd = dd; best = i; } });
+      if (best) where = best.id;
+    }
+    if (!where) return;
+    placeNr(d.nr, where); TB.pick = null; LZ.render();
+  };
+  document.addEventListener("pointerup", dropEnd);
+  document.addEventListener("pointercancel", dropEnd);
+  document.addEventListener("click", e => { if (noClick) { e.stopPropagation(); e.preventDefault(); noClick = false; } }, true);
 
   /* ---------- Spieler: freigegebene Tafeln ansehen ---------- */
   async function loadShared() {

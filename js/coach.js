@@ -47,7 +47,7 @@
     if (target === "form") return show("form", { type: "feld", nr: "", uname: "", posOff: "", posDef: "" });
     if (target === "kader") { show("kader"); await refreshPlayers(); LZ.render(); return; }
     if (target === "trainings") return openTrainings();
-    if (target === "coaches") { show("coaches"); await loadCoaches(); if (Co().isAdmin) loadCal(); return; }
+    if (target === "coaches") { show("coaches"); await loadCoaches(); if (Co().isAdmin) { loadCal(); loadDurations(); } return; }
   }
   LZ.actions.addStart = () => start("form");
   LZ.actions.kaderStart = () => start("kader");
@@ -183,6 +183,7 @@
         <div class="nrgrid">${LZ.C.players.map(p => { const m = moods[p.nr]; return `<button class="nr ${pres.has(p.nr) ? "" : "absent"}" data-act="tAtt" data-v="${p.nr}" aria-pressed="${pres.has(p.nr)}" aria-label="Nummer ${p.nr} ${pres.has(p.nr) ? "da" : "nicht da"}">${LZ.shirt(p.nr)}<span>${abs[p.nr] && !pres.has(p.nr) ? `<em class="abstag">abgesagt</em>` : `${m && m.vor ? LAUNE[(m.vor.laune || 3) - 1] : "&nbsp;"}${m && m.nach ? " " + m.nach.rpe : ""}`}</span></button>`; }).join("")}</div>
         ${(d.absences || []).length ? `<div class="abslist"><b>Abgesagt (${d.absences.length})</b>${d.absences.map(a => `<span>Nr. ${a.nr} · ${esc(a.label)}</span>`).join("")}</div>` : ""}</section>`}
       ${t.kind === "training" && t.state !== 2 ? gradeSection(d, pres) : ""}
+      ${d.kader ? kaderSection(d.kader) : ""}
       <section class="card stack"><h2>Befinden</h2>${sorted.length ? sorted.map(m => { const p = LZ.C.players.find(x => x.nr === m.nr) || {}; return `
         <div class="moodrow ${alert(m) ? "hot" : ""}"><b>Nr. ${m.nr}${p.name ? " · " + esc(p.name.split(" ")[0]) : ""}</b><span>${moodLine(m.vor, m.nach) || "–"}</span>${comments(m.vor, m.nach)}</div>`; }).join("") : `<p class="small">Noch keine Rückmeldungen. Die Spieler sehen die Abfrage am Trainingstag in „Mein Bereich“.</p>`}</section>
       ${errP()}
@@ -202,7 +203,7 @@
         ${userField("cf-user", "Benutzername", T.cf.user, "Leer lassen = Vorname.")}
         <label class="check"><input type="checkbox" id="cf-admin" ${T.cf.isAdmin ? "checked" : ""}> Cheftrainer</label>
         ${errP()}${okP()}<button class="btn wide" data-act="coachAdd" ${T.busy ? "disabled" : ""}>Trainer hinzufügen</button></section>
-      ${calCard()}${seasonCard()}` : ""}`;
+      ${calCard()}${seasonCard()}${durCard()}` : ""}`;
     }
 
     if (s === "coachEdit") {
@@ -369,6 +370,7 @@
     if (!r.ok) return fail(r);
     r.grades = g && g.ok ? g : { mine: {}, others: {}, count: {}, notes: {}, otherNotes: {} };
     r.grades.notes = r.grades.notes || {}; r.grades.otherNotes = r.grades.otherNotes || {};
+    if (["spiel", "turnier"].includes(r.training.kind)) { const k = await St().get("kader.php?id=" + id); r.kader = k && k.ok ? k : null; }
     T.tr = r; LZ.render();
   }
   LZ.actions.tCreate = async () => {
@@ -410,6 +412,72 @@
     if (!r.ok) return fail(r);
     T.tr.grades.notes[nr] = r.text;
   }
+  /* ---------- Kader für Spiele (ab 0.31.0): im Kader / nicht dabei mit Grund, Bekanntgabe; Spieler sehen nur ihren eigenen Status ---------- */
+  function kaderSection(K) {
+    const by = Object.fromEntries(K.players.map(p => [p.nr, p])), L = K.lineup;
+    const start = new Set(L ? L.starters : []), bench = new Set(L ? L.bench : []);
+    const inK = K.players.filter(p => p.status === "kader").length, outK = K.players.filter(p => p.status === "out").length;
+    const reasonOpts = cur => `<option value="">– Grund wählen –</option>${Object.entries(K.reasons).map(([k, l]) => `<option value="${k}" ${k === cur ? "selected" : ""}>${esc(l)}</option>`).join("")}`;
+    const row = p => { const x = by[p.nr] || {}, s = x.status || "";
+      return `<div class="krow ${s}"><span class="knr">${LZ.shirt(p.nr)}<span>${esc((p.name || "").split(" ")[0] || "Nr. " + p.nr)}</span></span>
+        <span class="kseg" role="group" aria-label="Nr. ${p.nr}"><button aria-pressed="${s === "kader"}" data-act="kSet" data-v="${p.nr}" data-s="kader">Im Kader</button><button aria-pressed="${s === "out"}" data-act="kSet" data-v="${p.nr}" data-s="out">Nicht dabei</button></span>
+        <span class="ktag">${s === "kader" && start.has(p.nr) ? "Startelf" : s === "kader" && bench.has(p.nr) ? "Einwechselspieler" : ""}</span>
+        ${s === "out" ? `<div class="kwhy"><select id="kr-${p.nr}" aria-label="Grund Nr. ${p.nr}">${reasonOpts(x.reason)}</select>
+          <input id="kn-${p.nr}" maxlength="300" value="${esc(x.note || "")}" placeholder="Notiz – nur für Trainer" aria-label="Notiz Nr. ${p.nr}"></div>` : ""}</div>`; };
+    return `<section class="card stack" id="kader"><div class="rowspread"><h2>Kader</h2><span class="small"><b>${inK}</b> im Kader · ${outK} nicht dabei</span></div>
+      <div class="row wrow"><div class="fld"><label for="k-type">Spielart</label><select id="k-type">${Object.entries(K.types).map(([k, l]) => `<option value="${k}" ${k === K.game.type ? "selected" : ""}>${esc(l)}${K.game.typeAuto && k === K.game.type ? " (erkannt)" : ""}</option>`).join("")}</select></div>
+        <p class="small">Spielzeit laut Einstellung: <b>${K.game.duration} Min.</b></p></div>
+      <p class="${K.announced ? "okmsg" : "small"}">${K.announced ? `Bekannt gegeben am ${esc(K.announcedAt || "")} – jeder Spieler sieht in „Mein Bereich“ nur, ob er dabei ist (und den Grund).` : "Noch nicht bekannt gegeben – die Spieler sehen noch nichts."}</p>
+      <div class="row">${L && (L.starters.length || L.bench.length) ? `<button class="btn ghost small" data-act="kLineup">Aus Aufstellung übernehmen (${L.starters.length} + ${L.bench.length})</button>` : ""}
+        <button class="btn ghost small" data-act="kAll" data-v="kader">Alle in den Kader</button><button class="btn ghost small" data-act="kAll" data-v="">Zurücksetzen</button></div>
+      <p class="small">Tipp: In „Taktik“ → Aufstellung Spieler auf Positionen und zu den Einwechselspielern ziehen – beim Speichern wird das der Kader. Gründe sehen die Kinder, Notizen nur Trainer (keine Gesundheitsdetails).</p>
+      <div class="klist">${LZ.C.players.map(row).join("")}</div>
+      <div class="row"><button class="btn ${K.announced ? "ghost" : ""}" data-act="kAnnounce" data-v="${K.announced ? "0" : "1"}">${K.announced ? "Bekanntgabe zurücknehmen" : "Kader bekannt geben"}</button></div></section>`;
+  }
+  async function kSend(body, reload) {
+    const id = T.tr.training.id;
+    const r = await St().send("kader.php", Object.assign({ id }, body));
+    if (!r.ok) return fail(r);
+    if (reload) { const k = await St().get("kader.php?id=" + id); if (k && k.ok) T.tr.kader = k; }
+    LZ.render();
+  }
+  const kPlayer = nr => { const K = T.tr.kader; let p = K.players.find(x => x.nr === nr); if (!p) { p = { nr, status: "", reason: "", note: "" }; K.players.push(p); } return p; };
+  LZ.actions.kSet = (b, v) => {
+    const p = kPlayer(+v), s = b.dataset.s; p.status = p.status === s ? "" : s; if (p.status !== "out") { p.reason = ""; p.note = ""; }
+    LZ.render(); kSend({ action: "set", nr: p.nr, status: p.status, reason: p.reason, note: p.note });
+  };
+  LZ.actions.kAll = (b, v) => kSend({ action: "all", status: v }, true);
+  LZ.actions.kLineup = () => kSend({ action: "lineup" }, true);
+  LZ.actions.kAnnounce = (b, v) => kSend({ action: "announce", on: v === "1" }, true);
+  const kTimer = {};
+  function kInput(id, el, type) {
+    if (id === "k-type" && type === "change") return kSend({ action: "type", type: el.value }, true), true;
+    const m = id.match(/^k([rn])-(\d+)$/); if (!m) return false;
+    const p = kPlayer(+m[2]); if (m[1] === "r") p.reason = el.value; else p.note = el.value;
+    // Notiz: kurz nach dem Tippen speichern (auch wenn das Feld neu gezeichnet wird), Grund sofort
+    clearTimeout(kTimer[p.nr]);
+    const save = () => St().send("kader.php", { id: T.tr.training.id, action: "set", nr: p.nr, status: "out", reason: p.reason, note: p.note }).then(r => { if (!r.ok) fail(r); });
+    if (m[1] === "r") { if (type === "change") save(); } else kTimer[p.nr] = setTimeout(save, type === "change" ? 0 : 700);
+    return true;
+  }
+
+  /* ---------- Einstellung: Spielzeit je Spielart (Cheftrainer) ---------- */
+  async function loadDurations() { const r = await St().get("kader.php?settings=1"); if (r && r.ok) { T.dur = r; LZ.render(); } }
+  function durCard() {
+    const D = T.dur; if (!D) return "";
+    return `<section class="card stack"><h2>Spielzeit je Spielart</h2>
+      <p class="small">Wird bei „Spielzeiten“ für neue Spiele übernommen. Die Spielart erkennt die App am Kalendertitel („Pokal“, „Freundschaftsspiel“/„Test“, Turnier), sonst Ligaspiel – beim Spiel unter „Kader“ änderbar.</p>
+      <div class="durgrid">${Object.entries(D.types).map(([k, l]) => `<div class="fld"><label for="dur-${k}">${esc(l)} (Min.)</label><input id="dur-${k}" type="number" min="1" max="240" inputmode="numeric" value="${D.durations[k]}"></div>`).join("")}</div>
+      <div class="row"><button class="btn" data-act="durSave" ${T.busy ? "disabled" : ""}>Speichern</button></div></section>`;
+  }
+  LZ.actions.durSave = async () => {
+    const durations = Object.fromEntries(Object.keys(T.dur.types).map(k => [k, +((document.getElementById("dur-" + k) || {}).value || 0)]));
+    T.busy = true; LZ.render();
+    const r = await St().send("kader.php", { action: "durations", durations });
+    T.busy = false;
+    if (!r.ok) return fail(r);
+    T.dur.durations = r.durations; T.err = ""; T.msg = "Spielzeiten gespeichert."; LZ.render();
+  };
   const trState = r => { T.tr.present = r.present; T.tr.training.state = r.state; T.tr.training.expected = false; T.confirm = null; LZ.render(); };
   LZ.actions.tAll = async (b, v) => {
     const r = await St().send("trainings.php", { action: "attendall", id: T.tr.training.id, present: v === "1" });
@@ -545,6 +613,7 @@
     else if (id === "cal-url") T.calInput = el.value;
     else if (id === "cal-season") T.seasonInput = el.value;
     else if (id.startsWith("gr-") && e.type === "change") { const [, nr, area] = id.split("-"); setGrade(+nr, area, +el.value || null); }
+    else if (T.tr && T.tr.kader && kInput(id, el, e.type)) { /* Kader */ }
     else if (id.startsWith("gn-") && T.tr && T.tr.grades) { const nr = +id.slice(3); T.tr.grades.notes[nr] = el.value; if (e.type === "change") saveNote(nr, el.value); }
     else if (id === "t-date") T.newT.date = el.value;
     else if (id === "t-time") T.newT.time = el.value;

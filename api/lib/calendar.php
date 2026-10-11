@@ -226,8 +226,8 @@ function cal_sync(array $occ, DateTimeImmutable $from, DateTimeImmutable $to): i
         if (isset($occ[$t['cal_key']])) continue;
         $used = db()->prepare('SELECT (SELECT COUNT(*) FROM attendance WHERE training_id = ?) + (SELECT COUNT(*) FROM moods WHERE training_id = ?)
                                       + (SELECT COUNT(*) FROM matches WHERE training_id = ?) + (SELECT COUNT(*) FROM grades WHERE training_id = ?)
-                                      + (SELECT COUNT(*) FROM grade_notes WHERE training_id = ?)');
-        $used->execute([$t['id'], $t['id'], $t['id'], $t['id'], $t['id']]);
+                                      + (SELECT COUNT(*) FROM grade_notes WHERE training_id = ?) + (SELECT COUNT(*) FROM match_call_players WHERE training_id = ?)');
+        $used->execute([$t['id'], $t['id'], $t['id'], $t['id'], $t['id'], $t['id']]);
         if ((int)$used->fetchColumn() === 0) {
             db()->prepare('DELETE FROM absences WHERE training_id = ?')->execute([$t['id']]);
             db()->prepare('DELETE FROM trainings WHERE id = ?')->execute([$t['id']]);

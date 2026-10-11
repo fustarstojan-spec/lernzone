@@ -92,7 +92,24 @@ CREATE TABLE IF NOT EXISTS matches (
 CREATE TABLE IF NOT EXISTS match_squad (
   training_id  INTEGER NOT NULL,
   nr           INTEGER NOT NULL,
-  starter      INTEGER NOT NULL DEFAULT 0,           -- 1 = Startelf, 0 = Bank
+  starter      INTEGER NOT NULL DEFAULT 0,           -- 1 = Startelf, 0 = Einwechselspieler
+  PRIMARY KEY (training_id, nr)
+);
+-- Kader für Spiele (ab 0.31.0): Bekanntgabe, Spielart, pro Spieler im Kader / nicht dabei mit Grund (fester Schlüssel) und Trainer-Notiz (nur Trainer)
+CREATE TABLE IF NOT EXISTS match_calls (
+  training_id   INTEGER PRIMARY KEY,
+  gtype         TEXT    NOT NULL DEFAULT '',       -- liga | freundschaft | pokal | turnier ('' = am Titel erkennen)
+  announced     INTEGER NOT NULL DEFAULT 0,
+  announced_at  TEXT,
+  updated_by    INTEGER,
+  updated_at    TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS match_call_players (
+  training_id  INTEGER NOT NULL,
+  nr           INTEGER NOT NULL,
+  status       TEXT    NOT NULL,                   -- kader | out
+  reason       TEXT    NOT NULL DEFAULT '',        -- Schlüssel aus KADER_REASONS (api/lib/matchday.php)
+  note         TEXT    NOT NULL DEFAULT '',        -- nur für Trainer
   PRIMARY KEY (training_id, nr)
 );
 CREATE TABLE IF NOT EXISTS match_subs (

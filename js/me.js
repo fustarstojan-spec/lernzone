@@ -36,7 +36,7 @@
     // Startseite: nach „Nächster Termin“ (calendar.js) einreihen
     LZ.on("homeTop", () => {
       if (!active() || !K.data || K.forNr !== LZ.S.user.nr) return "";
-      return trainingsCard(K.data, true) + attendanceCard(K.data.attendance, true);
+      return gamesCard(K.data) + trainingsCard(K.data, true) + attendanceCard(K.data.attendance, true);
     });
   });
 
@@ -68,6 +68,15 @@
 
   /* Nächste Trainings mit „Absagen“ */
   const hm = s => s.slice(11, 16);
+  /* Kader (ab 0.31.0): nur der eigene Status für bekannt gegebene Spiele – nie andere Kinder, nie Trainer-Notizen */
+  function gamesCard(d) {
+    const g = (d.games || []); if (!g.length) return "";
+    const when = x => `${LZ.calendar ? LZ.calendar.dayName(x.date) : x.date}${x.time ? " · " + x.time + " Uhr" : ""}`;
+    return g.map(x => `<section class="card stack kme ${x.status}"><p class="eyebrow">Kader · ${esc(when(x))}</p><h2>${esc(x.title)}</h2>
+      ${x.status === "kader" ? `<p class="kbig">✓ Du bist im Kader</p><p class="small">Ob du von Anfang an spielst, erfährst du von deinem Trainer.</p>`
+        : `<p class="kbig">Diesmal bist du nicht dabei</p>${x.reason ? `<p>Grund: <b>${esc(x.reason)}</b></p>` : ""}<p class="small">Wenn du Fragen hast, sprich mit deinem Trainer. Weiter Gas geben im Training!</p>`}
+      ${x.location ? `<p class="small">${LZ.mapLink ? LZ.mapLink(x.location) : esc(x.location)}</p>` : ""}</section>`).join("");
+  }
   function trainingsCard(d, home) {
     const list = (d.upcoming || []).slice(0, home ? 3 : 6), R = d.reasons || {};
     if (!list.length) return home ? "" : `<section class="card stack"><h2>Meine Trainings</h2><p class="small">In den nächsten zwei Wochen ist kein Training eingetragen.</p></section>`;
@@ -170,7 +179,7 @@
     if (!active()) return "";
     if (K.err) return `<section class="card"><p class="err" style="text-align:left">${esc(K.err)}</p></section>`;
     if (!K.data || K.forNr !== LZ.S.user.nr) return `<section class="card"><p class="small">Lade deine Daten …</p></section>`;
-    return attendanceCard(K.data.attendance) + trainingsCard(K.data) + iepCard() + moodCard(K.data) + profileCard(K.data);
+    return gamesCard(K.data) + attendanceCard(K.data.attendance) + trainingsCard(K.data) + iepCard() + moodCard(K.data) + profileCard(K.data);
   });
 
   /* ---------- Profil bearbeiten ---------- */

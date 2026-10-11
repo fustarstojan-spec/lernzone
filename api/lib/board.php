@@ -21,5 +21,9 @@ function board_clean($d): array {
         $lines[] = ['id' => substr(preg_replace('/[^a-z0-9]/i', '', (string)($l['id'] ?? '')), 0, 12) ?: bin2hex(random_bytes(4)), 'k' => $l['k'], 'f' => $f, 't' => $t];
     }
     $f = preg_match('/^[0-9]-[0-9](-[0-9]){1,3}$/', (string)($d['formation'] ?? '')) ? (string)$d['formation'] : '';
-    return ['items' => $items, 'lines' => $lines] + ($f !== '' ? ['formation' => $f] : []);
+    // Einwechselspieler (ab 0.31.0, nur Aufstellungen): Trikotnummern, die nicht auf dem Feld stehen
+    $placed = array_column(array_filter($items, fn($i) => isset($i['nr'])), 'nr');
+    $bench = array_values(array_unique(array_filter(array_map('intval', array_slice(is_array($d['bench'] ?? null) ? $d['bench'] : [], 0, 40)),
+                                                    fn($n) => $n >= 1 && $n <= 99 && !in_array($n, $placed, true))));
+    return ['items' => $items, 'lines' => $lines] + ($f !== '' ? ['formation' => $f] : []) + ($bench ? ['bench' => $bench] : []);
 }

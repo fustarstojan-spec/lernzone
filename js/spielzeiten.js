@@ -1,6 +1,7 @@
 /*
  * Lernzone – Spielzeiten (nur Trainer, Reiter „Spielzeiten“)
- * Pro Spiel: Spielzeit, Ergebnis, Spieltagskader (Startelf / Bank, auch aus der Aufstellung), Wechsel mit Minute
+ * Pro Spiel: Spielzeit (Vorgabe je Spielart aus den Einstellungen, ab 0.31.0), Ergebnis, Spieltagskader (Startelf / Einwechselspieler,
+ *   aus Aufstellung und Kader), Wechsel mit Minute
  * → Minuten pro Spieler; Saison-Übersicht (Spiele, Startelf, Einsätze, Minuten, Anteil an möglichen Minuten)
  * Daten: api/matches.php
  */
@@ -44,7 +45,7 @@
     if (SZ.sort === "pct") list.sort((a, b) => (a.pct ?? 101) - (b.pct ?? 101) || a.nr - b.nr);
     const rec = (SZ.games || []).filter(g => g.recorded).length;
     return `${LZ.coachNav("spielzeiten")}<section>${LZ.area("Trainer-Bereich")}<h1>Spielzeiten</h1>
-      <p class="lede">Wer hat wie viel gespielt? Pro Spiel Startelf, Bank und Wechsel eintragen – die Minuten rechnet die App.</p></section>
+      <p class="lede">Wer hat wie viel gespielt? Pro Spiel Startelf, Einwechselspieler und Wechsel eintragen – die Minuten rechnet die App.</p></section>
       ${SZ.err ? `<p class="err" style="text-align:left">${esc(SZ.err)}</p>` : ""}
       <section class="card stack"><h2>Spiele</h2>
       ${SZ.games === null ? `<p class="small">Lade …</p>` : !SZ.games.length ? `<p class="small">Seit Saisonbeginn stehen keine Spiele im Kalender.</p>` :
@@ -67,17 +68,18 @@
     SZ.cur = { loading: true }; LZ.render();
     const r = await LZ.Store.get("matches.php?id=" + v);
     if (!r.ok) { SZ.err = r.error; SZ.cur = null; LZ.render(); return; }
-    SZ.cur = { game: r.game, lineup: r.lineup, m: r.match || { duration: 70, gf: null, ga: null, squad: [], subs: [] }, recorded: !!r.match };
-    if (!r.match && r.lineup && r.lineup.length) fromLineup();
+    SZ.cur = { game: r.game, lineup: r.lineup || [], bench: r.bench || [], kader: r.kader || [], defDur: r.defaultDuration || 70,
+      m: r.match || { duration: r.defaultDuration || 70, gf: null, ga: null, squad: [], subs: [] }, recorded: !!r.match };
+    if (!r.match && (SZ.cur.lineup.length || SZ.cur.kader.length)) fromLineup();
     SZ.f = { minute: "", out: "", in: "" }; SZ.msg = ""; SZ.err = ""; SZ.dirty = !r.match;
     LZ.render(); LZ.top();
   };
+  // Startelf aus der Aufstellung, Einwechselspieler aus Aufstellung und Kader (ab 0.31.0)
   function fromLineup() {
-    const m = SZ.cur.m, start = new Set(SZ.cur.lineup);
-    const keep = m.squad.filter(s => !start.has(s.nr)).map(s => ({ nr: s.nr, starter: false }));
-    m.squad = [...start].map(nr => ({ nr, starter: true })).concat(keep);
-    // ohne Bank: alle übrigen aktiven Spieler auf die Bank
-    if (!keep.length) (LZ.C.players || []).filter(p => !start.has(p.nr)).forEach(p => m.squad.push({ nr: p.nr, starter: false }));
+    const c = SZ.cur, m = c.m, start = new Set(c.lineup);
+    const subs = new Set(c.bench.concat(c.kader, m.squad.map(s => s.nr)).filter(n => !start.has(n)));
+    m.squad = [...start].map(nr => ({ nr, starter: true })).concat([...subs].map(nr => ({ nr, starter: false })));
+    if (!subs.size && !c.kader.length) (LZ.C.players || []).filter(p => !start.has(p.nr)).forEach(p => m.squad.push({ nr: p.nr, starter: false }));
   }
   function gameView() {
     const c = SZ.cur;
@@ -89,15 +91,15 @@
     const on = onField(m, t), squadNrs = m.squad.map(s => s.nr);
     const opt = (nrs, cur) => `<option value="">–</option>${nrs.map(n => `<option value="${n}" ${String(cur) === String(n) ? "selected" : ""}>Nr. ${n}</option>`).join("")}`;
     return `${LZ.coachNav("spielzeiten")}<button class="back" data-act="szBack">‹ Spielzeiten</button>
-      <section><p class="eyebrow">${esc(cal().dayName(g.date))}${g.time ? " · " + esc(g.time) : ""}${c.recorded ? " · erfasst" : ""}${SZ.dirty ? " · nicht gespeichert" : ""}</p><h1>${esc(g.title)}</h1></section>
+      <section><p class="eyebrow">${g.typeLabel ? esc(g.typeLabel) + " · " : ""}${esc(cal().dayName(g.date))}${g.time ? " · " + esc(g.time) : ""}${c.recorded ? " · erfasst" : ""}${SZ.dirty ? " · nicht gespeichert" : ""}</p><h1>${esc(g.title)}</h1></section>
       <section class="card stack"><div class="row wrow">
-        <div class="fld"><label for="sz-dur">Spielzeit (Min.)</label><input id="sz-dur" type="number" min="1" max="240" inputmode="numeric" value="${m.duration}" style="width:5.5em"></div>
+        <div class="fld"><label for="sz-dur">Spielzeit (Min.)</label><input id="sz-dur" type="number" min="1" max="240" inputmode="numeric" value="${m.duration}" style="width:5.5em"><span class="small">Vorgabe ${g.typeLabel ? esc(g.typeLabel) + ": " : ""}${c.defDur} Min.</span></div>
         <div class="fld"><span class="fldlabel">Ergebnis (wir : Gegner)</span><div class="score"><input id="sz-gf" type="number" min="0" max="99" inputmode="numeric" value="${m.gf ?? ""}" aria-label="Tore wir"><b>:</b><input id="sz-ga" type="number" min="0" max="99" inputmode="numeric" value="${m.ga ?? ""}" aria-label="Tore Gegner"></div></div>
       </div></section>
-      <section class="card stack"><div class="rowspread"><h2>Kader</h2><span class="small">Startelf ${starters} · Bank ${bench}</span></div>
-        <p class="small">Antippen wechselt: nicht dabei → Startelf → Bank → nicht dabei.</p>
-        ${c.lineup && c.lineup.length ? `<button class="linkbtn" data-act="szLineup">Startelf aus der Aufstellung übernehmen (${c.lineup.length} Spieler)</button>` : ""}
-        <div class="squad">${(LZ.C.players || []).map(p => `<button class="sq-${st[p.nr] || "none"}" data-act="szCycle" data-v="${p.nr}" aria-label="Nummer ${p.nr}: ${st[p.nr] === "start" ? "Startelf" : st[p.nr] === "bank" ? "Bank" : "nicht dabei"}">${LZ.shirt(p.nr)}<span>${st[p.nr] === "start" ? "Start" : st[p.nr] === "bank" ? "Bank" : "–"}</span></button>`).join("")}</div></section>
+      <section class="card stack"><div class="rowspread"><h2>Kader</h2><span class="small">Startelf ${starters} · Einwechselspieler ${bench}</span></div>
+        <p class="small">Antippen wechselt: nicht dabei → Startelf → Einwechselspieler → nicht dabei.</p>
+        ${c.lineup.length || c.kader.length ? `<button class="linkbtn" data-act="szLineup">Aus Aufstellung und Kader übernehmen (Startelf ${c.lineup.length}${c.kader.length ? ` · Kader ${c.kader.length}` : ""})</button>` : ""}
+        <div class="squad">${(LZ.C.players || []).map(p => `<button class="sq-${st[p.nr] || "none"}" data-act="szCycle" data-v="${p.nr}" aria-label="Nummer ${p.nr}: ${st[p.nr] === "start" ? "Startelf" : st[p.nr] === "bank" ? "Einwechselspieler" : "nicht dabei"}">${LZ.shirt(p.nr)}<span>${st[p.nr] === "start" ? "Start" : st[p.nr] === "bank" ? "Einw." : "–"}</span></button>`).join("")}</div></section>
       <section class="card stack"><h2>Wechsel</h2>
         <div class="row wrow">
           <div class="fld"><label for="sz-min">Minute</label><input id="sz-min" type="number" min="0" max="${m.duration}" inputmode="numeric" value="${esc(SZ.f.minute)}" style="width:5em"></div>
@@ -108,7 +110,7 @@
         ${m.subs.length ? `<ul class="sublist">${m.subs.slice().sort((a, b) => a.minute - b.minute).map(s => `<li><b>${s.minute}'</b><span>${s.out != null ? `↓ Nr. ${s.out}` : ""}</span><span>${s.in != null ? `↑ Nr. ${s.in}` : ""}</span>
           <button class="linkbtn" data-act="szDelSub" data-v="${m.subs.indexOf(s)}" aria-label="Wechsel löschen">✕</button></li>`).join("")}</ul>` : `<p class="small">Noch keine Wechsel.</p>`}</section>
       <section class="card stack"><h2>Minuten</h2>${m.squad.length ? `<ul class="minlist">${m.squad.slice().sort((a, b) => (mins[b.nr] || 0) - (mins[a.nr] || 0) || a.nr - b.nr).map(s => `<li>
-          <span>Nr. ${s.nr}${s.starter ? "" : " <span class='small'>(Bank)</span>"}</span><span class="meter"><b style="width:${Math.round((mins[s.nr] || 0) / m.duration * 100)}%"></b></span><b>${mins[s.nr] || 0}'</b></li>`).join("")}</ul>` : `<p class="small">Erst den Kader festlegen.</p>`}</section>
+          <span>Nr. ${s.nr}${s.starter ? "" : " <span class='small'>(Einwechselspieler)</span>"}</span><span class="meter"><b style="width:${Math.round((mins[s.nr] || 0) / m.duration * 100)}%"></b></span><b>${mins[s.nr] || 0}'</b></li>`).join("")}</ul>` : `<p class="small">Erst den Kader festlegen.</p>`}</section>
       ${SZ.err ? `<p class="err" style="text-align:left">${esc(SZ.err)}</p>` : ""}${SZ.msg ? `<p class="okmsg">${esc(SZ.msg)}</p>` : ""}
       <div class="row"><button class="btn" data-act="szSave" ${SZ.busy ? "disabled" : ""}>Speichern</button>${c.recorded ? `<button class="btn ghost" data-act="szClear">Erfassung löschen</button>` : ""}</div>`;
   }

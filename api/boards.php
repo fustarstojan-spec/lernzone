@@ -68,7 +68,15 @@ switch ($in['action'] ?? '') {
             db()->prepare('INSERT INTO boards (title, kind, training_id, shared, data, updated_by) VALUES (?, ?, ?, ?, ?, ?)')->execute([$title, $kind, $tid, $shared, $data, $me['id']]);
             $id = (int)db()->lastInsertId();
         }
-        json_out(['ok' => true, 'id' => $id]);
+        // Aufstellung mit Spiel: Startelf + Einwechselspieler = Kader (ab 0.31.0)
+        $kader = false;
+        if ($kind === 'lineup' && $tid) {
+            require_once __DIR__ . '/lib/matchday.php';
+            $d = json_decode($data, true);
+            $starters = array_values(array_unique(array_map(fn($i) => (int)$i['nr'], array_filter($d['items'], fn($i) => $i['t'] === 'own' && isset($i['nr'])))));
+            if ($starters || !empty($d['bench'])) { kader_from_lineup($tid, $starters, $d['bench'] ?? [], $me['id']); $kader = true; }
+        }
+        json_out(['ok' => true, 'id' => $id, 'kader' => $kader]);
     case 'delete':
         db()->prepare('DELETE FROM boards WHERE id = ?')->execute([(int)($in['id'] ?? 0)]);
         json_out(['ok' => true]);

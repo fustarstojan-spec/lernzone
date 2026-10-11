@@ -2,6 +2,15 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.31.0 – 2026-10-11
+- **Kader für Spiele** (Trainer → Termin des Spiels → „Kader“): jeder Spieler „Im Kader“ oder „Nicht dabei“, dazu ein Grund aus einer festen Liste (Rotation, Trainingsbeteiligung, Abgesagt, Verhalten/Pünktlichkeit, andere Mannschaft, Pause, Gespräch) und eine Notiz nur für Trainer; „Alle in den Kader“, „Aus Aufstellung übernehmen“
+  - **Kader bekannt geben:** Danach sieht jedes Kind in „Mein Bereich“ und auf der Startseite nur seinen eigenen Status – „Du bist im Kader“ oder „Diesmal bist du nicht dabei“ mit Grund. Keine Namen anderer Kinder, keine Notizen, Startelf erst mit der freigegebenen Aufstellung
+- **Aufstellung (Taktik):** Spieler auf Positionen oder zu den **Einwechselspielern** ziehen (oder antippen und auswählen); zurückziehen = nicht im Kader; Plätze tauschen beim Ziehen auf eine besetzte Position. Speichern mit Spiel übernimmt Startelf + Einwechselspieler als Kader
+- **Einwechselspieler** statt „Bank“ in Aufstellung und Spielzeiten
+- **Spielzeit je Spielart** (Trainer → Trainer → „Spielzeit je Spielart“, Cheftrainer): Ligaspiel, Freundschaftsspiel, Pokalspiel, Turnier; wird bei „Spielzeiten“ für neue Spiele übernommen. Spielart wird am Kalendertitel erkannt („Pokal“, „Testspiel“/„Freundschaft“, Turnier, sonst Ligaspiel) und ist pro Spiel änderbar
+- Spielzeiten: Kader und Einwechselspieler aus Aufstellung und Kader übernehmen
+- Datenschutzerklärung: Kader ergänzt
+
 ## 0.30.2 – 2026-10-11
 - Trainer-Startseite, Nächste Termine: einheitlich „24/24 da“ (Anwesenheit erfasst) bzw. „24/24 erwartet“ (noch offen) – wie in der Trainingsliste
 

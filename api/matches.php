@@ -9,6 +9,7 @@
  */
 require __DIR__ . '/config.php';
 require_coach();
+require __DIR__ . '/lib/matchday.php';
 
 /* Minuten pro Spieler: Startelf ab 0, Wechsel in Minuten-Reihenfolge, Ende = Dauer */
 function match_minutes(int $id): array {
@@ -54,7 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 'squad' => array_map(fn($r) => ['nr' => (int)$r['nr'], 'starter' => (bool)$r['starter']], $sq->fetchAll(PDO::FETCH_ASSOC)),
                 'subs' => array_map(fn($r) => ['minute' => (int)$r['minute'], 'out' => $r['nr_out'] === null ? null : (int)$r['nr_out'], 'in' => $r['nr_in'] === null ? null : (int)$r['nr_in']], $su->fetchAll(PDO::FETCH_ASSOC))];
         }
-        json_out(['ok' => true, 'game' => $g, 'match' => $match, 'lineup' => $lineupOf($id), 'minutes' => (object)match_minutes($id)]);
+        // ab 0.31.0: Spielzeit je Spielart (Einstellung), Einwechselspieler aus der Aufstellung, Kader
+        $type = game_type_of($id);
+        $bench = db()->prepare("SELECT data FROM boards WHERE kind = 'lineup' AND training_id = ? ORDER BY updated_at DESC LIMIT 1"); $bench->execute([$id]);
+        $bd = json_decode((string)$bench->fetchColumn(), true) ?: [];
+        $kd = db()->prepare("SELECT nr FROM match_call_players WHERE training_id = ? AND status = 'kader' ORDER BY nr"); $kd->execute([$id]);
+        json_out(['ok' => true, 'game' => $g + ['type' => $type, 'typeLabel' => GAME_TYPES[$type]], 'match' => $match, 'lineup' => $lineupOf($id),
+                  'bench' => array_map('intval', $bd['bench'] ?? []), 'kader' => array_map('intval', $kd->fetchAll(PDO::FETCH_COLUMN)),
+                  'defaultDuration' => game_durations()[$type], 'minutes' => (object)match_minutes($id)]);
     }
     $season = (string)(db()->query("SELECT value FROM settings WHERE name = 'season_start'")->fetchColumn() ?: '2000-01-01');
     $st = db()->prepare("SELECT t.id, t.date, t.time, t.title, t.kind, m.duration, m.goals_for, m.goals_against

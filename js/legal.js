@@ -85,6 +85,7 @@
         <li>Lernfortschritt in der App (Quiz-Ergebnisse)</li>
         <li>Trainingsbeteiligung und Absagen (Grund aus einer festen Auswahl, kein Freitext)</li>
         <li>Aufstellungen, Taktiktafeln und Spielminuten</li>
+        <li>Kader für Spiele: im Kader oder nicht, bei „nicht dabei“ ein Grund aus einer festen Liste (das Kind sieht nur seinen eigenen Status und Grund) und eine Notiz nur für Trainer</li>
         <li>Individueller Entwicklungsplan: Ziele und Zeitplan (sieht auch das Kind); Einschätzungen und Notizen der Trainer (nur Trainer)</li>
         <li>Bewertungen nach dem Training in Verhalten, Umsetzung, Soziales und kurze Notizen der Trainer (nur Trainer)</li></ul>
       <h3>Nur mit Einwilligung der Eltern</h3>
