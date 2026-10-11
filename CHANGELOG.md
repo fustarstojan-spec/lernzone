@@ -2,6 +2,9 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.30.2 – 2026-10-11
+- Trainer-Startseite, Nächste Termine: einheitlich „24/24 da“ (Anwesenheit erfasst) bzw. „24/24 erwartet“ (noch offen) – wie in der Trainingsliste
+
 ## 0.30.1 – 2026-10-10
 - Training → Einheiten: Liste mit festen Spalten (Tag · Uhrzeit · Teilnehmer · Plan); Teilnehmer immer an derselben Stelle („18 da“, „22 erwartet“ oder „fällt aus“)
 - Statt des Themas steht nur noch „Plan“ bzw. „+ Plan hinzufügen“

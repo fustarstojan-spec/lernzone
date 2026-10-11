@@ -30,7 +30,7 @@
       const out = new Set(e.coachesOut), meOut = out.has(d.me.id);
       const coaches = d.coaches.map(c => `<span class="cchip ${out.has(c.id) ? "out" : ""}" title="${out.has(c.id) ? "nicht dabei" : "dabei"}">${out.has(c.id) ? "✕" : "✓"} ${esc(c.name)}</span>`).join("");
       const pl = e.players ? (e.state === 2 ? `<span class="abschip">Fällt aus</span>`
-        : `<span class="pcount"><b>${e.players.coming}</b>/${e.players.total} ${e.players.recorded ? "da" : "Spieler"}${e.players.absent ? ` · ${e.players.absent} abgesagt` : ""}</span>`) : "";
+        : `<span class="pcount"><b>${e.players.coming}</b>/${e.players.total} ${e.players.recorded ? "da" : "erwartet"}${e.players.absent ? ` · ${e.players.absent} abgesagt` : ""}</span>`) : "";
       return `<li class="evcard">
         <div class="rowspread"><span><b>${esc(cal().dayName(e.date))}</b> · ${esc(cal().timeText(e))}</span>${cal().chip(e.kind)}</div>
         <button class="evtitle-btn" data-act="tOpen" data-v="${e.id}">${esc(e.title)}</button>
