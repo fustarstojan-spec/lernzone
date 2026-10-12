@@ -2,6 +2,9 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.34.3 – 2026-10-12
+- Trikot oben rechts: Trainer kommen direkt auf ihr eigenes Profil (Kader und Trainings über die Seitenleiste bzw. die Reiter im Trainer-Bereich); Spieler wie bisher auf „Mein Bereich“
+
 ## 0.34.2 – 2026-10-12
 - **Anmeldung mit Benutzername oder E-Mail** (Trainer/Admins mit bestätigter E-Mail-Adresse)
 - E-Mail eintragen: Formular direkt sichtbar, Knopf „Speichern“ → Bestätigungs-Mail an die Adresse; erst nach Klick auf den Link aktiv. Jede Adresse nur bei einem Zugang

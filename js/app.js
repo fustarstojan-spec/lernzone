@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.34.2";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.34.3";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -296,6 +296,12 @@
     }
     else if (a === "sideToggle") { if (mobile() && SIDE.mob) SIDE.mob = false; else if (mobile()) SIDE.mob = true; else { SIDE.open = !SIDE.open; saveSide(); } render(); }
     else if (a === "sideClose") { SIDE.mob = false; render(); }
+    // Trikot oben rechts (ab 0.34.3): Trainer → eigenes Profil, Admin ohne Mannschaft → Verwaltung, Spieler → Mein Bereich
+    else if (a === "shirt") {
+      if (LZ.coachMode() && LZ.actions.myProfile) LZ.actions.myProfile();
+      else if (LZ.adminOnly()) go("verwaltung");
+      else go("me");
+    }
     else if (a === "me") {
       if (Store.mode === "api" && !S.user && Store.coach.active && LZ.actions.kaderStart) LZ.actions.kaderStart();
       else go("me");
