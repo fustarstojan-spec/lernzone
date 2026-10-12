@@ -2,6 +2,9 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.34.1 – 2026-10-12
+- Seitenleiste: Klick auf den eigenen Namen öffnet das eigene Konto (Trainer: Mein Konto mit Passwort und E-Mail; Admins: Verwaltung; Spieler: Mein Bereich)
+
 ## 0.34.0 – 2026-10-12
 - **Passwort vergessen per E-Mail** (Trainer und Admins): Auf der Anmeldeseite „Passwort vergessen?“ → Benutzername oder E-Mail → Link per E-Mail (30 Min. gültig, nur einmal) → neues Passwort festlegen; danach sind alle Geräte abgemeldet und es kommt eine Hinweis-Mail
   - Die Seite verrät nie, ob es ein Konto gibt; höchstens ein Link alle 10 Minuten pro Konto; Anfragen zählen für die Bremse pro Netz; gespeichert wird nur ein Hash des Links

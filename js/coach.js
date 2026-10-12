@@ -51,6 +51,14 @@
   }
   LZ.actions.addStart = () => start("form");
   LZ.actions.kaderStart = () => start("kader");
+  // Eigenes Konto öffnen (Klick auf den Namen in der Seitenleiste, ab 0.34.1)
+  LZ.actions.myProfile = async () => {
+    if (!Co().active) return;
+    await open("coaches");
+    const c = (T.coaches || []).find(x => x.id === Co().id);
+    if (c) LZ.actions.cEdit(null, c.id);
+    LZ.top();
+  };
 
   /* ---------- Kopf mit Reitern ---------- */
   const tabs = () => Co().active ? `

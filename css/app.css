@@ -658,3 +658,5 @@ body.dragging{cursor:grabbing}
 .sacc-who .badge{font-size:.62rem;padding:1px 7px}
 .saccount .slist .snav{min-height:40px;font-weight:500;color:var(--muted)}
 .saccount .slist .snav:hover{color:var(--fg)}
+.saccount .sacc-who{cursor:pointer}
+.saccount .sacc-who:hover{background:var(--bg)}

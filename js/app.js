@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.34.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.34.1";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -398,7 +398,9 @@
     else if (LZ.adminOnly()) { name = (acc && acc.username) || ""; role = c.platformAdmin ? "Superadmin" : "Vereinsadmin"; }
     else if (S.user) { name = acc ? acc.username : "Nr. " + S.user.nr; role = "Spieler"; }
     else return "";
-    return `<div class="saccount"><div class="snav sacc-who" title="${esc(name)} · ${esc(role)}">${icon("user")}<span class="sl"><b>${esc(name)}</b><span class="badge">${esc(role)}</span></span></div>
+    const act = LZ.coachMode() ? "myProfile" : LZ.adminOnly() ? "side" : "me";
+    const on = LZ.coachMode() ? S.view === "coach" : LZ.adminOnly() ? false : ["me", "profile"].includes(S.view);
+    return `<div class="saccount"><button class="snav sacc-who${on ? " on" : ""}" data-act="${act}" data-v="verwaltung" title="Mein Konto: ${esc(name)} · ${esc(role)}">${icon("user")}<span class="sl"><b>${esc(name)}</b><span class="badge">${esc(role)}</span></span></button>
       <ul class="slist"><li><button class="snav" data-act="logout" title="Abmelden">${icon("logout")}<span class="sl">Abmelden</span></button></li></ul></div>`;
   }
   function sideHtml() {
