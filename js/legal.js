@@ -95,7 +95,7 @@
       <p>Bis die Einwilligung da ist, sind diese Bereiche gesperrt. „Nicht fit“ ist nur ein Hinweis an den Trainer – Krankheiten oder Diagnosen werden nicht abgefragt.</p>
       <h3>Trainerinnen und Trainer</h3>
       <ul><li>Vorname, Benutzername, Mannschaften, Abwesenheiten bei Terminen</li>
-        <li>freiwillig: E-Mail-Adresse, nur für „Passwort vergessen“ (Bestätigungslink, Link zum Zurücksetzen, Hinweis nach einer Änderung); Versand über den Mailserver des Betreibers</li>
+        <li>freiwillig: E-Mail-Adresse für die Anmeldung und „Passwort vergessen“ (Bestätigungslink, Link zum Zurücksetzen, Hinweis nach einer Änderung); Versand über den Mailserver des Betreibers</li>
         <li>Trainingspläne und Übungen, auch als hochgeladenes PDF</li>
         <li>Einträge im Trainer-Wissen (wer zuletzt geändert hat); Verweise auf Material öffnen die Seite des jeweiligen Anbieters, z. B. Google Drive</li></ul>
 

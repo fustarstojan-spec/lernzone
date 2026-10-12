@@ -21,8 +21,8 @@
   /* ---------- Anmelden ---------- */
   LZ.views.login = () => `${head(esc(LZ.teamLabel()), "Anmelden", "Melde dich mit deinem Benutzernamen und deinem Passwort an.")}
     <form class="card stack authform" data-form="doLogin" novalidate>
-      <div class="fld"><label for="auth-u">Benutzername</label>
-        <input id="auth-u" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="30" value="${esc(F.u)}" required></div>
+      <div class="fld"><label for="auth-u">Benutzername oder E-Mail</label>
+        <input id="auth-u" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="120" value="${esc(F.u)}" required></div>
       ${pwInput("auth-p", "Passwort", "current-password", F.p)}
       ${showToggle}${errP()}
       <button class="btn wide" type="submit" ${F.busy ? "disabled" : ""}>${F.busy ? "Einen Moment …" : "Anmelden"}</button>
@@ -58,7 +58,7 @@
   LZ.actions.doForgot = async () => {
     if (F.busy) return;
     const v = (document.getElementById("fg-login") || {}).value || ""; R.login = v;
-    if (!v.trim()) { F.err = "Bitte Benutzername oder E-Mail eingeben."; LZ.render(); return; }
+    if (!v.trim()) { F.err = "Bitte Benutzername oder E-Mail eingeben."; LZ.render(); return; }   // gleiche Eingabe wie bei der Anmeldung
     F.busy = true; F.err = ""; LZ.render();
     const r = await LZ.Store.send("reset.php", { action: "request", login: v.trim() });
     F.busy = false;
@@ -110,13 +110,13 @@
     if (!M.data) { loadMail(); return `<section class="card stack"><h2>E-Mail für „Passwort vergessen“</h2><p class="small">Lade …</p></section>`; }
     const d = M.data;
     return `<section class="card stack" id="mailcard"><h2>E-Mail für „Passwort vergessen“</h2>
-      <p class="small">Freiwillig. Nur damit du dir bei vergessenem Passwort selbst einen Link schicken kannst – sonst gibt dir dein Cheftrainer oder Vereinsadmin einen neuen Code.</p>
+      <p class="small">Freiwillig. Damit kannst du dich auch mit deiner E-Mail-Adresse anmelden und dir bei vergessenem Passwort selbst einen Link schicken. Nach dem Speichern bekommst du eine E-Mail – erst mit dem Klick auf den Link darin ist die Adresse aktiv.</p>
       <p>${d.email ? `Hinterlegt: <b>${esc(d.email)}</b>` : "Noch keine Adresse hinterlegt."}${d.pending ? `<br><span class="small">Wartet auf Bestätigung: <b>${esc(d.pending)}</b> – bitte den Link in der E-Mail anklicken.</span>` : ""}</p>
-      ${M.edit ? `<form class="stack" data-form="mailSave" novalidate>
+      ${M.edit || (!d.email && !d.pending) ? `<form class="stack" data-form="mailSave" novalidate>
         <div class="fld"><label for="mc-email">E-Mail-Adresse</label><input id="mc-email" type="email" autocomplete="email" maxlength="120" value="${esc(M.email)}"></div>
         <div class="fld"><label for="mc-pw">Dein aktuelles Passwort (zur Sicherheit)</label><input id="mc-pw" type="password" autocomplete="current-password" maxlength="200"></div>
         ${M.err ? `<p class="err" role="alert" style="text-align:left">${esc(M.err)}</p>` : ""}
-        <div class="row"><button class="btn" type="submit" ${M.busy ? "disabled" : ""}>Bestätigungs-Mail schicken</button>${d.email ? `<button class="btn ghost" type="button" data-act="mailRemove">Adresse löschen</button>` : ""}<button class="btn ghost" type="button" data-act="mailEdit" data-v="0">Abbrechen</button></div></form>`
+        <div class="row"><button class="btn" type="submit" ${M.busy ? "disabled" : ""}>Speichern</button>${d.email ? `<button class="btn ghost" type="button" data-act="mailRemove">Adresse löschen</button>` : ""}${d.email || d.pending ? `<button class="btn ghost" type="button" data-act="mailEdit" data-v="0">Abbrechen</button>` : ""}</div></form>`
         : `<div class="row"><button class="btn ghost" data-act="mailEdit" data-v="1">${d.email || d.pending ? "Ändern" : "E-Mail hinterlegen"}</button></div>`}
       ${M.msg ? `<p class="okmsg" role="status">${esc(M.msg)}</p>` : ""}</section>`;
   };
@@ -128,7 +128,7 @@
     M.busy = false;
     if (!r.ok) { M.err = r.error || "Das hat nicht geklappt."; LZ.render(); return; }
     M.data.email = r.email; M.data.pending = r.pending; M.edit = false;
-    M.msg = body.action === "remove" ? "Adresse gelöscht." : r.testmode ? "Testmodus: Die Bestätigungs-Mail liegt in storage/mail-outbox/." : "Bestätigungs-Mail ist unterwegs – bitte den Link darin anklicken.";
+    M.msg = body.action === "remove" ? "Adresse gelöscht." : r.testmode ? "Gespeichert. Testmodus: Die E-Mail liegt in storage/mail-outbox/." : `Gespeichert. Wir haben eine E-Mail an ${body.email} geschickt – bitte den Link darin anklicken.`;
     LZ.render();
   };
   LZ.actions.mailSave = () => { M.email = (document.getElementById("mc-email") || {}).value || ""; mailSend({ action: "set", email: M.email.trim() }); };

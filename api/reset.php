@@ -74,6 +74,8 @@ if ($action === 'verify') {
     $st = pdb()->prepare("SELECT * FROM accounts WHERE email_token = ? AND email_token_exp > ? AND email_new != ''");
     $st->execute([$h, time()]); $a = $st->fetch(PDO::FETCH_ASSOC);
     if (!$a) $fail('Der Bestätigungslink ist abgelaufen oder wurde schon benutzt.');
+    $dup = pdb()->prepare("SELECT COUNT(*) FROM accounts WHERE id != ? AND email = ? COLLATE NOCASE"); $dup->execute([$a['id'], $a['email_new']]);
+    if ((int)$dup->fetchColumn()) $fail('Diese E-Mail-Adresse ist inzwischen bei einem anderen Zugang hinterlegt.');
     pdb()->prepare("UPDATE accounts SET email = email_new, email_new = '', email_token = '', email_token_exp = 0 WHERE id = ?")->execute([$a['id']]);
     sec_log('email_verified', 'info', (int)$a['id'], $a['username'], 'E-Mail-Adresse bestätigt');
     json_out(['ok' => true, 'csrf' => csrf_token()]);

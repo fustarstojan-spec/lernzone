@@ -29,12 +29,15 @@ if (($in['action'] ?? '') === 'remove') {
 if (($in['action'] ?? '') !== 'set') json_out(['ok' => false, 'error' => 'Unbekannte Aktion'], 400);
 $email = trim(mb_substr((string)($in['email'] ?? ''), 0, 120));
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) json_out(['ok' => false, 'error' => 'Bitte eine gültige E-Mail-Adresse eingeben.'], 400);
+$dup = pdb()->prepare("SELECT COUNT(*) FROM accounts WHERE id != ? AND (email = ? COLLATE NOCASE OR email_new = ? COLLATE NOCASE)");
+$dup->execute([$a['id'], $email, $email]);
+if ((int)$dup->fetchColumn()) json_out(['ok' => false, 'error' => 'Diese E-Mail-Adresse ist schon bei einem anderen Zugang hinterlegt.'], 400);
 $url = app_url();
 if ($url === null) json_out(['ok' => false, 'error' => 'Die Adresse der App ist noch nicht eingestellt (Superadmin: Verwaltung → E-Mail-Versand).'], 400);
 $t = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
 pdb()->prepare('UPDATE accounts SET email_new = ?, email_token = ?, email_token_exp = ? WHERE id = ?')->execute([$email, hash('sha256', $t), time() + 48 * 3600, $a['id']]);
 $r = send_mail($email, 'E-Mail-Adresse bestätigen – FU-STARS Lernzone',
-    "Hallo,\n\nbitte bestätige diese E-Mail-Adresse für den Zugang „{$a['username']}“. Sie wird nur für „Passwort vergessen“ verwendet.\n\n"
+    "Hallo,\n\nbitte bestätige diese E-Mail-Adresse für den Zugang „{$a['username']}“. Danach kannst du dich auch mit dieser Adresse anmelden und bei „Passwort vergessen“ einen Link bekommen.\n\n"
     . "{$url}?verify=$t\n\n(Link gültig 48 Stunden.) Wenn du das nicht warst, ignoriere diese E-Mail.\n\nFU-STARS Lernzone");
 if (str_starts_with($r, '!')) json_out(['ok' => false, 'error' => 'Die Bestätigungs-Mail konnte nicht verschickt werden: ' . substr($r, 1)], 502);
 sec_log('email_set', 'info', (int)$a['id'], $a['username'], 'neue E-Mail-Adresse eingetragen, Bestätigung ' . ($r === 'outbox' ? 'im Testmodus abgelegt' : 'verschickt'));

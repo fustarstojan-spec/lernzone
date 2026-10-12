@@ -2,6 +2,11 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.34.2 – 2026-10-12
+- **Anmeldung mit Benutzername oder E-Mail** (Trainer/Admins mit bestätigter E-Mail-Adresse)
+- E-Mail eintragen: Formular direkt sichtbar, Knopf „Speichern“ → Bestätigungs-Mail an die Adresse; erst nach Klick auf den Link aktiv. Jede Adresse nur bei einem Zugang
+- Datenschutzerklärung: E-Mail auch für die Anmeldung
+
 ## 0.34.1 – 2026-10-12
 - Seitenleiste: Klick auf den eigenen Namen öffnet das eigene Konto (Trainer: Mein Konto mit Passwort und E-Mail; Admins: Verwaltung; Spieler: Mein Bereich)
 

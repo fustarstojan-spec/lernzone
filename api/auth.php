@@ -51,11 +51,18 @@ if ($action === 'logout') { logout_session(); json_out(['ok' => true, 'csrf' => 
 if ($action === 'login') {
     check_lock('login');
     if (ip_blocked()) json_out(['ok' => false, 'error' => 'Zu viele Fehlversuche von diesem Netz. Warte 15 Minuten.'], 429);
-    $u  = clean_username((string)($in['username'] ?? ''));
+    $raw = trim((string)($in['username'] ?? ''));
     $pw = (string)($in['password'] ?? '');
-    $st = pdb()->prepare('SELECT * FROM accounts WHERE username = ? AND active = 1');
-    $st->execute([$u]);
+    // ab 0.34.2: Anmeldung mit Benutzername oder bestätigter E-Mail-Adresse (nur Trainer/Admins haben eine)
+    if (str_contains($raw, '@')) {
+        $st = pdb()->prepare("SELECT * FROM accounts WHERE email != '' AND email = ? COLLATE NOCASE AND active = 1 AND kind = 'coach' LIMIT 1");
+        $st->execute([mb_substr($raw, 0, 120)]);
+    } else {
+        $st = pdb()->prepare('SELECT * FROM accounts WHERE username = ? AND active = 1');
+        $st->execute([clean_username($raw)]);
+    }
     $a = $st->fetch(PDO::FETCH_ASSOC) ?: null;
+    $u = $a ? $a['username'] : mb_substr($raw, 0, 30);
     if ($a && (int)$a['locked_until'] > time()) { sec_log('login_locked', 'warn', (int)$a['id'], $u, 'Anmeldung während der Sperre'); json_out(['ok' => false, 'error' => 'Zu viele falsche Versuche. Warte 5 Minuten.'], 429); }
 
     $via = null;
