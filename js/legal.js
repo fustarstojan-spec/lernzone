@@ -66,7 +66,7 @@
     const o = op(), d = L.data || {};
     return `${head("Rechtliches", "Datenschutz")}${loading()}
     <section class="card stack legal">
-      <p class="lede">Die FU-STARS Lernzone ist für Kinder und Jugendliche gemacht. Deshalb speichern wir so wenig wie möglich, zeigen Kindern nie die Daten anderer Kinder und verzichten auf Werbung, Tracking und Analyse-Werkzeuge.</p>
+      <p class="lede">Die FU-STARS Lernzone ist für Kinder und Jugendliche gemacht. Deshalb speichern wir so wenig wie möglich, zeigen Kindern nie die Daten anderer Kinder und verzichten auf Tracking und Analyse-Werkzeuge. Kinder sehen keine Werbung.</p>
       ${d.updated ? `<p class="small">Stand: ${esc(d.updated)}</p>` : ""}
 
       <h2>1. Verantwortlich</h2>
@@ -100,6 +100,8 @@
       <h3>Eltern mit Zugang</h3>
       <ul><li>Benutzername, mit welchem Kind (bzw. welchen Kindern) der Zugang verknüpft ist; freiwillig eine E-Mail-Adresse für „Passwort vergessen“</li>
         <li>Einwilligung digital: wann, durch welchen Zugang und in welcher Fassung erteilt oder widerrufen (Nachweis nach Art. 7 Abs. 1 DSGVO); Absagen durch Eltern stehen im Sicherheitsprotokoll</li></ul>
+      <h3>Anfragen „Partner werden“</h3>
+      <ul><li>Praxen und Firmen, die über das öffentliche Formular anfragen: Name der Praxis bzw. Firma, Fachrichtung, Ansprechpartner, E-Mail, freiwillig Telefon, Anschrift, Webseite und Nachricht. Rechtsgrundlage: Einwilligung bzw. Anbahnung eines Vertrags (Art. 6 Abs. 1 lit. a und b DSGVO). Die Anfrage sehen nur Cheftrainer und Vereinsadmins des gewählten Vereins; sie wird spätestens nach 180 Tagen gelöscht.</li></ul>
       <h3>Trainerinnen und Trainer</h3>
       <ul><li>Vorname, Benutzername, Mannschaften, Abwesenheiten bei Terminen</li>
         <li>freiwillig: E-Mail-Adresse für die Anmeldung und „Passwort vergessen“ (Bestätigungslink, Link zum Zurücksetzen, Hinweis nach einer Änderung); Versand über den Mailserver des Betreibers</li>
@@ -117,7 +119,8 @@
         <li>Die Trainer einer Mannschaft sehen die Daten ihrer Spielerinnen und Spieler.</li>
         <li>Die Vereinsadmins (z. B. Jugendleitung) sehen alle Mannschaften ihres Vereins.</li>
         <li>Der Betreiber hat nur technischen Zugriff (z. B. für Fehlerbehebung und Sicherungen) und sieht das Sicherheitsprotokoll; die Vereinsadmins sehen es für ihren Verein.</li>
-        <li>Es gibt keine Weitergabe an Dritte, keine Werbung und kein Tracking.</li></ul>
+        <li>Eltern und Trainer sehen unter „Info“ Angaben des Vereins sowie Ärzte, Therapeuten und Partner; Einträge, für die der Verein eine Gegenleistung erhält, sind als „Anzeige“ gekennzeichnet. Diese Einträge sind reine Texte und Links – es werden keine Inhalte der Partner geladen und keine Daten an sie übermittelt.</li>
+        <li>Es gibt keine Weitergabe an Dritte, keine Werbung für Kinder und kein Tracking.</li></ul>
 
       <h2>6. Cookies und Speicher im Browser</h2>
       <p>Wir setzen nur ein einziges, technisch notwendiges Cookie („lernzone“). Es hält dich angemeldet (bis zum Abmelden, höchstens 30 Tage) und enthält keine persönlichen Daten außer einer zufälligen Sitzungsnummer. Dafür ist keine Einwilligung nötig (§ 25 Abs. 2 Nr. 2 TDDDG) – deshalb gibt es kein Cookie-Banner.</p>
@@ -157,7 +160,7 @@
       </ol>
       <h2>Was mit deinen Daten passiert</h2>
       <ul><li>Deine Trainer sehen, was du gelernt hast, wie oft du da warst und woran du arbeitest – damit sie dir besser helfen können.</li>
-        <li>Es gibt keine Werbung und niemand verkauft deine Daten.</li>
+        <li>Du siehst keine Werbung und niemand verkauft deine Daten.</li>
         <li>Wenn du die Mannschaft verlässt, wird alles gelöscht.</li>
         <li>Du und deine Eltern dürft jederzeit fragen, was gespeichert ist.</li></ul>
       <p class="small noprint">Genauer steht es in der <button class="linkbtn" data-act="legal" data-v="datenschutz">Datenschutzerklärung</button>.</p>

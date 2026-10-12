@@ -2,6 +2,13 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.39.0 – 2026-10-12
+- **Info** für Eltern und Trainer (Seitenleiste „Info“): Vom Verein · Ärzte · Therapie · Partner & Sponsoren, mit Anschrift (Karte), Telefon, E-Mail und Webseite. Einträge mit Gegenleistung sind als „Anzeige“ gekennzeichnet. Kinder sehen den Bereich nicht
+- **Admin-Zone → Info & Partner** (Cheftrainer, Vereinsadmin): Einträge anlegen, sortieren, als Entwurf speichern; Vereinsinfos als Text. Hinweis zum ärztlichen Werberecht (nur sachliche Angaben)
+- **Partner werden** (öffentlich, Link unten auf jeder Seite): Praxen und Firmen fragen ohne Anmeldung beim Verein an (Praxis, Fachrichtung, Ansprechpartner, Kontakt, Nachricht, Einwilligung). Die Anfragen erscheinen in der Admin-Zone; „Als Entwurf übernehmen“ legt den Eintrag direkt an. Schutz: Bremse pro Netz, Spam-Falle, höchstens 30 Anfragen pro Tag und Verein; Löschung nach 180 Tagen
+- Links nur https, keine fremden Bilder oder Skripte (kein Tracking)
+- Datenschutzerklärung: Info-Bereich, Anzeigen und Partner-Anfragen ergänzt; „keine Werbung“ gilt weiter für Kinder
+
 ## 0.38.0 – 2026-10-12
 - **Gespräche** (Trainer, Seitenleiste „Gespräche“): Gesprächsrunden mit Zeitfenstern, z. B. Entwicklungsgespräche. Titel, Ort, Hinweis, Länge (10–60 Min.), ein oder mehrere Tage mit Von–Bis (Fenster werden lückenlos erzeugt), eingeladene Kinder
   - „Mit Eltern und Kind“: die Eltern wählen das Zeitfenster im Elternzugang, das Kind sieht den Termin

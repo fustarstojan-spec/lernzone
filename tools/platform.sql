@@ -60,6 +60,31 @@ CREATE TABLE IF NOT EXISTS memberships (
 );
 CREATE INDEX IF NOT EXISTS memberships_team ON memberships (team_id, role, ref);
 
+-- Info für Eltern und Trainer (ab 0.39.0): Vereinsinfos, Ärzte/Therapeuten, Partner – pro Verein, Kinder sehen das nicht.
+-- kind: text {title, body} | partner {name, specialty, address, phone, email, url, text}; grp: verein | arzt | therapie | partner
+-- ad = 1: als „Anzeige“ gekennzeichnet (Gegenleistung an den Verein)
+CREATE TABLE IF NOT EXISTS club_info (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  club_id     INTEGER NOT NULL,
+  kind        TEXT    NOT NULL,
+  grp         TEXT    NOT NULL DEFAULT 'verein',
+  data        TEXT    NOT NULL DEFAULT '{}',
+  ad          INTEGER NOT NULL DEFAULT 0,
+  draft       INTEGER NOT NULL DEFAULT 0,
+  sort        INTEGER NOT NULL DEFAULT 0,
+  updated_by  INTEGER,
+  updated_at  TEXT    NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS club_info_club ON club_info (club_id, grp, sort);
+-- Anfragen „Partner werden“ (öffentliches Formular, ohne Anmeldung); werden nach 180 Tagen gelöscht
+CREATE TABLE IF NOT EXISTS partner_requests (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  club_id     INTEGER NOT NULL,
+  data        TEXT    NOT NULL DEFAULT '{}',
+  status      TEXT    NOT NULL DEFAULT 'neu',         -- neu | erledigt | abgelehnt
+  created_at  TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Eltern (ab 0.37.0): ein Elternkonto (accounts.kind = 'parent') kann mehrere Kinder haben, auch in anderen Mannschaften;
 -- pro Kind höchstens 2 Elternkonten. Eltern haben keine memberships.
 CREATE TABLE IF NOT EXISTS parent_links (

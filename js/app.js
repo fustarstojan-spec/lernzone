@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.38.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.39.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -403,6 +403,7 @@
     user: '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c.8-3.8 3.8-6 7.5-6s6.7 2.2 7.5 6"/>',
     key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 8-8M16 7l2 2M14 9l2 2"/>',
     logout: '<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l-4-4 4-4M6 12h10"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>',
     talk: '<path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M19 9h1a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1v2l-3-2h-4"/>',
     clubs: '<path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M3 20h18"/>',
     legal: '<path d="M12 4v16M5 20h14"/><path d="M6 7h12"/><path d="m6 7-3 6a3 3 0 0 0 6 0zM18 7l-3 6a3 3 0 0 0 6 0z"/>',
@@ -442,6 +443,7 @@
         .concat(club ? [{ k: "verwaltung", label: "Vereine & Mannschaften", icon: "clubs", act: "side", v: "verwaltung" }] : [])
         .concat(team ? [{ k: "trainer", label: "Trainer", icon: "kader", act: "coachesStart" },
                         { k: "inhalte", label: "Inhalte", icon: "pen", act: "side", v: "inhalte" },
+                        { k: "infoAdmin", label: "Info & Partner", icon: "info", act: "side", v: "infoAdmin" },
                         { k: "einstellungen", label: "Einstellungen", icon: "sliders", act: "side", v: "einstellungen" }] : [])
         .concat(club ? [{ k: "rechtliches", label: "Rechtliches", icon: "legal", act: "side", v: "rechtliches" }] : [])
         .concat(sup ? [{ k: "mailversand", label: "E-Mail-Versand", icon: "mail", act: "side", v: "mailversand" }] : [])
@@ -450,7 +452,8 @@
     }
     if (LZ.parentMode()) return [   // Eltern (ab 0.37.0): nur das eigene Kind
       { k: "home", label: "Übersicht", icon: "home", act: "side", v: "home" },
-      { k: "elternConsent", label: "Einwilligung", icon: "legal", act: "side", v: "elternConsent" }];
+      { k: "elternConsent", label: "Einwilligung", icon: "legal", act: "side", v: "elternConsent" },
+      { k: "info", label: "Info", icon: "info", act: "side", v: "info" }];
     if (LZ.coachMode()) return [
       // Reihenfolge vom Trainer festgelegt (0.34.4); Trainer-Wissen danach
       { k: "home", label: "Übersicht", icon: "home", act: "side", v: "home" },
@@ -460,7 +463,8 @@
       { k: "training", label: "Training", icon: "training", act: "side", v: "training" },
       { k: "taktik", label: "Taktik", icon: "taktik", act: "side", v: "taktik" },
       { k: "spielzeiten", label: "Spielzeiten", icon: "spielzeiten", act: "side", v: "spielzeiten" },
-      { k: "wissen", label: "Trainer-Wissen", icon: "wissen", act: "side", v: "wissen" }
+      { k: "wissen", label: "Trainer-Wissen", icon: "wissen", act: "side", v: "wissen" },
+      { k: "info", label: "Info", icon: "info", act: "side", v: "info" }
     ].concat(LZ.adminAccess() ? [{ k: "admin", label: "Admin-Zone", icon: "verwaltung", href: "admin/" }] : []);
     return [{ k: "home", label: "Start", icon: "home", act: "side", v: "home" }].concat(learn, [{ k: "me", label: "Mein Bereich", icon: "me", act: "me" }]);
   }

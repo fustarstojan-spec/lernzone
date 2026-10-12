@@ -715,3 +715,10 @@ body.dragging{cursor:grabbing}
 .tkround:hover{border-color:var(--accent)}
 .btn.taken{opacity:.45;text-decoration:line-through}
 @media (max-width:560px){.tkslots li{grid-template-columns:1fr 1fr}}
+/* Info & Partner (ab 0.39.0) */
+.infocard h3,.infotext h3{margin:0}
+.infolinks{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+.inforeq{padding:10px 0;border-bottom:1px solid var(--rule);gap:4px}
+.inforeq.abgelehnt,.inforeq.erledigt{opacity:.7}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.infolinks a{color:var(--accent)}

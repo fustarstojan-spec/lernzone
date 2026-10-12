@@ -203,6 +203,7 @@
       team && tile("", "coachesStart", "Mannschaft", "Trainer", "Co-Trainer anlegen, Zugänge und Einmal-Codes"),
       team && tile("inhalte", "side", "Mannschaft", "Inhalte", "Prinzipien, Quizfragen und Texte der Phasen"),
       team && tile("einstellungen", "side", "Mannschaft", "Einstellungen", "Google-Kalender, Saisonbeginn, Spielzeiten"),
+      team && tile("infoAdmin", "side", "Verein", "Info & Partner", "Vereinsinfos, Ärzte, Therapie, Partner für Eltern; Anfragen „Partner werden“"),
       club && tile("rechtliches", "side", "Verein", "Rechtliches", "Impressum, Vorstand, Verantwortlicher für den Inhalt"),
       Co.platformAdmin && tile("mailversand", "side", "Plattform", "E-Mail-Versand", "Mailserver für „Passwort vergessen“"),
       club && tile("sicherheit", "side", "Plattform", "Sicherheit", "Anmeldungen, Fehlversuche, Sperren")

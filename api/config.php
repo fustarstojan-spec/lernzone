@@ -340,6 +340,27 @@ function event_for_parents(array $t): bool {
     return $p === 1 || ($p === 0 && mb_stripos((string)($t['title'] ?? ''), 'eltern') !== false);
 }
 
+/* Info-Einträge (ab 0.39.0) prüfen: nur Text, Links nur https, Telefon nur Ziffern und Zeichen */
+function info_clean(string $kind, array $d, callable $fail): array {
+    $t = fn(string $k, int $n) => clean_text($d[$k] ?? '', $n);
+    $area = fn(string $k, int $n) => mb_substr(trim(str_replace("\r", '', preg_replace('/[\x00-\x09\x0B-\x1F\x7F]/u', '', (string)($d[$k] ?? '')))), 0, $n);
+    if ($kind === 'text') {
+        $x = ['title' => $t('title', 80), 'body' => $area('body', 3000)];
+        if ($x['title'] === '') $fail('Bitte eine Überschrift eingeben.');
+        return $x;
+    }
+    $url = trim((string)($d['url'] ?? ''));
+    if ($url !== '' && !preg_match('#^https://[^\s<>"]+$#i', $url)) $fail('Webseite bitte mit https:// angeben.');
+    $mail = trim((string)($d['email'] ?? ''));
+    if ($mail !== '' && !filter_var($mail, FILTER_VALIDATE_EMAIL)) $fail('Die E-Mail-Adresse stimmt nicht.');
+    $phone = trim((string)($d['phone'] ?? ''));
+    if ($phone !== '' && !preg_match('#^[0-9 +()/\-]{4,30}$#', $phone)) $fail('Telefon: nur Ziffern, Leerzeichen und + ( ) / -');
+    $x = ['name' => $t('name', 80), 'specialty' => $t('specialty', 80), 'address' => $area('address', 200), 'phone' => $phone,
+          'email' => mb_substr($mail, 0, 120), 'url' => mb_substr($url, 0, 200), 'text' => $area('text', 600)];
+    if ($x['name'] === '') $fail('Bitte den Namen der Praxis bzw. des Partners eingeben.');
+    return $x;
+}
+
 /* Einwilligung: Verlauf schreiben; letzter Eintrag = woher der aktuelle Stand kommt */
 function consent_log(int $nr, bool $given, string $source, ?array $acc): void {
     db()->prepare('INSERT INTO consent_log (nr, given, source, account_id, username, version) VALUES (?, ?, ?, ?, ?, ?)')
