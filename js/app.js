@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.33.1";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.33.2";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -390,7 +390,7 @@
     ].concat(LZ.isAdmin() ? [{ k: "verwaltung", label: "Verwaltung", icon: "verwaltung", act: "side", v: "verwaltung" }] : []);
     return [{ k: "home", label: "Start", icon: "home", act: "side", v: "home" }].concat(learn, [{ k: "me", label: "Mein Bereich", icon: "me", act: "me" }]);
   }
-  /* Angemeldet als … mit Rolle, Passwort ändern, Abmelden (ab 0.33.1, vorher Leiste über dem Inhalt) */
+  /* Angemeldet als … mit Rolle und Abmelden (Passwort ändern steht in „Mein Konto“ bzw. „Mein Bereich“) (ab 0.33.1, vorher Leiste über dem Inhalt) */
   function accountHtml() {
     const c = Store.coach || {}, acc = Store.account || null;
     let name = "", role = "";
@@ -398,10 +398,8 @@
     else if (LZ.adminOnly()) { name = (acc && acc.username) || ""; role = c.platformAdmin ? "Superadmin" : "Vereinsadmin"; }
     else if (S.user) { name = acc ? acc.username : "Nr. " + S.user.nr; role = "Spieler"; }
     else return "";
-    const pw = Store.mode === "api" && acc;
     return `<div class="saccount"><div class="snav sacc-who" title="${esc(name)} · ${esc(role)}">${icon("user")}<span class="sl"><b>${esc(name)}</b><span class="badge">${esc(role)}</span></span></div>
-      <ul class="slist">${pw ? `<li><button class="snav" data-act="pwStart" title="Passwort ändern">${icon("key")}<span class="sl">Passwort ändern</span></button></li>` : ""}
-        <li><button class="snav" data-act="logout" title="Abmelden">${icon("logout")}<span class="sl">Abmelden</span></button></li></ul></div>`;
+      <ul class="slist"><li><button class="snav" data-act="logout" title="Abmelden">${icon("logout")}<span class="sl">Abmelden</span></button></li></ul></div>`;
   }
   function sideHtml() {
     const act = activeKey(), wide = SIDE.open || SIDE.mob;

@@ -166,7 +166,8 @@
       ${noteBox()}${errBox()}
       ${d.platform ? platformCard(d) : ""}
       ${clubs.map(clubCard).join("")}
-      ${secCard()}`;
+      ${secCard()}
+      ${LZ.coachMode() ? "" : `<section class="card stack"><h2>Mein Konto</h2><p class="small">Angemeldet als <b>${esc(acc.username || "")}</b></p><div class="row"><button class="btn ghost" data-act="pwStart">Passwort ändern</button></div></section>`}`;
   };
 
   /* ---------- Sicherheitsprotokoll (ab 0.25.0) ---------- */

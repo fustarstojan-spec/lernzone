@@ -2,6 +2,9 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.33.2 – 2026-10-12
+- „Passwort ändern“ nicht mehr in der Seitenleiste, nur noch in der Oberfläche: Trainer unter Trainer → Mein Konto, Spieler unten in „Mein Bereich“, Vereins- und Superadmins unten in der Verwaltung („Mein Konto“)
+
 ## 0.33.1 – 2026-10-12
 - Konto in der Seitenleiste: Name mit Rolle (Trainer, Cheftrainer, Vereinsadmin, Superadmin, Spieler), „Passwort ändern“ und „Abmelden“ unter dem Inhaltsverzeichnis; die Leiste darüber im Trainer-Bereich und in der Verwaltung entfällt
 
