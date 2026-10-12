@@ -43,10 +43,18 @@
       <div class="row"><button class="btn ghost" data-act="side" data-v="elternConsent">Einwilligung ansehen</button></div></section>`;
   }
 
+  /* Spiele und Turniere (ab 0.37.1): alle Termine der nächsten 6 Wochen, Kader-Status sobald bekannt gegeben */
   function gamesCard(d) {
-    return (d.games || []).map(x => `<section class="card stack kme ${x.status}"><p class="eyebrow">Kader · ${esc(day(x.date))}${x.time ? " · " + esc(x.time) + " Uhr" : ""}</p><h2>${esc(x.title)}</h2>
-      ${x.status === "kader" ? `<p class="kbig">✓ ${esc(kidName(d))} ist im Kader</p>` : `<p class="kbig">Diesmal nicht dabei</p>${x.reason ? `<p>Grund: <b>${esc(x.reason)}</b></p>` : ""}<p class="small">Fragen dazu bitte direkt an den Trainer.</p>`}
-      ${x.location ? `<p class="small">${where(x.location)}</p>` : ""}</section>`).join("");
+    const list = d.matches || [];
+    if (!list.length) return `<section class="card stack"><h2>Spiele</h2><p class="small">In den nächsten sechs Wochen ist kein Spiel eingetragen.</p></section>`;
+    const chip = g => g.cancelled ? `<span class="abschip">Fällt aus</span>`
+      : g.status === "kader" ? `<span class="kchip in">✓ Im Kader</span>`
+      : g.status === "out" ? `<span class="kchip out">Nicht dabei${g.reason ? " · " + esc(g.reason) : ""}</span>`
+      : `<span class="small">Kader folgt</span>`;
+    return `<section class="card stack"><h2>Spiele</h2><ul class="trlist">${list.map(g => `<li class="trrow${g.cancelled || g.status === "out" ? " off" : ""}">
+      <div><b>${esc(fmtDate(g.date))}${g.time ? " · " + esc(g.time) : ""}${g.endTime ? "–" + esc(g.endTime) : ""}</b><span class="small">${g.kind === "turnier" ? "Turnier · " : ""}${esc(g.title)}${g.location ? " · " + where(g.location) : ""}</span></div>
+      <div class="trright">${chip(g)}</div></li>`).join("")}</ul>
+      <p class="small">Den Kader gibt der Trainer vor dem Spiel bekannt. Fragen dazu bitte direkt an den Trainer.</p></section>`;
   }
 
   function trainingsCard(d) {

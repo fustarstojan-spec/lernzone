@@ -2,6 +2,9 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.37.1 – 2026-10-12
+- Eltern: neue Karte „Spiele“ mit allen Spielen und Turnieren der nächsten 6 Wochen (Datum, Uhrzeit, Ort). Status je Spiel: „✓ Im Kader“, „Nicht dabei · Grund“ oder „Kader folgt“, solange der Trainer ihn noch nicht bekannt gegeben hat
+
 ## 0.37.0 – 2026-10-12
 - **Eltern-Zugang**: Trainer legen im Kader beim Kind unter „Eltern-Zugang“ bis zu 2 Elternkonten an (Benutzername-Vorschlag `<kind>.eltern`, Einmal-Code 72 Std.). Geschwisterkind: vorhandenen Benutzernamen der Eltern eingeben – dann wird nur verknüpft (auch über Mannschaften hinweg). Neuer Code und Entfernen ebenfalls dort
 - Eltern melden sich unter der normalen Adresse an und sehen nur ihr Kind: nächste Trainings mit Absage (gleiche Gründe und Fristen wie das Kind), Kader-Status bekannt gegebener Spiele, Lernfortschritt (Quiz). Mehrere Kinder: Umschalter oben

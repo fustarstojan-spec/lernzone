@@ -698,3 +698,5 @@ body.dragging{cursor:grabbing}
 .sechead{margin:8px 0 0}
 @media (max-width:560px){.legaldl{grid-template-columns:1fr}.legaldl dd{margin-bottom:6px}}
 .zone-admin .top{border-bottom:3px solid var(--accent)}
+.kchip.in{background:var(--ok-soft);color:var(--ok)}
+.kchip.out{background:var(--rule);color:var(--muted);white-space:normal}
