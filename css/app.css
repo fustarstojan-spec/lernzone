@@ -649,3 +649,12 @@ body.dragging{cursor:grabbing}
 /* 0.32.1 Teilnehmerzahl antippbar */
 .linkcount{justify-self:start;background:none;border:0;padding:2px 6px;margin-left:-6px;border-radius:8px;text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:3px;cursor:pointer}
 .linkcount:hover{background:var(--accent-soft);text-decoration-color:var(--accent)}
+
+/* 0.33.1 Konto in der Seitenleiste */
+.saccount{margin-top:10px;padding-top:10px;border-top:1px solid var(--rule)}
+.sacc-who{cursor:default}
+.sacc-who:hover{background:none}
+.sacc-who .sl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+.sacc-who .badge{font-size:.62rem;padding:1px 7px}
+.saccount .slist .snav{min-height:40px;font-weight:500;color:var(--muted)}
+.saccount .slist .snav:hover{color:var(--fg)}

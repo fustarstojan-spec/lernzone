@@ -54,7 +54,6 @@
 
   /* ---------- Kopf mit Reitern ---------- */
   const tabs = () => Co().active ? `
-    <div class="coachbar"><span>Trainer: <b>${esc(Co().name || "")}</b>${Co().clubAdmin ? ` <span class="badge">Vereinsadmin</span>` : Co().isAdmin ? ` <span class="badge">Cheftrainer</span>` : ""}</span><span class="coachbar-links"><button class="linkbtn" data-act="pwStart">Passwort ändern</button><button class="linkbtn" data-act="logout">Abmelden</button></span></div>
     <div class="seg">${[["kader", "Kader"], ["trainings", "Trainings"], ["coaches", Co().isAdmin ? "Trainer" : "Mein Konto"]].map(([k, l]) =>
       `<button aria-pressed="${T.tab === k}" data-act="ctab" data-v="${k}">${l}</button>`).join("")}</div>` : "";
   LZ.actions.ctab = (b, v) => open(v);

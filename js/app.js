@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.33.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.33.1";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -351,7 +351,10 @@
     kader: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2c3 .2 5 2.4 5 5.8"/>',
     me: '<path d="M8 3 4 6l2 4 2-1v12h8V9l2 1 2-4-4-3c-.8 1.6-2.2 2.5-4 2.5S8.8 4.6 8 3z"/>',
     verwaltung: '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
-    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>'
+    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+    user: '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c.8-3.8 3.8-6 7.5-6s6.7 2.2 7.5 6"/>',
+    key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 8-8M16 7l2 2M14 9l2 2"/>',
+    logout: '<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l-4-4 4-4M6 12h10"/>'
   };
   const icon = k => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${IC[k] || ""}</svg>`;
   const SIDE = { open: true, mob: false, grp: { lernzone: false, phasen: true, module: true } };
@@ -387,6 +390,19 @@
     ].concat(LZ.isAdmin() ? [{ k: "verwaltung", label: "Verwaltung", icon: "verwaltung", act: "side", v: "verwaltung" }] : []);
     return [{ k: "home", label: "Start", icon: "home", act: "side", v: "home" }].concat(learn, [{ k: "me", label: "Mein Bereich", icon: "me", act: "me" }]);
   }
+  /* Angemeldet als … mit Rolle, Passwort ändern, Abmelden (ab 0.33.1, vorher Leiste über dem Inhalt) */
+  function accountHtml() {
+    const c = Store.coach || {}, acc = Store.account || null;
+    let name = "", role = "";
+    if (LZ.coachMode()) { name = c.name || (acc && acc.username) || ""; role = c.clubAdmin ? "Vereinsadmin" : c.isAdmin ? "Cheftrainer" : "Trainer"; }
+    else if (LZ.adminOnly()) { name = (acc && acc.username) || ""; role = c.platformAdmin ? "Superadmin" : "Vereinsadmin"; }
+    else if (S.user) { name = acc ? acc.username : "Nr. " + S.user.nr; role = "Spieler"; }
+    else return "";
+    const pw = Store.mode === "api" && acc;
+    return `<div class="saccount"><div class="snav sacc-who" title="${esc(name)} · ${esc(role)}">${icon("user")}<span class="sl"><b>${esc(name)}</b><span class="badge">${esc(role)}</span></span></div>
+      <ul class="slist">${pw ? `<li><button class="snav" data-act="pwStart" title="Passwort ändern">${icon("key")}<span class="sl">Passwort ändern</span></button></li>` : ""}
+        <li><button class="snav" data-act="logout" title="Abmelden">${icon("logout")}<span class="sl">Abmelden</span></button></li></ul></div>`;
+  }
   function sideHtml() {
     const act = activeKey(), wide = SIDE.open || SIDE.mob;
     const has = it => it.k === act || (it.group || []).some(has);
@@ -400,7 +416,7 @@
       }
       return `<li><button class="snav${it.k === act ? " on" : ""}" data-act="${it.act}" data-v="${it.v || ""}" ${it.a ? `data-a="${esc(it.a)}"` : ""} title="${esc(it.label)}" ${it.k === act ? 'aria-current="page"' : ""}>${ico}${lab}</button></li>`;
     };
-    return `<ul class="slist">${sideItems().map(x => row(x, 0)).join("")}</ul>
+    return `<div><ul class="slist">${sideItems().map(x => row(x, 0)).join("")}</ul>${accountHtml()}</div>
       <button class="snav stoggle" data-act="sideToggle" title="${wide ? "Einklappen" : "Ausklappen"}" aria-label="${wide ? "Inhaltsverzeichnis einklappen" : "Inhaltsverzeichnis ausklappen"}"><span class="schev2" aria-hidden="true">${wide ? "«" : "»"}</span><span class="sl">Einklappen</span></button>`;
   }
   function renderSide(gate) {

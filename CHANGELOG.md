@@ -2,6 +2,9 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.33.1 – 2026-10-12
+- Konto in der Seitenleiste: Name mit Rolle (Trainer, Cheftrainer, Vereinsadmin, Superadmin, Spieler), „Passwort ändern“ und „Abmelden“ unter dem Inhaltsverzeichnis; die Leiste darüber im Trainer-Bereich und in der Verwaltung entfällt
+
 ## 0.33.0 – 2026-10-12
 - **Seitenleiste neu gestaltet** (nach Vorlage des Trainers): dünne Linien-Icons, dunkle Beschriftung, Pfeil rechts bei aufklappbaren Gruppen, Unterpunkte eingerückt, aktueller Punkt hell hinterlegt mit Markierung links; standardmäßig ausgeklappt (» / « klappt auf die Icon-Leiste zusammen)
 - Korrektur: Die Seitenleiste hat die Blöcke im Einheiten-Editor verstellt (gleicher CSS-Name) – getrennt
