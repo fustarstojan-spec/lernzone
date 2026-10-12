@@ -96,6 +96,9 @@
         <li>Befindens-Barometer: Laune, Schlaf, Energie, Hinweis „nicht fit“, Belastung nach dem Training, freiwilliger Kommentar</li>
         <li>Selbsteinschätzung nach Spielen</li></ul>
       <p>Bis die Einwilligung da ist, sind diese Bereiche gesperrt. „Nicht fit“ ist nur ein Hinweis an den Trainer – Krankheiten oder Diagnosen werden nicht abgefragt.</p>
+      <h3>Eltern mit Zugang</h3>
+      <ul><li>Benutzername, mit welchem Kind (bzw. welchen Kindern) der Zugang verknüpft ist; freiwillig eine E-Mail-Adresse für „Passwort vergessen“</li>
+        <li>Einwilligung digital: wann, durch welchen Zugang und in welcher Fassung erteilt oder widerrufen (Nachweis nach Art. 7 Abs. 1 DSGVO); Absagen durch Eltern stehen im Sicherheitsprotokoll</li></ul>
       <h3>Trainerinnen und Trainer</h3>
       <ul><li>Vorname, Benutzername, Mannschaften, Abwesenheiten bei Terminen</li>
         <li>freiwillig: E-Mail-Adresse für die Anmeldung und „Passwort vergessen“ (Bestätigungslink, Link zum Zurücksetzen, Hinweis nach einer Änderung); Versand über den Mailserver des Betreibers</li>
@@ -104,11 +107,12 @@
 
       <h2>4. Wozu und auf welcher Rechtsgrundlage</h2>
       <ul><li><b>Trainings- und Spielbetrieb, sportliche Ausbildung</b> im Rahmen der Vereinsmitgliedschaft: Art. 6 Abs. 1 lit. b DSGVO; Organisation und Planung durch den Verein: Art. 6 Abs. 1 lit. f DSGVO</li>
-        <li><b>Profil, Befindens-Barometer, Selbsteinschätzung:</b> Einwilligung der Erziehungsberechtigten, Art. 6 Abs. 1 lit. a DSGVO; für den Hinweis „nicht fit“ zusätzlich Art. 9 Abs. 2 lit. a DSGVO. Die Einwilligung ist freiwillig und kann jederzeit für die Zukunft widerrufen werden – beim Trainer oder beim Verein.</li>
+        <li><b>Profil, Befindens-Barometer, Selbsteinschätzung:</b> Einwilligung der Erziehungsberechtigten, Art. 6 Abs. 1 lit. a DSGVO; für den Hinweis „nicht fit“ zusätzlich Art. 9 Abs. 2 lit. a DSGVO. Die Einwilligung ist freiwillig und kann jederzeit für die Zukunft widerrufen werden – beim Trainer, beim Verein oder im Elternzugang. Beim Widerruf im Elternzugang werden Profil, Befindens-Einträge und Selbsteinschätzungen sofort gelöscht.</li>
         <li><b>Sicherheit</b> (Anmeldung, Sperre nach Fehlversuchen, Protokolle): Art. 6 Abs. 1 lit. f DSGVO und Art. 32 DSGVO</li></ul>
 
       <h2>5. Wer was sieht</h2>
       <ul><li>Kinder sehen nur ihre eigenen Daten – nie die anderer Kinder.</li>
+        <li>Eltern mit Zugang sehen nur ihr eigenes Kind: Termine und Absagen, Kader-Status, Lernfortschritt und die Einwilligung – nicht Befinden, Profil, Entwicklungsplan, Bewertungen oder Spielzeiten.</li>
         <li>Die Trainer einer Mannschaft sehen die Daten ihrer Spielerinnen und Spieler.</li>
         <li>Die Vereinsadmins (z. B. Jugendleitung) sehen alle Mannschaften ihres Vereins.</li>
         <li>Der Betreiber hat nur technischen Zugriff (z. B. für Fehlerbehebung und Sicherungen) und sieht das Sicherheitsprotokoll; die Vereinsadmins sehen es für ihren Verein.</li>
@@ -126,7 +130,7 @@
       <p>${o.logs ? nl(o.logs) : "Beim Aufruf der Seite speichert der Webserver technische Protokolle (IP-Adresse, Zeitpunkt, aufgerufene Adresse, Browser). Sie dienen nur der Sicherheit und Fehlersuche und werden automatisch gelöscht."}</p>
 
       <h2>9. Wie lange wir Daten speichern</h2>
-      <p>Solange das Kind in der Mannschaft ist. Verlässt es die Mannschaft, löscht der Trainer es aus dem Kader – damit werden alle zugehörigen Daten gelöscht. Trainer-Konten werden gelöscht, wenn sie keiner Mannschaft mehr angehören. Das Sicherheitsprotokoll wird nach 90 Tagen gelöscht, Sperren von Netzen nach 24 Stunden. Auf Wunsch löschen wir früher.</p>
+      <p>Solange das Kind in der Mannschaft ist. Verlässt es die Mannschaft, löscht der Trainer es aus dem Kader – damit werden alle zugehörigen Daten gelöscht. Trainer-Konten werden gelöscht, wenn sie keiner Mannschaft mehr angehören, Elternzugänge, wenn kein Kind mehr verknüpft ist. Das Sicherheitsprotokoll wird nach 90 Tagen gelöscht, Sperren von Netzen nach 24 Stunden. Auf Wunsch löschen wir früher.</p>
 
       <h2>10. Sicherheit</h2>
       <p>Verschlüsselte Verbindung (HTTPS), Passwörter nur als Argon2id-Hash, Sperre nach mehreren Fehlversuchen pro Konto und pro Netz, Sicherheitsprotokoll, automatische Abmeldung von Trainern nach 8 Stunden ohne Aktivität, Schutz vor fremden Anfragen (CSRF), Daten jeder Mannschaft in einer eigenen Datei.</p>
@@ -158,7 +162,12 @@
       <p class="small noprint">Genauer steht es in der <button class="linkbtn" data-act="legal" data-v="datenschutz">Datenschutzerklärung</button>.</p>
     </section>`;
 
-  /* ---------- Einwilligung der Eltern (Druckvorlage) ---------- */
+  /* ---------- Einwilligung der Eltern (Druckvorlage; derselbe Text digital in js/eltern.js, Fassung CONSENT_VERSION in api/config.php) ---------- */
+  const CONSENT_ITEMS = `<ul><li><b>Profil:</b> Vor- und Nachname, starker Fuß, Wunschposition, Vorbild, Saisonziel, Trikot- und Schuhgröße, Schulschluss</li>
+        <li><b>Befindens-Barometer</b> vor und nach dem Training: Laune, Schlaf, Energie, Belastung, freiwilliger Kommentar sowie ein Hinweis „nicht fit“</li>
+        <li><b>Selbsteinschätzung</b> nach Spielen</li></ul>
+      <p>Diese Angaben sehen nur die Trainer der Mannschaft und die Vereinsadmins (z. B. Jugendleitung) – nie andere Kinder und auch nicht der Elternzugang. Sie dienen der sportlichen Betreuung und werden gelöscht, wenn das Kind die Mannschaft verlässt.</p>`;
+  LZ.consentItems = () => CONSENT_ITEMS;
   LZ.views.einwilligung = () => {
     const d = L.data || { clubs: [] }, team = (LZ.Store.coach || {}).team;
     const clubs = d.clubs;
@@ -172,13 +181,10 @@
       <p><b>Verein:</b> ${club ? esc(club.legalName || club.name) : "______________________________"} &nbsp; <b>Mannschaft:</b> ${team && club && team.clubId === club.id ? esc(team.name) : "__________"}</p>
       ${line("Vor- und Nachname des Kindes")}
       <p>Die Lernzone wird im Training ohne diese Einwilligung genutzt (Lerninhalte, Termine, Absagen, Trainingsbeteiligung). Die folgenden Bereiche schaltet der Trainer <b>erst nach dieser Einwilligung</b> frei:</p>
-      <ul><li><b>Profil:</b> Vor- und Nachname, starker Fuß, Wunschposition, Vorbild, Saisonziel, Trikot- und Schuhgröße, Schulschluss</li>
-        <li><b>Befindens-Barometer</b> vor und nach dem Training: Laune, Schlaf, Energie, Belastung, freiwilliger Kommentar sowie ein Hinweis „nicht fit“</li>
-        <li><b>Selbsteinschätzung</b> nach Spielen</li></ul>
-      <p>Diese Angaben sehen nur die Trainer der Mannschaft und die Vereinsadmins (z. B. Jugendleitung) – nie andere Kinder. Sie dienen der sportlichen Betreuung und werden gelöscht, wenn das Kind die Mannschaft verlässt.</p>
+      ${CONSENT_ITEMS}
       <label class="check"><span class="box">☐</span> Ich willige / Wir willigen ein, dass die oben genannten Angaben in der Lernzone verarbeitet werden (Art. 6 Abs. 1 lit. a DSGVO).</label>
       <label class="check"><span class="box">☐</span> Ich willige / Wir willigen ausdrücklich ein, dass dabei auch der Hinweis „nicht fit“ verarbeitet wird – eine Angabe mit Gesundheitsbezug (Art. 9 Abs. 2 lit. a DSGVO). Diagnosen oder Krankheiten werden nicht abgefragt.</label>
-      <p>Die Einwilligung ist freiwillig. Ohne sie entstehen keine Nachteile – das Kind kann die Lernzone und das Training ganz normal nutzen. Sie kann jederzeit ohne Angabe von Gründen beim Trainer oder beim Verein für die Zukunft widerrufen werden. Weitere Informationen: Datenschutzerklärung der FU-STARS Lernzone.</p>
+      <p>Die Einwilligung ist freiwillig. Ohne sie entstehen keine Nachteile – das Kind kann die Lernzone und das Training ganz normal nutzen. Sie kann jederzeit ohne Angabe von Gründen beim Trainer, beim Verein oder im Elternzugang für die Zukunft widerrufen werden. Weitere Informationen: Datenschutzerklärung der FU-STARS Lernzone.</p>
       <div class="sigrow">${line("Ort, Datum")}${line("Unterschrift Erziehungsberechtigte/r")}</div>
       <div class="sigrow">${line("")}${line("Unterschrift zweite/r Erziehungsberechtigte/r")}</div>
       <div class="sigrow">${line("Kenntnis genommen: Unterschrift des Kindes")}</div>

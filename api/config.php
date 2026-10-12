@@ -19,6 +19,8 @@ const COACH_IDLE      = 8 * 3600;   // Trainer nach 8 Stunden ohne Aktivität ab
 const CODE_HOURS      = 72;         // Einmal-Codes sind 72 Stunden gültig
 const PW_MIN_PLAYER   = 12;         // Mindestlänge Passwort Spieler
 const PW_MIN_COACH    = 14;         // Mindestlänge Passwort Trainer/Admin
+const PARENTS_MAX     = 2;          // Elternkonten pro Kind (ab 0.37.0)
+const CONSENT_VERSION = '2026-10';  // Fassung des Einwilligungstextes (js/legal.js) – bei Textänderung erhöhen
 const PENDING_SECONDS = 900;        // 15 Minuten Zeit, um nach dem Einmal-Code das eigene Passwort festzulegen
 
 date_default_timezone_set('Europe/Berlin');
@@ -269,6 +271,83 @@ function require_user(): array {
 
 function require_consent(array $u): void {
     if (empty($u['consent'])) json_out(['ok' => false, 'error' => 'Dein Trainer schaltet das frei, sobald die Einwilligung deiner Eltern da ist.'], 403);
+}
+
+/* ---------- Eltern (ab 0.37.0) ---------- */
+
+/* Kinder eines Elternkontos (nur aktive Vereine, Mannschaften und Spieler) */
+function parent_children(int $accountId): array {
+    $st = pdb()->prepare('SELECT l.team_id, l.nr, t.name AS team, c.name AS club, c.id AS club_id FROM parent_links l
+                          JOIN teams t ON t.id = l.team_id AND t.active = 1 JOIN clubs c ON c.id = t.club_id AND c.active = 1
+                          WHERE l.account_id = ? ORDER BY c.name, t.name, l.nr');
+    $st->execute([$accountId]);
+    $out = [];
+    foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        $p = db((int)$r['team_id'])->prepare('SELECT 1 FROM players WHERE nr = ? AND active = 1'); $p->execute([(int)$r['nr']]);
+        if ($p->fetchColumn()) $out[] = ['team' => (int)$r['team_id'], 'nr' => (int)$r['nr'], 'teamName' => $r['team'], 'club' => $r['club'], 'clubId' => (int)$r['club_id']];
+    }
+    return $out;
+}
+/* Kind wählen: Sitzung zeigt danach nur die Daten dieses Kindes */
+function select_child(array $acc, int $team, int $nr): bool {
+    foreach (parent_children((int)$acc['id']) as $c) {
+        if ($c['team'] !== $team || $c['nr'] !== $nr) continue;
+        unset($_SESSION['nr'], $_SESSION['coach']);
+        $_SESSION['team'] = $team; $_SESSION['parent'] = $nr;
+        pdb()->prepare('UPDATE accounts SET last_team = ? WHERE id = ?')->execute([$team, $acc['id']]);
+        return true;
+    }
+    return false;
+}
+/* Angemeldete Eltern mit gewähltem Kind → ['nr', 'consent'] */
+function current_parent(): ?array {
+    if (empty($_SESSION['parent']) || !team_id() || empty($_SESSION['acc'])) return null;
+    $st = pdb()->prepare('SELECT 1 FROM parent_links WHERE account_id = ? AND team_id = ? AND nr = ?');
+    $st->execute([(int)$_SESSION['acc'], team_id(), (int)$_SESSION['parent']]);
+    if (!$st->fetchColumn()) return null;
+    $st = db()->prepare('SELECT nr, consent FROM players WHERE nr = ? AND active = 1'); $st->execute([(int)$_SESSION['parent']]);
+    $p = $st->fetch(PDO::FETCH_ASSOC);
+    return $p ? ['nr' => (int)$p['nr'], 'consent' => (bool)$p['consent']] : null;
+}
+function require_parent(): array {
+    $p = current_parent();
+    if (!$p) json_out(['ok' => false, 'error' => 'Nur für Eltern.'], 403);
+    return $p;
+}
+/* Für Absagen: Kind selbst oder seine Eltern → Trikotnummer */
+function require_child_nr(): int {
+    if ($p = current_parent()) return $p['nr'];
+    return require_user()['nr'];
+}
+function parent_state(): ?array {
+    $acc = current_account();
+    if (!$acc || $acc['kind'] !== 'parent') return null;
+    $p = current_parent();
+    return ['active' => $p !== null, 'nr' => $p['nr'] ?? null, 'team' => team_info(), 'children' => parent_children((int)$acc['id'])];
+}
+
+/* Verknüpfung Eltern–Kind lösen; Konto löschen, wenn es kein Kind mehr hat */
+function parent_unlink(int $accountId, int $team, int $nr): void {
+    pdb()->prepare('DELETE FROM parent_links WHERE account_id = ? AND team_id = ? AND nr = ?')->execute([$accountId, $team, $nr]);
+    $st = pdb()->prepare('SELECT COUNT(*) FROM parent_links WHERE account_id = ?'); $st->execute([$accountId]);
+    if ((int)$st->fetchColumn() === 0) pdb()->prepare("DELETE FROM accounts WHERE id = ? AND kind = 'parent'")->execute([$accountId]);
+}
+
+/* Einwilligung: Verlauf schreiben; letzter Eintrag = woher der aktuelle Stand kommt */
+function consent_log(int $nr, bool $given, string $source, ?array $acc): void {
+    db()->prepare('INSERT INTO consent_log (nr, given, source, account_id, username, version) VALUES (?, ?, ?, ?, ?, ?)')
+        ->execute([$nr, $given ? 1 : 0, $source, $acc ? (int)$acc['id'] : null, $acc['username'] ?? '', $source === 'eltern' ? CONSENT_VERSION : '']);
+}
+function consent_info(int $nr): ?array {
+    $st = db()->prepare('SELECT given, source, username, version, created_at FROM consent_log WHERE nr = ? ORDER BY id DESC LIMIT 1'); $st->execute([$nr]);
+    $r = $st->fetch(PDO::FETCH_ASSOC);
+    return $r ? ['given' => (bool)$r['given'], 'source' => $r['source'], 'username' => $r['username'], 'version' => $r['version'],
+                 'at' => date('d.m.Y H:i', strtotime($r['created_at'] . ' UTC'))] : null;
+}
+/* Widerruf: Freigabe weg und alle Daten löschen, die nur mit Einwilligung erhoben werden */
+function consent_revoke_data(int $nr): void {
+    db()->prepare('UPDATE players SET consent = 0 WHERE nr = ?')->execute([$nr]);
+    foreach (['moods', 'profiles', 'iep_ratings'] as $t) db()->prepare("DELETE FROM $t WHERE nr = ?")->execute([$nr]);
 }
 
 /* ---------- Trainer ---------- */
@@ -652,6 +731,13 @@ function logout_session(): void {
 function start_session_for(array $acc, ?int $team = null): void {
     session_regenerate_id(true);
     $_SESSION = ['csrf' => bin2hex(random_bytes(32)), 'acc' => (int)$acc['id'], 'ver' => (int)$acc['sess_ver'], 'last' => time()];
+    if ($acc['kind'] === 'parent') {        // Eltern: zuletzt gewählte Mannschaft, sonst das erste Kind
+        $kids = parent_children((int)$acc['id']);
+        $pick = array_values(array_filter($kids, fn($c) => $c['team'] === (int)$acc['last_team']))[0] ?? ($kids[0] ?? null);
+        if ($pick) select_child($acc, $pick['team'], $pick['nr']);
+        pdb()->prepare('UPDATE accounts SET last_login = ? WHERE id = ?')->execute([date('Y-m-d H:i'), $acc['id']]);
+        return;
+    }
     // Mannschaft: gewünschte, sonst zuletzt gewählte, sonst die erste
     $teams = array_column(account_teams((int)$acc['id']), null, 'id');
     $pick = $team && isset($teams[$team]) ? $team : (isset($teams[(int)$acc['last_team']]) ? (int)$acc['last_team'] : (int)(array_key_first($teams) ?? 0));
@@ -668,7 +754,7 @@ function select_team(int $team, array $acc): bool {
     if (!$t) return false;
     if (!$m && $acc['kind'] === 'coach' && is_club_admin((int)$acc['id'], (int)$t['club_id'])) $m = ['role' => 'coach', 'ref' => (int)$acc['ref']];
     if (!$m) return false;
-    unset($_SESSION['nr'], $_SESSION['coach']);
+    unset($_SESSION['nr'], $_SESSION['coach'], $_SESSION['parent']);
     $_SESSION['team'] = $team;
     if ($m['role'] === 'player') $_SESSION['nr'] = (int)$m['ref']; else $_SESSION['coach'] = (int)$m['ref'];
     pdb()->prepare('UPDATE accounts SET last_team = ? WHERE id = ?')->execute([$team, $acc['id']]);
@@ -689,6 +775,14 @@ function validate_session(): void {
     $a = current_account();
     if (!$a || !(int)$a['active'] || (int)$a['sess_ver'] !== (int)($_SESSION['ver'] ?? -1)) { logout_session(); return; }
     if ($a['kind'] === 'coach' && time() - (int)($_SESSION['last'] ?? 0) > COACH_IDLE) { logout_session(); return; }
+    if ($a['kind'] === 'parent') {          // Eltern: Verknüpfung zum gewählten Kind muss noch bestehen
+        if (!current_parent()) {
+            $kids = parent_children((int)$a['id']);
+            if (!$kids || !select_child($a, $kids[0]['team'], $kids[0]['nr'])) { logout_session(); return; }
+        }
+        $_SESSION['last'] = time();
+        return;
+    }
     // Mitgliedschaft in der gewählten Mannschaft muss noch bestehen
     if (team_id()) {
         $ok = in_array(team_id(), array_column(account_teams((int)$a['id']), 'id'), true);

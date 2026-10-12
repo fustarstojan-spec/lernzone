@@ -19,7 +19,7 @@ $fail = fn(string $m, int $c = 400) => json_out(['ok' => false, 'error' => $m, '
 $tok = fn() => preg_match('/^[A-Za-z0-9_-]{30,60}$/', (string)($in['token'] ?? '')) ? hash('sha256', (string)$in['token']) : '';
 $byReset = function (string $h) {
     if ($h === '') return null;
-    $st = pdb()->prepare("SELECT * FROM accounts WHERE reset_hash = ? AND reset_expires > ? AND active = 1 AND kind = 'coach'");
+    $st = pdb()->prepare("SELECT * FROM accounts WHERE reset_hash = ? AND reset_expires > ? AND active = 1 AND kind IN ('coach', 'parent')");
     $st->execute([$h, time()]); return $st->fetch(PDO::FETCH_ASSOC) ?: null;
 };
 
@@ -31,8 +31,8 @@ if ($action === 'request') {
     if ($login === '') $fail('Bitte Benutzername oder E-Mail eingeben.');
     $st = pdb()->prepare("SELECT * FROM accounts WHERE (username = ? COLLATE NOCASE OR (email != '' AND email = ? COLLATE NOCASE)) AND active = 1 LIMIT 1");
     $st->execute([$login, $login]); $a = $st->fetch(PDO::FETCH_ASSOC);
-    if (!$a || $a['kind'] !== 'coach' || $a['email'] === '') {
-        sec_log('pw_reset_request', 'info', $a ? (int)$a['id'] : null, $a['username'] ?? mb_substr($login, 0, 30), $a ? 'kein Link: ' . ($a['kind'] !== 'coach' ? 'Spielerkonto' : 'keine E-Mail hinterlegt') : 'unbekannt');
+    if (!$a || !in_array($a['kind'], ['coach', 'parent'], true) || $a['email'] === '') {
+        sec_log('pw_reset_request', 'info', $a ? (int)$a['id'] : null, $a['username'] ?? mb_substr($login, 0, 30), $a ? 'kein Link: ' . (!in_array($a['kind'], ['coach', 'parent'], true) ? 'Spielerkonto' : 'keine E-Mail hinterlegt') : 'unbekannt');
         json_out($generic);
     }
     if (time() - (int)$a['reset_sent'] < RESET_GAP) json_out($generic);

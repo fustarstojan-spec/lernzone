@@ -29,11 +29,7 @@ foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $t) {
 
 // Kader: nur bekannt gegebene, nur eigener Status, Grund als Text, nie die Trainer-Notiz
 require __DIR__ . '/lib/matchday.php';
-$gs = db()->prepare("SELECT t.id, t.date, t.time, t.title, t.location, p.status, p.reason FROM trainings t JOIN match_calls c ON c.training_id = t.id AND c.announced = 1
-                     LEFT JOIN match_call_players p ON p.training_id = t.id AND p.nr = ? WHERE t.date >= ? AND t.date <= ? ORDER BY t.date, t.time");
-$gs->execute([$u['nr'], today(), date('Y-m-d', strtotime('+21 days'))]);
-$games = array_map(fn($g) => ['id' => (int)$g['id'], 'date' => $g['date'], 'time' => $g['time'], 'title' => $g['title'] ?: 'Spiel', 'location' => $g['location'],
-                              'status' => $g['status'] === 'kader' ? 'kader' : 'out', 'reason' => $g['status'] === 'out' ? (KADER_REASONS[$g['reason']] ?? '') : ''], $gs->fetchAll(PDO::FETCH_ASSOC));
+$games = games_for($u['nr']);
 
 json_out(['ok' => true, 'consent' => $u['consent'], 'games' => $games, 'profile' => (object)profile_of($u['nr']),
           'attendance' => attendance_summary($u['nr']), 'today' => $today,

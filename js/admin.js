@@ -183,7 +183,7 @@
   LZ.views.mailversand = () => `${H("E-Mail-Versand")}${(LZ.Store.coach || {}).platformAdmin ? mailSettingsCard() || `<p class="small">Lade …</p>` : `<p class="small">Nur für den Superadmin.</p>`}`;
   LZ.views.konto = () => {
     const acc = LZ.Store.account || {};
-    return `${H("Mein Konto")}<section class="card stack"><p class="small">Angemeldet als <b>${esc(acc.username || "")}</b></p>
+    return `<section>${LZ.area(LZ.zone === "admin" ? "Admin-Zone" : "Eltern")}<h1>Mein Konto</h1></section><section class="card stack"><p class="small">Angemeldet als <b>${esc(acc.username || "")}</b></p>
       <div class="row"><button class="btn ghost" data-act="pwStart">Passwort ändern</button></div></section>${LZ.mailCard ? LZ.mailCard() : ""}`;
   };
 
@@ -258,7 +258,8 @@
     account_locked: "Konto gesperrt", ip_blocked: "Netz gesperrt", pw_set: "Passwort festgelegt", pw_change: "Passwort geändert", pw_change_fail: "Passwort ändern fehlgeschlagen", pw_reset_request: "Passwort vergessen angefragt", pw_reset: "Passwort per E-Mail-Link neu gesetzt",
     email_set: "E-Mail eingetragen", email_verified: "E-Mail bestätigt", email_removed: "E-Mail gelöscht", email_change_fail: "E-Mail ändern fehlgeschlagen", mail_settings: "E-Mail-Versand geändert",
     code_issued: "Neuer Einmal-Code", username_change: "Benutzername geändert", coach_add: "Trainer hinzugefügt", coach_remove: "Trainer entfernt",
-    role_change: "Rolle geändert", player_add: "Spieler angelegt", player_delete: "Spieler gelöscht", consent: "Einwilligung", setup: "Einrichtung" };
+    role_change: "Rolle geändert", player_add: "Spieler angelegt", player_delete: "Spieler gelöscht", consent: "Einwilligung", setup: "Einrichtung",
+    parent_add: "Elternzugang angelegt", parent_link: "Elternzugang verknüpft", parent_remove: "Elternzugang entfernt", parent_absence: "Absage durch Eltern" };
   function secCard() {
     const d = SEC.data; if (!d) return "";
     const st = d.stats, fmt = ts => new Date(ts * 1000).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });

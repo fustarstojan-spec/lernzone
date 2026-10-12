@@ -18,11 +18,12 @@ $action = (string)($in['action'] ?? '');
 const DUMMY_HASH = '$2y$10$qDT3H.8TpDKmxurdx.PDo.1RqLj1.RwhVLH5mmnU9xqBB.XhVU/c6';   // echter Hash eines Platzhalters
 
 $done = function (): never {
-    json_out(['ok' => true, 'state' => 'ok', 'user' => current_user(), 'coach' => coach_state(), 'csrf' => csrf_token(),
+    json_out(['ok' => true, 'state' => 'ok', 'user' => current_user(), 'coach' => coach_state(), 'parent' => parent_state(), 'csrf' => csrf_token(),
               'account' => ['username' => current_account()['username'] ?? '', 'minLen' => pw_min(current_account()['kind'] ?? 'player')]]);
 };
 /* Konto darf sich anmelden, wenn es in mindestens einer aktiven Mannschaft dabei (und dort aktiv) ist */
 $entityActive = function (array $a): bool {
+    if ($a['kind'] === 'parent') return (bool)parent_children((int)$a['id']);                                   // Eltern: mindestens ein aktives Kind
     if ($a['kind'] === 'coach') {
         $st = pdb()->prepare('SELECT active FROM coaches WHERE id = ?'); $st->execute([(int)$a['ref']]);
         if ((int)$st->fetchColumn() !== 1) return false;
@@ -55,7 +56,7 @@ if ($action === 'login') {
     $pw = (string)($in['password'] ?? '');
     // ab 0.34.2: Anmeldung mit Benutzername oder bestätigter E-Mail-Adresse (nur Trainer/Admins haben eine)
     if (str_contains($raw, '@')) {
-        $st = pdb()->prepare("SELECT * FROM accounts WHERE email != '' AND email = ? COLLATE NOCASE AND active = 1 AND kind = 'coach' LIMIT 1");
+        $st = pdb()->prepare("SELECT * FROM accounts WHERE email != '' AND email = ? COLLATE NOCASE AND active = 1 AND kind IN ('coach', 'parent') LIMIT 1");
         $st->execute([mb_substr($raw, 0, 120)]);
     } else {
         $st = pdb()->prepare('SELECT * FROM accounts WHERE username = ? AND active = 1');

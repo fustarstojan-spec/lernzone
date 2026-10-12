@@ -1,12 +1,12 @@
 <?php
 /*
- * Training absagen (nur angemeldeter Spieler, nur Trainings, bis 2 Stunden vor Beginn)
+ * Training absagen (angemeldeter Spieler oder seine Eltern – ab 0.37.0, nur Trainings, bis 2 Stunden vor Beginn)
  * POST {action:"set", id, reason}   reason: schule | krank | urlaub | sonst
  * POST {action:"withdraw", id}      Absage zurücknehmen („Ich bin doch dabei“)
  * → {ok, upcoming:[…]}
  */
 require __DIR__ . '/config.php';
-$u = require_user();
+$u = ['nr' => require_child_nr()];
 require_method('POST');
 $in = json_in();
 $id = (int)($in['id'] ?? 0);
@@ -25,6 +25,7 @@ switch ($in['action'] ?? '') {
         db()->prepare('INSERT INTO absences (training_id, nr, reason) VALUES (?, ?, ?)
                        ON CONFLICT(training_id, nr) DO UPDATE SET reason = excluded.reason, created_at = CURRENT_TIMESTAMP')->execute([$id, $u['nr'], $reason]);
         db()->prepare('DELETE FROM attendance WHERE training_id = ? AND nr = ?')->execute([$id, $u['nr']]);
+        if (current_parent()) sec_log('parent_absence', 'info', (int)$_SESSION['acc'], current_account()['username'] ?? '', "Nr. {$u['nr']}: Training {$t['date']} abgesagt");
         break;
     case 'withdraw':
         db()->prepare('DELETE FROM absences WHERE training_id = ? AND nr = ?')->execute([$id, $u['nr']]);

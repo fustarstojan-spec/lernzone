@@ -10,7 +10,7 @@ require __DIR__ . '/config.php';
 require __DIR__ . '/lib/mail.php';
 require_login();
 $a = current_account();
-if (!$a || $a['kind'] !== 'coach') json_out(['ok' => false, 'error' => 'Nur für Trainer- und Admin-Konten.'], 403);
+if (!$a || !in_array($a['kind'], ['coach', 'parent'], true)) json_out(['ok' => false, 'error' => 'Nur für Trainer-, Admin- und Elternkonten.'], 403);   // Eltern ab 0.37.0
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') json_out(['ok' => true, 'email' => $a['email'], 'pending' => $a['email_new'], 'testmode' => mail_testmode()]);
 

@@ -101,9 +101,10 @@
       coach: { active: false, hasCoaches: false, canSetup: false },
       account: null,
       pending: null,
+      parent: null,                                            // ab 0.37.0: Elternkonto {active, nr, team, children}
       get currentUser() { return user; },
       gate() {
-        if (user || api_.coach.active || api_.coach.platformAdmin || (api_.coach.clubs || []).length) return null;   // Admins auch ohne Mannschaft
+        if (user || (api_.parent && api_.parent.active) || api_.coach.active || api_.coach.platformAdmin || (api_.coach.clubs || []).length) return null;   // Admins auch ohne Mannschaft
         if (api_.pending) return "setpw";
         if (!api_.coach.hasCoaches && api_.coach.canSetup) return "setup";
         return "login";
@@ -125,6 +126,7 @@
         api_.coach = me.coach || api_.coach;
         api_.account = me.account || null;
         api_.pending = me.pending || null;
+        api_.parent = me.parent || null;
         await api_.refreshPlayers();
         progress = user ? normalize(await getJSON(api + "progress.php")) : emptyProgress();
         return { user };
@@ -134,6 +136,7 @@
         if (r.coach) api_.coach = r.coach;
         api_.account = r.account || null;
         api_.pending = null;
+        api_.parent = r.parent || null;
         await api_.refreshPlayers();
         progress = user ? normalize(await getJSON(api + "progress.php")) : emptyProgress();
       },
@@ -163,7 +166,7 @@
       async login() { return { ok: false, error: "Bitte mit Benutzername und Passwort anmelden." }; },
       async logout() {
         await safe("auth.php", { action: "logout" });
-        user = null; progress = emptyProgress(); api_.account = null; api_.pending = null;
+        user = null; progress = emptyProgress(); api_.account = null; api_.pending = null; api_.parent = null;
         api_.coach = Object.assign({}, api_.coach, { active: false, id: null, name: null, isAdmin: false, team: null, teams: [], clubs: [], platformAdmin: false });
         if (content) content.players.splice(0);
       },
@@ -181,6 +184,7 @@
       async send(file, body) {
         const r = await safe(file, body);
         if (r && r.me) api_.coach = r.me;
+        if (r && r.parent) api_.parent = r.parent;
         return r;
       }
     };

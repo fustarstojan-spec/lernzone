@@ -58,3 +58,12 @@ function kader_from_lineup(int $id, array $starters, array $bench, ?int $by): vo
     db()->prepare('INSERT INTO match_calls (training_id, updated_by) VALUES (?, ?) ON CONFLICT(training_id) DO UPDATE SET updated_by = excluded.updated_by, updated_at = CURRENT_TIMESTAMP')
         ->execute([$id, $by]);
 }
+
+/* Bekannt gegebene Kader der nächsten 3 Wochen – nur der Status dieses Kindes, Grund als Text, nie die Trainer-Notiz (Kind und Eltern) */
+function games_for(int $nr): array {
+    $gs = db()->prepare("SELECT t.id, t.date, t.time, t.title, t.location, p.status, p.reason FROM trainings t JOIN match_calls c ON c.training_id = t.id AND c.announced = 1
+                         LEFT JOIN match_call_players p ON p.training_id = t.id AND p.nr = ? WHERE t.date >= ? AND t.date <= ? ORDER BY t.date, t.time");
+    $gs->execute([$nr, today(), date('Y-m-d', strtotime('+21 days'))]);
+    return array_map(fn($g) => ['id' => (int)$g['id'], 'date' => $g['date'], 'time' => $g['time'], 'title' => $g['title'] ?: 'Spiel', 'location' => $g['location'],
+                                'status' => $g['status'] === 'kader' ? 'kader' : 'out', 'reason' => $g['status'] === 'out' ? (KADER_REASONS[$g['reason']] ?? '') : ''], $gs->fetchAll(PDO::FETCH_ASSOC));
+}

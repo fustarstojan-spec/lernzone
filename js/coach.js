@@ -123,7 +123,10 @@
       ${d.flag ? `<p class="alert">Bitte ansprechen: ${esc(d.flag)}</p>` : ""}
       <section class="card stack"><h2>Einwilligung der Eltern</h2>
         <label class="check"><input type="checkbox" id="c-consent" ${p.consent ? "checked" : ""}> Liegt vor – Profil, Befindens-Barometer und Selbsteinschätzung sind freigeschaltet</label>
+        ${d.consentInfo ? `<p class="small">${d.consentInfo.given ? "Erteilt" : "Entfernt / widerrufen"} ${d.consentInfo.source === "eltern" ? `digital von ${esc(d.consentInfo.username)}` : `vom Trainer${d.consentInfo.username ? " (" + esc(d.consentInfo.username) + ")" : ""}`} am ${esc(d.consentInfo.at)}</p>` : ""}
+        <p class="small">Häkchen setzen, wenn die Einwilligung auf Papier vorliegt. Eltern mit Zugang können sie auch selbst digital erteilen oder widerrufen.</p>
         <button class="linkbtn" data-act="legal" data-v="einwilligung">Formular zum Ausdrucken</button></section>
+      ${parentsCard(d)}
       <section class="card stack"><h2>Profil</h2>${rows.length ? `<dl class="sub">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : `<p class="small">${p.consent ? "Der Spieler hat noch nichts eingetragen." : "Wird nach der Einwilligung freigeschaltet."}</p>`}</section>
       <section class="card stack"><h2>Trainingsbeteiligung</h2>${attLine(d.attendance)}</section>
       ${gradeSummary(d)}
@@ -235,11 +238,53 @@
     return "";
   };
 
+  /* ---------- Elternzugang (ab 0.37.0): bis 2 Konten pro Kind, Geschwister über vorhandenen Benutzernamen ---------- */
+  function parentsCard(d) {
+    const P = d.parents || { parents: [], max: 2 }, list = P.parents, full = list.length >= P.max;
+    return `<section class="card stack"><h2>Eltern-Zugang</h2>
+      <p class="small">Eltern sehen nur dieses Kind: Termine und Absagen, Kader-Status, Lernfortschritt und die Einwilligung. Kein Befinden, kein Profil, keine Bewertungen.</p>
+      ${list.length ? `<ul class="admcoaches">${list.map(x => `<li class="rowspread"><span><b>${esc(x.username)}</b>${x.pending ? ` <span class="badge muted">Code offen</span>` : ""}${x.kids > 1 ? ` <span class="small">· ${x.kids} Kinder</span>` : ""}</span>
+        <span class="chiprow"><button class="linkbtn" data-act="parCode" data-v="${x.id}">Neuer Code</button>
+        ${T.parConfirm === x.id ? `<button class="btn small danger-btn" data-act="parRm" data-v="${x.id}">Wirklich entfernen?</button> <button class="linkbtn" data-act="parAsk" data-v="">Nein</button>` : `<button class="linkbtn" data-act="parAsk" data-v="${x.id}">Entfernen</button>`}</span></li>`).join("")}</ul>` : `<p class="small">Noch kein Elternzugang.</p>`}
+      ${full ? `<p class="small">Höchstens ${P.max} Elternzugänge pro Kind.</p>` : T.parAdd ? `<div class="stack subform">
+        ${userField("par-user", "Benutzername", T.parUser, "Leer lassen = Vorschlag. Geschwisterkind? Vorhandenen Benutzernamen der Eltern eingeben – dann wird nur verknüpft.")}
+        <div class="chiprow"><button class="btn" data-act="parAdd" ${T.busy ? "disabled" : ""}>Anlegen</button><button class="btn ghost" data-act="parOpen" data-v="0">Abbrechen</button></div></div>`
+        : `<button class="btn ghost wide" data-act="parOpen" data-v="1">+ Elternzugang anlegen</button>`}
+    </section>`;
+  }
+  LZ.actions.parOpen = (b, v) => { T.parAdd = v === "1"; T.parUser = ""; T.err = ""; LZ.render(); };
+  LZ.actions.parAsk = (b, v) => { T.parConfirm = v ? +v : null; LZ.render(); };
+  const parCode = r => show("code", { code: { nr: T.editNr, heading: `Eltern von Nr. ${T.editNr}`, title: "Zugang für Eltern", username: r.username, code: r.code, expires: r.expires,
+    buttons: `<p class="small">Die Eltern melden sich unter der normalen Adresse an und legen ein eigenes Passwort fest.</p><button class="btn wide" data-act="cPlayer" data-v="${T.editNr}">Zurück zum Spieler</button>` } });
+  LZ.actions.parAdd = async () => {
+    const username = (document.getElementById("par-user") || {}).value || T.parUser;
+    T.busy = true; LZ.render();
+    const r = await St().send("parents.php", { action: "add", nr: T.editNr, username: username.trim() });
+    T.busy = false;
+    if (!r.ok) return fail(r);
+    if (r.code) return parCode(r);
+    T.detail.parents.parents = r.parents; T.parAdd = false; T.msg = `${r.username} ist jetzt auch mit Nr. ${T.editNr} verknüpft.`; LZ.render();
+  };
+  LZ.actions.parCode = async (b, v) => {
+    T.busy = true; LZ.render();
+    const r = await St().send("parents.php", { action: "code", nr: T.editNr, id: +v });
+    T.busy = false;
+    if (!r.ok) return fail(r);
+    parCode(r);
+  };
+  LZ.actions.parRm = async (b, v) => {
+    const r = await St().send("parents.php", { action: "remove", nr: T.editNr, id: +v });
+    if (!r.ok) return fail(r);
+    T.detail.parents.parents = r.parents; T.parConfirm = null; LZ.render();
+  };
+
   /* ---------- Kader / Spieler ---------- */
   async function openPlayer(nr) {
     show("player", { editNr: nr, detail: null });
-    const [r, ie, gr] = await Promise.all([St().get("players.php?nr=" + nr), St().get("iep.php?nr=" + nr), St().get("grades.php?nr=" + nr)]);
+    const [r, ie, gr, pa] = await Promise.all([St().get("players.php?nr=" + nr), St().get("iep.php?nr=" + nr), St().get("grades.php?nr=" + nr), St().get("parents.php?nr=" + nr)]);
     if (!r.ok) return fail(r);
+    r.parents = pa && pa.ok ? pa : { parents: [], max: 2 };
+    T.parAdd = false; T.parUser = ""; T.parConfirm = null;
     r.iep = ie && ie.ok ? ie : { iep: null, ratings: [], versions: [] };
     r.grades = gr && gr.ok ? gr : null;
     T.iepOld = null;
@@ -642,5 +687,6 @@
     else if (id === "cf-name" || id === "ce-name") T.cf.name = el.value;
     else if (id === "cf-user" || id === "ce-user") T.cf.user = el.value;
     else if ((id === "cf-admin" || id === "ce-admin") && e.type === "change") T.cf.isAdmin = el.checked;
+    else if (id === "par-user") T.parUser = el.value;
   });
 })();

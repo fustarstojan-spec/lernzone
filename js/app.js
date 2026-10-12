@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.36.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.37.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -277,7 +277,7 @@
   /* ---------- Render & Events ---------- */
   function render() {
     const gate = Store.gate ? Store.gate() : null;          // Weg B: erst anmelden
-    document.getElementById("shirtBtn").innerHTML = gate ? "" : shirt(S.user ? S.user.nr : Store.coach.active ? "T" : LZ.adminOnly() ? "A" : "?");
+    document.getElementById("shirtBtn").innerHTML = gate ? "" : shirt(S.user ? S.user.nr : Store.coach.active ? "T" : LZ.parentMode() ? "E" : LZ.adminOnly() ? "A" : "?");
     document.getElementById("shirtBtn").hidden = !!gate;
     renderSide(gate);
     if (gate && LZ.views[gate] && !(LZ.legalPages || []).concat(LZ.publicViews || []).includes(S.view)) { app.innerHTML = LZ.views[gate](); return; }   // Impressum & Co. auch ohne Anmeldung
@@ -286,6 +286,7 @@
       if (PEND) { const x = PEND; PEND = null; return go(x.v, x.a); }
       if (S.view === "home" || S.view === "me") { app.innerHTML = LZ.views.adminHome ? LZ.views.adminHome() : ""; return; }
     } else if (LZ.adminOnly()) { location.replace("admin/"); return; }   // Admin ohne Mannschaft gehört in die Admin-Zone
+    else if (LZ.parentMode() && ["home", "me"].includes(S.view) && LZ.views.parentHome) { app.innerHTML = LZ.views.parentHome(); return; }   // Eltern (ab 0.37.0)
     // Trainer ohne Spieler-Anmeldung: eigene Startseite (js/dashboard.js), Lerninhalte unter „Lernzone“
     const coachHome = S.view === "home" && LZ.coachMode() && LZ.views.coachHome;
     app.innerHTML = coachHome ? LZ.views.coachHome()
@@ -340,7 +341,7 @@
     // Trikot oben rechts (ab 0.34.3): Trainer → eigenes Profil, Admin ohne Mannschaft → Verwaltung, Spieler → Mein Bereich
     else if (a === "shirt") {
       if (LZ.coachMode() && LZ.actions.myProfile) LZ.actions.myProfile();
-      else if (LZ.adminOnly()) go("konto");
+      else if (LZ.adminOnly() || LZ.parentMode()) go("konto");
       else go("me");
     }
     else if (a === "me") {
@@ -446,6 +447,9 @@
         .concat(club ? [{ k: "sicherheit", label: "Sicherheit", icon: "shield", act: "side", v: "sicherheit" }] : [])
         .concat(LZ.coachMode() ? [{ k: "app", label: "Zu FU-STARS", icon: "open", href: "./" }] : []);
     }
+    if (LZ.parentMode()) return [   // Eltern (ab 0.37.0): nur das eigene Kind
+      { k: "home", label: "Übersicht", icon: "home", act: "side", v: "home" },
+      { k: "elternConsent", label: "Einwilligung", icon: "legal", act: "side", v: "elternConsent" }];
     if (LZ.coachMode()) return [
       // Reihenfolge vom Trainer festgelegt (0.34.4); Trainer-Wissen danach
       { k: "home", label: "Übersicht", icon: "home", act: "side", v: "home" },
@@ -465,9 +469,10 @@
     if (LZ.coachMode()) { name = c.name || (acc && acc.username) || ""; role = c.clubAdmin ? "Vereinsadmin" : c.isAdmin ? "Cheftrainer" : "Trainer"; }
     else if (LZ.adminOnly()) { name = (acc && acc.username) || ""; role = c.platformAdmin ? "Superadmin" : "Vereinsadmin"; }
     else if (S.user) { name = acc ? acc.username : "Nr. " + S.user.nr; role = "Spieler"; }
+    else if (LZ.parentMode()) { name = (acc && acc.username) || ""; role = "Eltern"; }
     else return "";
-    const act = LZ.coachMode() ? "myProfile" : LZ.adminOnly() ? "side" : "me";   // Admin ohne Mannschaft → „konto“ (Admin-Zone)
-    const on = LZ.coachMode() ? S.view === "coach" : LZ.adminOnly() ? false : ["me", "profile"].includes(S.view);
+    const act = LZ.coachMode() ? "myProfile" : LZ.adminOnly() || LZ.parentMode() ? "side" : "me";   // Admin ohne Mannschaft und Eltern → „konto“
+    const on = LZ.coachMode() ? S.view === "coach" : LZ.adminOnly() || LZ.parentMode() ? S.view === "konto" : ["me", "profile"].includes(S.view);
     return `<div class="saccount"><button class="snav sacc-who${on ? " on" : ""}" data-act="${act}" data-v="konto" title="Mein Konto: ${esc(name)} · ${esc(role)}">${icon("user")}<span class="sl"><b>${esc(name)}</b><span class="badge">${esc(role)}</span></span></button>
       <ul class="slist"><li><button class="snav" data-act="logout" title="Abmelden">${icon("logout")}<span class="sl">Abmelden</span></button></li></ul></div>`;
   }
@@ -511,6 +516,7 @@
     on(name, fn) { (this.hooks[name] = this.hooks[name] || []).push(fn); },
     zone: ZONE,
     // Darf in die Admin-Zone: Superadmin, Vereinsadmin, Cheftrainer der gewählten Mannschaft
+    parentMode() { return !!(Store && Store.parent && Store.parent.active); },
     adminAccess() { return this.adminOnly() || (this.coachMode() && !!Store.coach.isAdmin); },
     contentItems() { return CC ? CC.items : []; },
     reloadContent: () => loadClubContent(),

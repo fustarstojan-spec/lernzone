@@ -61,6 +61,19 @@ CREATE TABLE IF NOT EXISTS absences (
   PRIMARY KEY (training_id, nr)
 );
 
+-- Einwilligung der Eltern: Verlauf (ab 0.37.0). players.consent bleibt der aktuelle Stand.
+-- source: eltern (digital in der App) | trainer (Papier, Häkchen im Kader)
+CREATE TABLE IF NOT EXISTS consent_log (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  nr          INTEGER NOT NULL,
+  given       INTEGER NOT NULL,
+  source      TEXT    NOT NULL,
+  account_id  INTEGER,
+  username    TEXT    NOT NULL DEFAULT '',
+  version     TEXT    NOT NULL DEFAULT '',
+  created_at  TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Trainer, die bei einem Termin nicht können (ab 0.13.0)
 CREATE TABLE IF NOT EXISTS coach_absences (
   training_id  INTEGER NOT NULL,

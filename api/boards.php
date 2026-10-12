@@ -12,6 +12,7 @@ require __DIR__ . '/config.php';
 require_login();
 $coach = current_coach();
 $user  = current_user();
+if (!$coach && !$user) json_out(['ok' => false, 'error' => 'Nur für Trainer und Spieler.'], 403);   // Eltern sehen keine Taktiktafeln (ab 0.37.0)
 
 $gameOf = function (?int $tid): ?array {
     if (!$tid) return null;

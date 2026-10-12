@@ -2,6 +2,15 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.37.0 – 2026-10-12
+- **Eltern-Zugang**: Trainer legen im Kader beim Kind unter „Eltern-Zugang“ bis zu 2 Elternkonten an (Benutzername-Vorschlag `<kind>.eltern`, Einmal-Code 72 Std.). Geschwisterkind: vorhandenen Benutzernamen der Eltern eingeben – dann wird nur verknüpft (auch über Mannschaften hinweg). Neuer Code und Entfernen ebenfalls dort
+- Eltern melden sich unter der normalen Adresse an und sehen nur ihr Kind: nächste Trainings mit Absage (gleiche Gründe und Fristen wie das Kind), Kader-Status bekannt gegebener Spiele, Lernfortschritt (Quiz). Mehrere Kinder: Umschalter oben
+- **Einwilligung digital**: Eltern lesen den Text und bestätigen beide Punkte (Daten + Hinweis „nicht fit“); Widerruf jederzeit – Profil, Befindens-Einträge und Selbsteinschätzungen werden dann sofort gelöscht. Papier-Häkchen des Trainers gilt weiter. Verlauf mit Zeitpunkt, Zugang und Textfassung (`consent_log`), beim Kind im Kader sichtbar
+- Eltern sehen nicht: Befinden, Profil, Entwicklungsplan, Bewertungen, Spielzeiten, Taktiktafeln, andere Kinder; kein Zugang zur Admin-Zone
+- Eltern können eine E-Mail für „Passwort vergessen“ hinterlegen (Mein Konto)
+- Sicherheitsprotokoll: Elternzugang angelegt/verknüpft/entfernt, Absage durch Eltern, Einwilligung digital
+- Datenschutzerklärung und Einwilligungstext um den Elternzugang ergänzt
+
 ## 0.36.0 – 2026-10-12
 - **Admin-Zone** unter eigener Adresse `…/admin/` (Kennzeichnung „Admin-Zone“ oben, eigene Seitenleiste). Zugang für Superadmin, Vereinsadmins und Cheftrainer; alle anderen sehen „Kein Zugang“
   - Übersicht mit offenen Punkten (fehlende Impressums-Angaben, Sperren) und Kacheln

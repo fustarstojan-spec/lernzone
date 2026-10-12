@@ -60,6 +60,17 @@ CREATE TABLE IF NOT EXISTS memberships (
 );
 CREATE INDEX IF NOT EXISTS memberships_team ON memberships (team_id, role, ref);
 
+-- Eltern (ab 0.37.0): ein Elternkonto (accounts.kind = 'parent') kann mehrere Kinder haben, auch in anderen Mannschaften;
+-- pro Kind höchstens 2 Elternkonten. Eltern haben keine memberships.
+CREATE TABLE IF NOT EXISTS parent_links (
+  account_id  INTEGER NOT NULL,
+  team_id     INTEGER NOT NULL,
+  nr          INTEGER NOT NULL,                       -- Trikotnummer des Kindes in dieser Mannschaft
+  created_at  TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (account_id, team_id, nr)
+);
+CREATE INDEX IF NOT EXISTS parent_links_child ON parent_links (team_id, nr);
+
 -- Vereinsadmins (ab 0.22.0): legen Mannschaften an, laden Trainer ein, sehen alle Mannschaften ihres Vereins
 CREATE TABLE IF NOT EXISTS club_admins (
   account_id  INTEGER NOT NULL,                       -- Trainer-Konto (kind 'coach')

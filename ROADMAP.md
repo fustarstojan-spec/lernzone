@@ -51,7 +51,7 @@ Pflege: neue Ideen hier eintragen, Erledigtes streichen und ins CHANGELOG übern
 - [ ] Wissenskarten für Kinder (kurz, kindgerecht, z. B. Schlaf, Trinken, Aufwärmen) aus dem Trainer-Wissen
 - [ ] Übungen ebenfalls einem Schwerpunkt aus der Spielphasen-Referenz zuordnen und danach filtern
 
-- [ ] **Eltern-Zugang (nächstes Vorhaben)**: Elternkonto mit Kind verknüpft – Termine & Absagen, Einwilligung digital statt Papier, Lernfortschritt, Kader-Status (vorher besprechen)
+- [x] Eltern-Zugang (0.37.0): Termine & Absagen, Einwilligung digital, Lernfortschritt, Kader-Status
 - [ ] Lernfortschritt aller Spieler in der Trainer-Ansicht
 - [ ] Individuelle Pläne pro Spieler
 - [ ] Spieler sehen ihre Spielzeiten

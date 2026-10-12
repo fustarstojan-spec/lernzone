@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         if (!$p) json_out(['ok' => false, 'error' => "Nr. $nr gibt es nicht."], 404);
         json_out(['ok' => true, 'player' => $p, 'username' => account_for('player', $nr)['username'] ?? '',
                   'profile' => (object)profile_of($nr), 'attendance' => attendance_summary($nr),
-                  'moods' => recent_moods($nr, 10), 'flag' => mood_flag($nr)]);
+                  'moods' => recent_moods($nr, 10), 'flag' => mood_flag($nr), 'consentInfo' => consent_info($nr)]);
     }
     $rows = db()->query('SELECT nr, pos, plan, pos_off, pos_def, consent FROM players WHERE active = 1 ORDER BY nr')->fetchAll(PDO::FETCH_ASSOC);
     json_out(array_map(function ($r) use ($coach) {
@@ -68,6 +68,7 @@ if ($action === 'setconsent') {
     db()->prepare('UPDATE players SET consent = ? WHERE nr = ? AND active = 1')->execute([!empty($in['consent']) ? 1 : 0, $nr]);
     $p = $row($nr);
     if (!$p) json_out(['ok' => false, 'error' => "Nr. $nr gibt es nicht."], 404);
+    consent_log($nr, !empty($in['consent']), 'trainer', current_account());
     $acc = account_for('player', $nr);
     sec_log('consent', 'info', $acc ? (int)$acc['id'] : null, $acc['username'] ?? '', "Nr. $nr: Einwilligung " . (!empty($in['consent']) ? 'eingetragen' : 'entfernt'));
     json_out(['ok' => true, 'player' => $p]);
@@ -75,10 +76,13 @@ if ($action === 'setconsent') {
 
 if ($action === 'delete') {
     if (!$me['isAdmin']) json_out(['ok' => false, 'error' => 'Nur Admins dürfen Spieler löschen.'], 403);
-    foreach (['progress', 'profiles', 'moods', 'attendance', 'absences', 'match_squad', 'iep', 'iep_versions', 'iep_ratings', 'grades', 'grade_notes', 'match_call_players', 'players'] as $t) {
+    foreach (['progress', 'profiles', 'moods', 'attendance', 'absences', 'match_squad', 'iep', 'iep_versions', 'iep_ratings', 'grades', 'grade_notes', 'match_call_players', 'consent_log', 'players'] as $t) {
         db()->prepare("DELETE FROM $t WHERE nr = ?")->execute([$nr]);
     }
     if ($a = account_for('player', $nr)) remove_membership((int)$a['id']);
+    // Eltern-Verknüpfungen lösen; Elternkonten ohne weiteres Kind löschen (ab 0.37.0)
+    $pl = pdb()->prepare('SELECT account_id FROM parent_links WHERE team_id = ? AND nr = ?'); $pl->execute([team_id(), $nr]);
+    foreach (array_map('intval', $pl->fetchAll(PDO::FETCH_COLUMN)) as $pid) parent_unlink($pid, (int)team_id(), $nr);
     sec_log('player_delete', 'warn', $a ? (int)$a['id'] : null, $a['username'] ?? '', "Nr. $nr mit allen Daten gelöscht");
     json_out(['ok' => true]);
 }
