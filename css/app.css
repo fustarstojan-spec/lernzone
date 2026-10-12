@@ -513,7 +513,7 @@ footer.legal .linkbtn{font-size:.85rem;color:var(--muted)}
 .wpage .badge{justify-self:start}
 
 /* 0.28.0 Layout links ausgerichtet, Inhaltsverzeichnis als linke Spalte */
-:root{--toph:67px;--rail:64px;--sidew:272px}
+:root{--toph:67px;--rail:64px;--sidew:288px}
 .shell{display:flex;align-items:flex-start;min-height:calc(100dvh - var(--toph))}
 .content{flex:1;min-width:0}
 @media (min-width:900px){main,footer.legal{padding-inline:28px}}
@@ -527,22 +527,29 @@ body.side-open .side{width:var(--sidew)}
 body.noside .side,body.noside .side-shade{display:none}
 .slist,.ssub{list-style:none;margin:0;padding:0;display:grid;gap:2px;grid-template-columns:minmax(0,1fr)}
 .slist li{min-width:0}
-.ssub{margin:2px 0 6px 18px;padding-left:8px;border-left:1px solid var(--rule)}
-.sitem{display:flex;align-items:center;gap:12px;width:100%;min-height:42px;padding:8px 12px;border:0;border-radius:10px;background:none;color:var(--muted);font-weight:600;text-align:left;white-space:nowrap;box-sizing:border-box}
-.sitem svg{width:22px;height:22px;flex:none}
-.sitem:hover{background:var(--accent-soft);color:var(--fg)}
-.sitem.on{color:var(--accent)}
-.sitem[aria-current="page"]{background:var(--shirt);color:#fff}
-.ssub .sitem{min-height:36px;padding:6px 10px;font-size:.93rem;gap:10px}
+/* 0.33.0 Seitenleiste im Stil einer Verwaltungs-Software: dünne Linien-Icons, dunkle Beschriftung, Pfeil rechts bei Gruppen */
+.ssub{margin:0 0 6px;padding:0}
+.snav{display:flex;align-items:center;gap:16px;width:100%;min-height:46px;padding:10px 14px;border:0;border-radius:10px;background:none;color:var(--fg);font-weight:600;font-size:.95rem;text-align:left;white-space:nowrap;box-sizing:border-box;position:relative}
+.snav svg{width:22px;height:22px;flex:none}
+.snav:hover{background:var(--bg)}
+.snav.on{color:var(--accent)}
+.snav[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+.snav[aria-current="page"]::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:3px;background:var(--accent)}
+.ssub .snav{min-height:38px;padding:7px 12px 7px 50px;font-size:.9rem;font-weight:500;gap:10px;color:var(--muted)}
+.ssub .ssub .snav{padding-left:58px}
+.ssub .snav:hover{color:var(--fg)}
+.ssub .snav[aria-current="page"]{color:var(--accent);font-weight:600}
 .sl{overflow:hidden;text-overflow:ellipsis;flex:1}
-.snr{width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:.75rem;border:1.5px solid currentColor}
-.sdot{width:6px;height:6px;margin:0 8px;border-radius:50%;background:currentColor;flex:none}
-.schev{transition:transform .15s;font-size:1.1rem}
+.snr{width:20px;height:20px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:.7rem;border:1.5px solid currentColor}
+.sdot{width:20px;height:1px;flex:none}
+.schev{display:grid;place-items:center;color:var(--muted);transition:transform .15s}
+.schev svg{width:18px;height:18px}
 .sgrp[aria-expanded="true"] .schev{transform:rotate(90deg)}
-.stoggle{margin-top:8px;border-top:1px solid var(--rule);border-radius:0 0 10px 10px}
+.stoggle{margin-top:8px;border-top:1px solid var(--rule);border-radius:0 0 10px 10px;color:var(--muted);font-weight:500}
 .schev2{width:22px;text-align:center;font-size:1.15rem;flex:none}
 body:not(.side-open):not(.side-mob) .side .sl,body:not(.side-open):not(.side-mob) .side .schev{display:none}
-body:not(.side-open):not(.side-mob) .side .sitem{justify-content:center;padding-inline:0}
+body:not(.side-open):not(.side-mob) .side .snav{justify-content:center;padding-inline:0}
+body:not(.side-open):not(.side-mob) .side .snav[aria-current="page"]::before{left:-8px}
 .side-shade{display:none}
 @media (max-width:899px){
   .side{position:fixed;left:0;top:var(--toph);z-index:6;width:min(84vw,300px)!important;transform:translateX(-102%);transition:transform .2s ease;box-shadow:0 10px 30px rgba(0,0,0,.18)}

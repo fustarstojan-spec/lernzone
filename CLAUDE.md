@@ -19,7 +19,7 @@ Sprache: Deutsch. Antworten kurz und direkt.
   - `js/app.js` – Kern: Startseite, Phasen, Quiz, Zonen, Anmeldung, Mein Bereich; Erweiterungs-Schnittstelle `window.LZ` (views, actions, inputs, hooks).
   - `js/me.js` – Spieler: Trainingsbeteiligung, Befindens-Barometer, Profil.
   - `js/coach.js` – Trainer-Bereich: Kader, Trainings, Trainer-Konten.
-  - `js/dashboard.js` – Trainer-Startseite (Übersicht). Navigation seit 0.28.0 als Inhaltsverzeichnis links in `js/app.js` (`sideItems()`, Icons `IC`, Zustand in localStorage `lz-side`); `LZ.coachNav()` liefert nur noch "".
+  - `js/dashboard.js` – Trainer-Startseite (Übersicht). Navigation seit 0.28.0 als Inhaltsverzeichnis links in `js/app.js` (`sideItems()`, Icons `IC`, Zustand in localStorage `lz-side2`); `LZ.coachNav()` liefert nur noch "".
   - `js/taktik.js` – Taktiktafel und Aufstellungen (Trainer), freigegebene Tafeln (Spieler).
   - `js/spielzeiten.js` – Spielzeiten pro Spiel und Saison (Trainer).
   - `js/wissen.js` – Trainer-Wissen: Seiten je Altersstufe und Materialbibliothek (Verein).
@@ -51,7 +51,7 @@ Sprache: Deutsch. Antworten kurz und direkt.
 
 ## Stand und nächste Schritte
 
-- Aktuell: Version 0.32.1 (siehe `CHANGELOG.md`). Bis 0.30.0 auf GitHub, 0.30.1–0.32.1 lokal.
+- Aktuell: Version 0.33.0 (siehe `CHANGELOG.md`). Bis 0.30.0 auf GitHub, 0.30.1–0.33.0 lokal. Seitenleiste: Klassen `.snav` (nicht `.sitem`, das ist der Einheiten-Editor).
 - Matchplan (ab 0.32.0): `js/matchplan.js` (reine Rechnung, auch in Node testbar: `plan({duration, periods, grid, slots, players:[{nr,pos,target,starter}]})` – je Position Beam-Suche über Wechselfenster, Kosten = Abweichung vom Soll + Wechsel (in der Pause billig)), Oberfläche in `js/spielzeiten.js` (`planCard`), Eingaben in Tabelle `match_plans` (matches.php action plan). Halbzeitpausen je Spielart: settings `match_pauses`, `game_pauses()`; Abschnitte = Pausen + 1.
 - Kader (ab 0.31.0): `api/kader.php` + `api/lib/matchday.php` (GAME_TYPES liga/freundschaft/pokal/turnier, `game_type()` per Titel-Stichwort oder `match_calls.gtype`, `game_durations()` = settings `match_durations`, KADER_REASONS, `kader_from_lineup()`), Tabellen `match_calls` (announced, gtype) + `match_call_players` (status kader|out, reason, note nur Trainer). Aufstellung: `data.bench` = Einwechselspieler; Speichern einer Aufstellung mit Spiel setzt den Kader. Spieler sehen über `api/my.php → games` nur den eigenen Status bekannt gegebener Spiele.
 - Trainer-Wissen (ab 0.27.0): `js/wissen.js` + `api/wissen.php`, Plattform-Tabelle `knowledge` (club_id, kind page|link, stage grundlagen|aufbau|leistung|alle, category, phase A1–D2, body mit „## “/„- “, url nur https). Material (CV Academy usw.) bleibt im Google Drive des Trainers, nur Links + eigene Zusammenfassungen – nichts kopieren. Import `tools/import_wissen.php storage/wissen-import.json`.

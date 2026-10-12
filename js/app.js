@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.32.1";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.33.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -353,10 +353,10 @@
     verwaltung: '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
     menu: '<path d="M4 7h16M4 12h16M4 17h16"/>'
   };
-  const icon = k => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[k] || ""}</svg>`;
-  const SIDE = { open: false, mob: false, grp: { lernzone: false, phasen: true, module: true } };
-  try { const o = JSON.parse(localStorage.getItem("lz-side") || "{}"); if (typeof o.open === "boolean") SIDE.open = o.open; Object.assign(SIDE.grp, o.grp || {}); } catch (e) { }
-  const saveSide = () => { try { localStorage.setItem("lz-side", JSON.stringify({ open: SIDE.open, grp: SIDE.grp })); } catch (e) { } };
+  const icon = k => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${IC[k] || ""}</svg>`;
+  const SIDE = { open: true, mob: false, grp: { lernzone: false, phasen: true, module: true } };
+  try { const o = JSON.parse(localStorage.getItem("lz-side2") || "{}"); if (typeof o.open === "boolean") SIDE.open = o.open; Object.assign(SIDE.grp, o.grp || {}); } catch (e) { }
+  const saveSide = () => { try { localStorage.setItem("lz-side2", JSON.stringify({ open: SIDE.open, grp: SIDE.grp })); } catch (e) { } };
   const mobile = () => window.matchMedia("(max-width: 899px)").matches;
   function activeKey() {
     const v = S.view, coach = LZ.coachMode();
@@ -395,13 +395,13 @@
       const ico = it.icon ? icon(it.icon) : it.nr ? `<b class="snr">${it.nr}</b>` : `<i class="sdot"></i>`;
       if (it.group) {
         const open = wide && (SIDE.grp[it.k] || on);
-        return `<li><button class="sitem sgrp${on ? " on" : ""}" data-act="sideGrp" data-v="${it.k}" aria-expanded="${!!open}" title="${esc(it.label)}">${ico}${lab}<span class="schev" aria-hidden="true">›</span></button>
+        return `<li><button class="snav sgrp${on ? " on" : ""}" data-act="sideGrp" data-v="${it.k}" aria-expanded="${!!open}" title="${esc(it.label)}">${ico}${lab}<span class="schev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span></button>
           ${open ? `<ul class="ssub">${it.group.map(x => row(x, depth + 1)).join("")}</ul>` : ""}</li>`;
       }
-      return `<li><button class="sitem${it.k === act ? " on" : ""}" data-act="${it.act}" data-v="${it.v || ""}" ${it.a ? `data-a="${esc(it.a)}"` : ""} title="${esc(it.label)}" ${it.k === act ? 'aria-current="page"' : ""}>${ico}${lab}</button></li>`;
+      return `<li><button class="snav${it.k === act ? " on" : ""}" data-act="${it.act}" data-v="${it.v || ""}" ${it.a ? `data-a="${esc(it.a)}"` : ""} title="${esc(it.label)}" ${it.k === act ? 'aria-current="page"' : ""}>${ico}${lab}</button></li>`;
     };
     return `<ul class="slist">${sideItems().map(x => row(x, 0)).join("")}</ul>
-      <button class="sitem stoggle" data-act="sideToggle" title="${wide ? "Einklappen" : "Ausklappen"}" aria-label="${wide ? "Inhaltsverzeichnis einklappen" : "Inhaltsverzeichnis ausklappen"}"><span class="schev2" aria-hidden="true">${wide ? "«" : "»"}</span><span class="sl">Einklappen</span></button>`;
+      <button class="snav stoggle" data-act="sideToggle" title="${wide ? "Einklappen" : "Ausklappen"}" aria-label="${wide ? "Inhaltsverzeichnis einklappen" : "Inhaltsverzeichnis ausklappen"}"><span class="schev2" aria-hidden="true">${wide ? "«" : "»"}</span><span class="sl">Einklappen</span></button>`;
   }
   function renderSide(gate) {
     const nav = document.getElementById("side"), btn = document.getElementById("menuBtn"); if (!nav) return;

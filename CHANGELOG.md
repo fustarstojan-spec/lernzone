@@ -2,6 +2,10 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.33.0 – 2026-10-12
+- **Seitenleiste neu gestaltet** (nach Vorlage des Trainers): dünne Linien-Icons, dunkle Beschriftung, Pfeil rechts bei aufklappbaren Gruppen, Unterpunkte eingerückt, aktueller Punkt hell hinterlegt mit Markierung links; standardmäßig ausgeklappt (» / « klappt auf die Icon-Leiste zusammen)
+- Korrektur: Die Seitenleiste hat die Blöcke im Einheiten-Editor verstellt (gleicher CSS-Name) – getrennt
+
 ## 0.32.1 – 2026-10-12
 - Training → Einheiten: Die Teilnehmerzahl („24 da“, „22 erwartet“, „fällt aus“) ist antippbar und öffnet das Training mit den teilnehmenden Spielern (Anwesenheit)
 
