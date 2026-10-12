@@ -214,7 +214,7 @@
         ${userField("ce-user", "Benutzername", T.cf.user)}
         ${me.isAdmin ? `<label class="check"><input type="checkbox" id="ce-admin" ${T.cf.isAdmin ? "checked" : ""}> Cheftrainer</label>` : ""}
         ${errP()}${okP()}<button class="btn wide" data-act="coachSave" ${T.busy ? "disabled" : ""}>Speichern</button></section>
-      ${self ? `<button class="btn ghost wide" data-act="pwStart">Mein Passwort ändern</button>`
+      ${self ? `<button class="btn ghost wide" data-act="pwStart">Mein Passwort ändern</button>${LZ.mailCard ? LZ.mailCard() : ""}`
         : me.isAdmin ? `<section class="card stack"><h2>Zugang</h2><button class="btn wide" data-act="coachCode">Neuen Einmal-Code erzeugen</button>
         <p class="small">Falls das Passwort vergessen wurde. Das alte Passwort gilt danach nicht mehr.</p></section>` : ""}
       ${me.isAdmin && !self ? (T.confirm === "delCoach"

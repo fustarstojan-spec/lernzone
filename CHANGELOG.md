@@ -2,6 +2,15 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.34.0 – 2026-10-12
+- **Passwort vergessen per E-Mail** (Trainer und Admins): Auf der Anmeldeseite „Passwort vergessen?“ → Benutzername oder E-Mail → Link per E-Mail (30 Min. gültig, nur einmal) → neues Passwort festlegen; danach sind alle Geräte abgemeldet und es kommt eine Hinweis-Mail
+  - Die Seite verrät nie, ob es ein Konto gibt; höchstens ein Link alle 10 Minuten pro Konto; Anfragen zählen für die Bremse pro Netz; gespeichert wird nur ein Hash des Links
+  - Spieler bekommen weiterhin einen neuen Code vom Trainer (kein E-Mail-Link für Kinder)
+- **E-Mail für „Passwort vergessen“** hinterlegen (freiwillig): Trainer → Trainer → eigenes Konto bzw. Verwaltung → Mein Konto; nur mit aktuellem Passwort, wird erst nach Klick auf den Bestätigungslink (48 Std.) aktiv
+- **E-Mail-Versand** (Superadmin, Verwaltung): Mailserver (SMTP mit STARTTLS oder SSL), Absender, Adresse der App für die Links, Test-Mail. Ohne Mailserver Testmodus: E-Mails liegen als Datei in `storage/mail-outbox/`
+- Sicherheitsprotokoll: Passwort-vergessen-Anfragen, Zurücksetzen, E-Mail eingetragen/bestätigt/gelöscht, Änderungen am E-Mail-Versand
+- Datenschutzerklärung: freiwillige E-Mail-Adresse der Trainer ergänzt
+
 ## 0.33.2 – 2026-10-12
 - „Passwort ändern“ nicht mehr in der Seitenleiste, nur noch in der Oberfläche: Trainer unter Trainer → Mein Konto, Spieler unten in „Mein Bereich“, Vereins- und Superadmins unten in der Verwaltung („Mein Konto“)
 

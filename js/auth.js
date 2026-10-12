@@ -28,7 +28,7 @@
       <button class="btn wide" type="submit" ${F.busy ? "disabled" : ""}>${F.busy ? "Einen Moment …" : "Anmelden"}</button>
     </form>
     <p class="small authnote"><b>Zum ersten Mal hier?</b> Gib deinen Benutzernamen und den Code von deinem Trainer ein (z. B. K7MP-3QX9). Danach legst du dein eigenes Passwort fest.</p>
-    <p class="small authnote">Passwort vergessen? Dein Trainer gibt dir einen neuen Code.</p>`;
+    <p class="small authnote"><button class="linkbtn" data-act="forgotStart">Passwort vergessen?</button></p>`;
 
   LZ.actions.doLogin = async () => {
     if (F.busy) return;
@@ -40,6 +40,99 @@
     if (r.state === "setpw") { reset(); LZ.render(); focus("auth-p"); return; }
     done();
   };
+
+  /* ---------- Passwort vergessen (ab 0.34.0) ---------- */
+  LZ.publicViews = (LZ.publicViews || []).concat(["forgot", "pwreset", "mailverify"]);
+  const R = { login: "", sent: false, test: false, valid: null, user: "", done: false };
+  LZ.actions.forgotStart = () => { Object.assign(R, { login: F.u || "", sent: false, test: false }); F.err = ""; LZ.go("forgot"); };
+  LZ.actions.forgotBack = () => { reset(); LZ.go("home"); };
+  LZ.views.forgot = () => `${head("Passwort vergessen", "Neues Passwort anfordern", "")}
+    <section class="card stack authform"><p><b>Spieler:</b> Dein Trainer gibt dir einen neuen Code. Damit legst du ein neues Passwort fest.</p>
+      <p><b>Trainer und Admins:</b> Wenn du unter „Mein Konto“ eine E-Mail-Adresse hinterlegt hast, schicken wir dir einen Link (30 Minuten gültig).</p></section>
+    ${R.sent ? `<section class="card stack authform"><p class="okmsg" role="status">Wenn zu diesem Konto eine bestätigte E-Mail-Adresse gehört, ist der Link jetzt unterwegs. Schau auch im Spam-Ordner nach.</p>
+        ${R.test ? `<p class="small">Testmodus (kein Mailserver eingestellt): Die E-Mail liegt als Datei in <code>storage/mail-outbox/</code>.</p>` : ""}</section>`
+      : `<form class="card stack authform" data-form="doForgot" novalidate>
+      <div class="fld"><label for="fg-login">Benutzername oder E-Mail</label><input id="fg-login" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="120" value="${esc(R.login)}" required></div>
+      ${errP()}<button class="btn wide" type="submit" ${F.busy ? "disabled" : ""}>Link anfordern</button></form>`}
+    <p class="authnote"><button class="linkbtn" data-act="forgotBack">‹ Zur Anmeldung</button></p>`;
+  LZ.actions.doForgot = async () => {
+    if (F.busy) return;
+    const v = (document.getElementById("fg-login") || {}).value || ""; R.login = v;
+    if (!v.trim()) { F.err = "Bitte Benutzername oder E-Mail eingeben."; LZ.render(); return; }
+    F.busy = true; F.err = ""; LZ.render();
+    const r = await LZ.Store.send("reset.php", { action: "request", login: v.trim() });
+    F.busy = false;
+    if (!r.ok) { F.err = r.error || "Das hat nicht geklappt."; LZ.render(); return; }
+    R.sent = true; R.test = !!r.testmode; LZ.render();
+  };
+  async function checkReset() {
+    const r = await LZ.Store.send("reset.php", { action: "check", token: LZ.S.arg });
+    R.valid = !!(r && r.ok && r.valid); R.user = (r && r.username) || ""; R.min = (r && r.minLen) || 14; LZ.render();
+  }
+  LZ.on("ready", () => { if (LZ.S.view === "pwreset") checkReset(); if (LZ.S.view === "mailverify") verifyMail(); });
+  LZ.views.pwreset = () => {
+    if (R.done) return `${head("Passwort vergessen", "Passwort geändert", "Du kannst dich jetzt mit dem neuen Passwort anmelden. Alle anderen Geräte sind abgemeldet.")}
+      <p class="authnote"><button class="btn" data-act="forgotBack">Zur Anmeldung</button></p>`;
+    if (R.valid === null) return `${head("Passwort vergessen", "Einen Moment …", "")}`;
+    if (!R.valid) return `${head("Passwort vergessen", "Link nicht mehr gültig", "Der Link ist abgelaufen oder wurde schon benutzt. Fordere einfach einen neuen an.")}
+      <p class="authnote"><button class="btn" data-act="forgotStart">Neuen Link anfordern</button></p>`;
+    return `${head("Passwort vergessen", "Neues Passwort festlegen", `Für den Zugang <b>${esc(R.user)}</b>.`)}
+    <form class="card stack authform" data-form="doReset" novalidate>
+      <input type="text" autocomplete="username" value="${esc(R.user)}" hidden>
+      ${pwInput("auth-p", "Neues Passwort", "new-password", F.p)}
+      ${pwInput("auth-p2", "Passwort wiederholen", "new-password", F.p2)}
+      ${showToggle}<ul class="rules"><li>mindestens ${R.min} Zeichen</li><li>Groß- und Kleinbuchstaben, mindestens eine Zahl und ein Sonderzeichen</li><li>nicht dein Benutzername</li></ul>${errP()}
+      <button class="btn wide" type="submit" ${F.busy ? "disabled" : ""}>Passwort speichern</button></form>`;
+  };
+  LZ.actions.doReset = async () => {
+    if (F.busy) return;
+    if (F.p !== F.p2) { F.err = "Die beiden Passwörter sind nicht gleich."; LZ.render(); return; }
+    F.busy = true; F.err = ""; LZ.render();
+    const r = await LZ.Store.send("reset.php", { action: "reset", token: LZ.S.arg, password: F.p, password2: F.p2 });
+    F.busy = false;
+    if (!r.ok) { F.err = r.error || "Das hat nicht geklappt."; LZ.render(); return; }
+    reset(); F.u = r.username || ""; R.done = true; LZ.S.arg = null; LZ.render();
+  };
+  const V = { state: "wait", err: "" };
+  async function verifyMail() {
+    const r = await LZ.Store.send("reset.php", { action: "verify", token: LZ.S.arg });
+    V.state = r && r.ok ? "ok" : "bad"; V.err = (r && r.error) || ""; LZ.S.arg = null; LZ.render();
+  }
+  LZ.views.mailverify = () => V.state === "wait" ? head("E-Mail bestätigen", "Einen Moment …", "")
+    : `${head("E-Mail bestätigen", V.state === "ok" ? "Danke – bestätigt" : "Das hat nicht geklappt", V.state === "ok" ? "Deine E-Mail-Adresse ist jetzt für „Passwort vergessen“ hinterlegt." : esc(V.err))}
+      <p class="authnote"><button class="btn" data-act="forgotBack">Weiter</button></p>`;
+
+  /* E-Mail für „Passwort vergessen“ – Karte für „Mein Konto“ (Trainer) und die Verwaltung (Admins) */
+  const M = { data: null, edit: false, email: "", pw: "", err: "", msg: "", busy: false };
+  async function loadMail() { const r = await LZ.Store.get("mymail.php"); if (r && r.ok) { M.data = r; LZ.render(); } }
+  LZ.mailCard = () => {
+    if (LZ.Store.mode !== "api" || !LZ.Store.account) return "";
+    if (!M.data) { loadMail(); return `<section class="card stack"><h2>E-Mail für „Passwort vergessen“</h2><p class="small">Lade …</p></section>`; }
+    const d = M.data;
+    return `<section class="card stack" id="mailcard"><h2>E-Mail für „Passwort vergessen“</h2>
+      <p class="small">Freiwillig. Nur damit du dir bei vergessenem Passwort selbst einen Link schicken kannst – sonst gibt dir dein Cheftrainer oder Vereinsadmin einen neuen Code.</p>
+      <p>${d.email ? `Hinterlegt: <b>${esc(d.email)}</b>` : "Noch keine Adresse hinterlegt."}${d.pending ? `<br><span class="small">Wartet auf Bestätigung: <b>${esc(d.pending)}</b> – bitte den Link in der E-Mail anklicken.</span>` : ""}</p>
+      ${M.edit ? `<form class="stack" data-form="mailSave" novalidate>
+        <div class="fld"><label for="mc-email">E-Mail-Adresse</label><input id="mc-email" type="email" autocomplete="email" maxlength="120" value="${esc(M.email)}"></div>
+        <div class="fld"><label for="mc-pw">Dein aktuelles Passwort (zur Sicherheit)</label><input id="mc-pw" type="password" autocomplete="current-password" maxlength="200"></div>
+        ${M.err ? `<p class="err" role="alert" style="text-align:left">${esc(M.err)}</p>` : ""}
+        <div class="row"><button class="btn" type="submit" ${M.busy ? "disabled" : ""}>Bestätigungs-Mail schicken</button>${d.email ? `<button class="btn ghost" type="button" data-act="mailRemove">Adresse löschen</button>` : ""}<button class="btn ghost" type="button" data-act="mailEdit" data-v="0">Abbrechen</button></div></form>`
+        : `<div class="row"><button class="btn ghost" data-act="mailEdit" data-v="1">${d.email || d.pending ? "Ändern" : "E-Mail hinterlegen"}</button></div>`}
+      ${M.msg ? `<p class="okmsg" role="status">${esc(M.msg)}</p>` : ""}</section>`;
+  };
+  LZ.actions.mailEdit = (b, v) => { M.edit = v === "1"; M.email = (M.data && (M.data.pending || M.data.email)) || ""; M.err = ""; M.msg = ""; LZ.render(); };
+  const mailSend = async body => {
+    const password = (document.getElementById("mc-pw") || {}).value || "";   // vor dem Neuzeichnen lesen
+    M.busy = true; M.err = ""; LZ.render();
+    const r = await LZ.Store.send("mymail.php", Object.assign({ password }, body));
+    M.busy = false;
+    if (!r.ok) { M.err = r.error || "Das hat nicht geklappt."; LZ.render(); return; }
+    M.data.email = r.email; M.data.pending = r.pending; M.edit = false;
+    M.msg = body.action === "remove" ? "Adresse gelöscht." : r.testmode ? "Testmodus: Die Bestätigungs-Mail liegt in storage/mail-outbox/." : "Bestätigungs-Mail ist unterwegs – bitte den Link darin anklicken.";
+    LZ.render();
+  };
+  LZ.actions.mailSave = () => { M.email = (document.getElementById("mc-email") || {}).value || ""; mailSend({ action: "set", email: M.email.trim() }); };
+  LZ.actions.mailRemove = () => mailSend({ action: "remove" });
 
   /* ---------- Eigenes Passwort festlegen ---------- */
   LZ.views.setpw = () => `${head("Erste Anmeldung", "Dein eigenes Passwort", `Hallo <b>${esc((LZ.Store.pending || {}).username || "")}</b>! Lege jetzt ein Passwort fest, das nur du kennst.`)}

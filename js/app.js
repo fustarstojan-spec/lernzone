@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.33.2";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.34.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -243,7 +243,7 @@
     document.getElementById("shirtBtn").innerHTML = gate ? "" : shirt(S.user ? S.user.nr : Store.coach.active ? "T" : LZ.adminOnly() ? "A" : "?");
     document.getElementById("shirtBtn").hidden = !!gate;
     renderSide(gate);
-    if (gate && LZ.views[gate] && !(LZ.legalPages || []).includes(S.view)) { app.innerHTML = LZ.views[gate](); return; }   // Impressum & Co. auch ohne Anmeldung
+    if (gate && LZ.views[gate] && !(LZ.legalPages || []).concat(LZ.publicViews || []).includes(S.view)) { app.innerHTML = LZ.views[gate](); return; }   // Impressum & Co. auch ohne Anmeldung
     // Trainer ohne Spieler-Anmeldung: eigene Startseite (js/dashboard.js), Lerninhalte unter „Lernzone“
     const coachHome = S.view === "home" && LZ.coachMode() && LZ.views.coachHome;
     const adminHome = ["home", "me"].includes(S.view) && LZ.adminOnly() && LZ.views.verwaltung;   // Vereins-/Superadmin ohne Mannschaft
@@ -452,6 +452,9 @@
       window.LZPitch.setup(C.zones, C.team, gkNrs());
       const s = await Store.init();
       S.user = s.user;
+      // Links aus E-Mails (ab 0.34.0): ?reset=… (Passwort vergessen) und ?verify=… (E-Mail bestätigen) – Token sofort aus der Adresszeile entfernen
+      const qp = new URLSearchParams(location.search), tk = qp.get("reset") || qp.get("verify");
+      if (tk && /^[A-Za-z0-9_-]{30,60}$/.test(tk)) { S.view = qp.get("reset") ? "pwreset" : "mailverify"; S.arg = tk; history.replaceState(null, "", location.pathname); }
       render();
       fire("ready");
     } catch (e) {

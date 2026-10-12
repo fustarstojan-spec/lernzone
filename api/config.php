@@ -126,6 +126,12 @@ function platform_bootstrap(PDO $p): void {
 
 /* Plattform-Ergänzungen: 0.22.0 Vereinsadmins – der Superadmin wird Vereinsadmin der Vereine, in denen er Trainer ist */
 function platform_migrate(PDO $p): void {
+    // 0.34.0: E-Mail für „Passwort vergessen“ (nur Trainer/Admins, freiwillig, erst nach Bestätigung aktiv)
+    $acols = array_column($p->query('PRAGMA table_info(accounts)')->fetchAll(PDO::FETCH_ASSOC), 'name');
+    foreach (['email' => "TEXT NOT NULL DEFAULT ''", 'email_new' => "TEXT NOT NULL DEFAULT ''", 'email_token' => "TEXT NOT NULL DEFAULT ''",
+              'email_token_exp' => 'INTEGER NOT NULL DEFAULT 0', 'reset_hash' => "TEXT NOT NULL DEFAULT ''", 'reset_expires' => 'INTEGER NOT NULL DEFAULT 0',
+              'reset_sent' => 'INTEGER NOT NULL DEFAULT 0'] as $c => $def)
+        if ($acols && !in_array($c, $acols, true)) $p->exec("ALTER TABLE accounts ADD COLUMN $c $def");
     // 0.24.1: Bild zur Übung
     $dcols = array_column($p->query('PRAGMA table_info(drills)')->fetchAll(PDO::FETCH_ASSOC), 'name');
     if ($dcols && !in_array('image', $dcols, true)) $p->exec("ALTER TABLE drills ADD COLUMN image TEXT NOT NULL DEFAULT ''");

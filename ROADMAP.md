@@ -28,7 +28,8 @@ Pflege: neue Ideen hier eintragen, Erledigtes streichen und ins CHANGELOG übern
 - [ ] Projektdateien sperren, die von außen abrufbar sind: `tools/*.sql`, `data/demo-pins.json` (auf dem Server weglassen), `ROADMAP.md`, `api/lib/`
 - [ ] Unabhängiger Sicherheitscheck (Code-Prüfung) vor dem Online-Gehen
 - [ ] Beim Hosting prüfen, ob die echte Besucher-IP ankommt (Proxy) – sonst sperrt die IP-Bremse alle
-- [ ] Optional: E-Mail an Superadmin bei Alarmen (Netz gesperrt, viele Fehlversuche)
+- [x] ~~Passwort vergessen per E-Mail für Trainer/Admins~~ (0.34.0) – beim Hosting Mailserver und App-Adresse eintragen
+- [ ] Optional: E-Mail an Superadmin bei Alarmen (Netz gesperrt, viele Fehlversuche) – Versand ist seit 0.34.0 vorhanden
 
 - [ ] Datenbanken außerhalb des Web-Ordners, automatische Backups
 - [ ] HSTS, optional 2FA für Admins

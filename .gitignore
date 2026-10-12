@@ -12,3 +12,4 @@ storage/*.json
 storage/drills/
 storage/training-import-img/
 storage/sessions/
+storage/mail-outbox/

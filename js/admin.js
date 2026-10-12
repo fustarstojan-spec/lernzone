@@ -167,12 +167,50 @@
       ${d.platform ? platformCard(d) : ""}
       ${clubs.map(clubCard).join("")}
       ${secCard()}
-      ${LZ.coachMode() ? "" : `<section class="card stack"><h2>Mein Konto</h2><p class="small">Angemeldet als <b>${esc(acc.username || "")}</b></p><div class="row"><button class="btn ghost" data-act="pwStart">Passwort ändern</button></div></section>`}`;
+      ${d.platform ? mailSettingsCard() : ""}
+      ${LZ.coachMode() ? "" : `<section class="card stack"><h2>Mein Konto</h2><p class="small">Angemeldet als <b>${esc(acc.username || "")}</b></p><div class="row"><button class="btn ghost" data-act="pwStart">Passwort ändern</button></div></section>${LZ.mailCard ? LZ.mailCard() : ""}`}`;
+  };
+
+  /* ---------- E-Mail-Versand (ab 0.34.0, Superadmin) ---------- */
+  const MS = { d: null, err: "", msg: "", busy: false };
+  async function loadMS() { const r = await LZ.Store.get("mailsettings.php"); if (r && r.ok) { MS.d = r; LZ.render(); } else MS.d = { failed: true }; }
+  function mailSettingsCard() {
+    if (!MS.d) { loadMS(); return ""; }
+    const d = MS.d; if (d.failed) return "";
+    const f = (id, label, val, type = "text", ph = "") => `<div class="fld"><label for="ms-${id}">${label}</label><input id="ms-${id}" type="${type}" maxlength="200" value="${esc(val ?? "")}" placeholder="${esc(ph)}" autocomplete="off"></div>`;
+    return `<section class="card stack"><h2>E-Mail-Versand</h2>
+      <p class="small">Für „Passwort vergessen“ und die Bestätigung von E-Mail-Adressen (nur Trainer und Admins). ${d.testmode ? "<b>Testmodus:</b> Ohne Mailserver landen E-Mails als Datei in <code>storage/mail-outbox/</code>." : ""}</p>
+      ${f("app", "Adresse der App (https://…)", d.appUrl, "url", "https://lernzone.verein.de/")}
+      <p class="small">Für die Links in den E-Mails. Lokal (localhost) geht es auch ohne.</p>
+      <div class="grid2">${f("host", "Mailserver (SMTP)", d.host, "text", "smtp.anbieter.de")}${f("port", "Port", d.port, "number")}</div>
+      <div class="fld"><label for="ms-secure">Verschlüsselung</label><select id="ms-secure"><option value="tls" ${d.secure !== "ssl" ? "selected" : ""}>STARTTLS (meist Port 587)</option><option value="ssl" ${d.secure === "ssl" ? "selected" : ""}>SSL/TLS (meist Port 465)</option></select></div>
+      <div class="grid2">${f("user", "Benutzer", d.user)}${f("pass", d.hasPass ? "Passwort (leer = unverändert)" : "Passwort", "", "password")}</div>
+      <div class="grid2">${f("from", "Absender-Adresse", d.from, "email", "noreply@verein.de")}${f("fromName", "Absender-Name", d.fromName, "text", "FU-STARS Lernzone")}</div>
+      ${MS.err ? `<p class="err" role="alert" style="text-align:left">${esc(MS.err)}</p>` : ""}${MS.msg ? `<p class="okmsg">${esc(MS.msg)}</p>` : ""}
+      <div class="row"><button class="btn" data-act="msSave" ${MS.busy ? "disabled" : ""}>Speichern</button><button class="btn ghost" data-act="msTest" ${MS.busy ? "disabled" : ""}>Test-Mail an mich</button></div></section>`;
+  }
+  const msVal = id => ((document.getElementById("ms-" + id) || {}).value || "").trim();
+  LZ.actions.msSave = async () => {
+    const body = { action: "save", appUrl: msVal("app"), host: msVal("host"), port: +msVal("port") || 587, secure: msVal("secure"),
+      user: msVal("user"), pass: (document.getElementById("ms-pass") || {}).value || "", from: msVal("from"), fromName: msVal("fromName") };   // vor dem Neuzeichnen lesen
+    MS.busy = true; MS.err = ""; MS.msg = ""; LZ.render();
+    const r = await LZ.Store.send("mailsettings.php", body);
+    MS.busy = false;
+    if (!r.ok) { MS.err = r.error || "Speichern hat nicht geklappt."; LZ.render(); return; }
+    MS.d = null; MS.msg = "Gespeichert."; await loadMS();
+  };
+  LZ.actions.msTest = async () => {
+    MS.busy = true; MS.err = ""; MS.msg = ""; LZ.render();
+    const r = await LZ.Store.send("mailsettings.php", { action: "test" });
+    MS.busy = false;
+    if (!r.ok) MS.err = r.error || "Test hat nicht geklappt."; else MS.msg = r.result === "outbox" ? "Testmodus: Mail liegt in storage/mail-outbox/." : "Test-Mail verschickt.";
+    LZ.render();
   };
 
   /* ---------- Sicherheitsprotokoll (ab 0.25.0) ---------- */
   const SEC_LABELS = { login_ok: "Anmeldung", login_code: "Anmeldung mit Einmal-Code", login_fail: "Fehlversuch", login_locked: "Versuch trotz Sperre",
-    account_locked: "Konto gesperrt", ip_blocked: "Netz gesperrt", pw_set: "Passwort festgelegt", pw_change: "Passwort geändert", pw_change_fail: "Passwort ändern fehlgeschlagen",
+    account_locked: "Konto gesperrt", ip_blocked: "Netz gesperrt", pw_set: "Passwort festgelegt", pw_change: "Passwort geändert", pw_change_fail: "Passwort ändern fehlgeschlagen", pw_reset_request: "Passwort vergessen angefragt", pw_reset: "Passwort per E-Mail-Link neu gesetzt",
+    email_set: "E-Mail eingetragen", email_verified: "E-Mail bestätigt", email_removed: "E-Mail gelöscht", email_change_fail: "E-Mail ändern fehlgeschlagen", mail_settings: "E-Mail-Versand geändert",
     code_issued: "Neuer Einmal-Code", username_change: "Benutzername geändert", coach_add: "Trainer hinzugefügt", coach_remove: "Trainer entfernt",
     role_change: "Rolle geändert", player_add: "Spieler angelegt", player_delete: "Spieler gelöscht", consent: "Einwilligung", setup: "Einrichtung" };
   function secCard() {
