@@ -142,3 +142,17 @@ CREATE TABLE IF NOT EXISTS security_log (
   detail      TEXT    NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS security_log_ts ON security_log (ts);
+-- Eigene Lerninhalte des Vereins (ab 0.35.0): Prinzipien, Phasentexte, Quizfragen – in der App gepflegt, für alle Mannschaften des Vereins
+CREATE TABLE IF NOT EXISTS club_content (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  club_id     INTEGER NOT NULL,
+  kind        TEXT    NOT NULL,                 -- principle | quiz | text
+  target      TEXT    NOT NULL,                 -- Phase (bb, ud, gb, uo, st) oder Modul-ID
+  data        TEXT    NOT NULL,                 -- JSON je Art (siehe api/content.php)
+  draft       INTEGER NOT NULL DEFAULT 0,       -- Entwurf: Spieler sehen ihn nicht
+  sort        INTEGER NOT NULL DEFAULT 0,
+  active      INTEGER NOT NULL DEFAULT 1,
+  updated_by  INTEGER,
+  updated_at  TEXT    NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS club_content_club ON club_content (club_id, active, target);

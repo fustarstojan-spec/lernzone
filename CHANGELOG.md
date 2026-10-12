@@ -2,6 +2,12 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.35.0 – 2026-10-12
+- **Prinzipien in den Phasen** (neuer Reiter „Prinzipien“): jedes Prinzip als Karte mit Schlagwort, kurzer Erklärung, Kommando, Bild (aus einer Taktiktafel) und Aufgabe je Position – das angemeldete Kind sieht seine Positionen zuerst (gelb), die anderen aufklappbar; im Bild hat seine Position den gelben Ring. Ohne eigene Prinzipien bleibt die bisherige Liste
+- **Inhalte bearbeiten** (Trainer, Seitenleiste → Lernzone → „Inhalte bearbeiten“ oder Knopf in jeder Phase): pro Phase Prinzipien anlegen, sortieren, als Entwurf speichern; Phasentexte (Ziel, Einleitung, Merksatz) ändern; eigene Quizfragen (2–4 Antworten, Erklärung) für Phasen und Module, Standardfragen mitverwenden oder ausblenden
+- Gilt für alle Mannschaften des Vereins; Entwürfe sehen nur Trainer; Löschen nur Cheftrainer und Vereinsadmins
+- Lernmaterial zeigt nur noch die Spielsituation (Prinzipien haben ihren eigenen Reiter)
+
 ## 0.34.4 – 2026-10-12
 - Seitenleiste (Trainer) neu sortiert: Übersicht · Lernzone · Kader · Training · Taktik · Spielzeiten · Trainer-Wissen · Verwaltung
 

@@ -660,3 +660,25 @@ body.dragging{cursor:grabbing}
 .saccount .slist .snav:hover{color:var(--fg)}
 .saccount .sacc-who{cursor:pointer}
 .saccount .sacc-who:hover{background:var(--bg)}
+
+/* 0.35.0 Prinzipien als Karten, Inhalte bearbeiten */
+.pcards{display:grid;gap:14px}
+.pcard h3{font-size:1.35rem}
+.pcmd{background:var(--accent-soft);color:var(--accent);border-radius:10px;padding:8px 12px;justify-self:start}
+.psketch .pitch{max-width:340px;margin:0}
+.ptasks{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.ptasks li{display:grid;grid-template-columns:2.6rem 1fr;gap:10px;align-items:baseline}
+.ptag{display:inline-grid;place-items:center;min-width:2.2rem;padding:2px 6px;border-radius:8px;background:var(--shirt);color:#fff;font-size:.8rem}
+.pmine{border-left:3px solid #e0b100;padding-left:12px}
+.pmine .ptag{background:#e0b100;color:#251517}
+.pall summary{cursor:pointer;font-weight:600;color:var(--muted);padding:4px 0}
+.pall .ptasks{margin-top:6px}
+.clist{list-style:none;margin:0;padding:0;display:grid}
+.crow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--rule)}
+.crow:last-child{border-bottom:0}
+.crow-btns{display:flex;gap:12px;flex:none}
+.posgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.posrow{display:grid;grid-template-columns:2.6rem 1fr;gap:8px;align-items:center}
+.posrow input,.qopt input:not([type=radio]){font:inherit;padding:8px 10px;border:1.5px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--fg);min-width:0}
+.qopt{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;margin-bottom:6px}
+.qopt input[type=radio]{width:20px;height:20px;accent-color:var(--ok)}

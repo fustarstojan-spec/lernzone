@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.34.4";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.35.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -118,23 +118,59 @@
   /* ---------- Spielphase ---------- */
   function phaseView() {
     const ph = PH[S.arg];
-    const tabs = [["grundlagen", "Grundlagen"], ["material", "Lernmaterial"], ["quiz", "Quiz"]];
+    const tabs = [["grundlagen", "Grundlagen"], ["prinzipien", "Prinzipien"], ["material", "Lernmaterial"], ["quiz", "Quiz"]];
     let body = "";
     if (S.tab === "grundlagen") {
       body = `<div class="goal-box"><p class="eyebrow">Unser Ziel</p><p>${esc(ph.ziel)}</p></div>
     <p>${esc(ph.intro)}</p>
     <div class="card stack"><h3>Unterphasen</h3><dl class="sub">${ph.unter.map(([a, b]) => `<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join("")}</dl></div>
     <p class="merk">${esc(ph.merk)}</p>`;
+    } else if (S.tab === "prinzipien") {
+      body = (ph.principles || []).length ? `<div class="pcards">${ph.principles.map(principleCard).join("")}</div>`
+        : `<ul class="prin">${(ph.prin || []).map(([t, x]) => `<li><b>${esc(t)}</b><span>${esc(x)}</span></li>`).join("")}</ul>`;
     } else if (S.tab === "material") {
       const me = myPositions().filter(m => ph.sit.own.some(o => o[0] === m));
       body = `<div class="stack">${field({ ...ph.sit, label: ph.sit.cap, me })}${legend(me.length > 0)}<p class="caption">${esc(ph.sit.cap)}</p>
-      ${me.length ? `<p class="small">Gelber Ring: deine Position${me.length > 1 ? "en" : ""} (${me.map(esc).join(", ")}).</p>` : ""}</div>
-    <h3>Unsere Prinzipien</h3><ul class="prin">${ph.prin.map(([t, x]) => `<li><b>${esc(t)}</b><span>${esc(x)}</span></li>`).join("")}</ul>`;
+      ${me.length ? `<p class="small">Gelber Ring: deine Position${me.length > 1 ? "en" : ""} (${me.map(esc).join(", ")}).</p>` : ""}</div>`;
     } else body = quizHTML(ph);
     return `<button class="back" data-act="home">‹ Übersicht</button>
-  <section><p class="eyebrow">Phase ${ph.nr} · ${ballLabel(ph.ball)}</p><h1>${esc(ph.title)}</h1></section>
+  <section><div class="rowspread"><p class="eyebrow">Phase ${ph.nr} · ${ballLabel(ph.ball)}</p>${LZ.coachMode() && LZ.views.inhalte ? `<button class="btn ghost small" data-act="side" data-v="inhalte" data-a="${ph.id}">Inhalte bearbeiten</button>` : ""}</div><h1>${esc(ph.title)}</h1></section>
   <div class="seg" role="tablist">${tabs.map(([k, l]) => `<button role="tab" aria-pressed="${S.tab === k}" data-act="tab" data-v="${k}">${l}</button>`).join("")}</div>
   ${body}`;
+  }
+
+  /* Prinzip als Karte (ab 0.35.0): Schlagwort, Erklärung, Kommando, Bild, Aufgabe je Position (eigene Positionen zuerst) */
+  function principleCard(it) {
+    const d = it.data || {}, mine = [...new Set(myPositions())], pos = d.pos || {};
+    const own = mine.filter(p => pos[p]), others = Object.keys(pos).filter(p => !own.includes(p));
+    const sketch = d.sketch && (d.sketch.items || []).length ? field({ zones: true, label: d.title,
+      board: { items: d.sketch.items.map(i => Object.assign({}, i, { me: i.t === "own" && mine.includes(i.lab) })), lines: d.sketch.lines || [] } }) : "";
+    const row = p => `<li><b class="ptag">${esc(p)}</b><span>${esc(pos[p])}</span></li>`;
+    return `<article class="card stack pcard"><div class="rowspread"><h3>${esc(d.title || "")}</h3><span>${it.draft ? `<span class="badge muted">Entwurf</span>` : ""}${d.sub ? ` <span class="badge muted">${esc(d.sub)}</span>` : ""}</span></div>
+      ${d.text ? `<p>${esc(d.text)}</p>` : ""}
+      ${d.cmd ? `<p class="pcmd">📣 Kommando: <b>„${esc(d.cmd)}“</b></p>` : ""}
+      ${sketch ? `<div class="psketch">${sketch}</div>` : ""}
+      ${own.length ? `<div class="pmine"><p class="eyebrow">Deine Aufgabe</p><ul class="ptasks">${own.map(row).join("")}</ul></div>` : ""}
+      ${others.length ? (own.length || !S.user ? `<details class="pall" ${S.user ? "" : "open"}><summary>${own.length ? "Alle anderen Positionen" : "Aufgaben je Position"}</summary><ul class="ptasks">${others.map(row).join("")}</ul></details>` : `<ul class="ptasks">${others.map(row).join("")}</ul>`) : ""}
+    </article>`;
+  }
+
+  /* ---------- Eigene Inhalte des Vereins (ab 0.35.0): api/content.php → Phasen und Module ergänzen ---------- */
+  let CC = null;
+  function applyContent() {
+    Object.values(PH).forEach(ph => {
+      ph._base = ph._base || { ziel: ph.ziel, intro: ph.intro, merk: ph.merk, quiz: ph.quiz || [] };
+      const b = ph._base, items = (CC ? CC.items : []).filter(i => i.target === ph.id);
+      const tx = items.find(i => i.kind === "text"), d = tx ? tx.data : {};
+      ph.ziel = d.ziel || b.ziel; ph.intro = d.intro || b.intro; ph.merk = d.merk || b.merk;
+      ph.quiz = (d.keepQuiz === false ? [] : b.quiz).concat(items.filter(i => i.kind === "quiz" && !i.draft).map(i => i.data));
+      ph.principles = items.filter(i => i.kind === "principle" && (!i.draft || LZ.coachMode()));
+    });
+  }
+  async function loadClubContent() {
+    if (!Store || Store.mode !== "api" || !(S.user || LZ.coachMode())) { CC = null; if (PH) applyContent(); return; }
+    const r = await Store.get("content.php");
+    CC = r && r.ok ? r : null; applyContent(); render();
   }
 
   function startQuiz(id) {
@@ -146,6 +182,7 @@
   }
   function quizHTML(ph) {
     const p = prog().quiz[ph.id];
+    if (!ph.quiz.length) return `<div class="card stack"><h2>Quiz: ${esc(ph.title)}</h2><p class="small">Für diese Phase gibt es noch keine Fragen.</p></div>`;
     if (!Q || Q.id !== ph.id) return `<div class="card stack"><h2>Quiz: ${esc(ph.title)}</h2><p class="small">${ph.quiz.length} Fragen. Nach jeder Antwort siehst du die Erklärung.${p ? ` Dein bestes Ergebnis: ${p.best}/${p.of}.` : ""}</p><button class="btn wide" data-act="qstart">Quiz starten</button></div>`;
     if (Q.i >= Q.qs.length) {
       const n = Q.qs.length, msg = Q.score === n ? "Perfekt – alles richtig!" : Q.score >= n - 1 ? "Stark, fast alles richtig." : Q.score >= n / 2 ? "Gute Basis. Schau dir das Lernmaterial nochmal an." : "Lies die Grundlagen nochmal und versuch es erneut.";
@@ -371,6 +408,7 @@
     const v = S.view, coach = LZ.coachMode();
     if (["training", "einheit", "einheitEdit", "uebung", "uebungEdit"].includes(v)) return "training";
     if (v.startsWith("wissen")) return "wissen";
+    if (v === "inhalte" || v === "inhaltEdit") return "inhalte";
     if (v === "taktik" || (coach && v === "tafel")) return "taktik";
     if (v === "phase" || v === "modul") return v + ":" + S.arg;
     if (v === "coach" || (coach && v === "me")) return "kader";
@@ -388,7 +426,7 @@
     if (LZ.coachMode()) return [
       // Reihenfolge vom Trainer festgelegt (0.34.4); Trainer-Wissen danach
       { k: "home", label: "Übersicht", icon: "home", act: "side", v: "home" },
-      { k: "lernzone", label: "Lernzone", icon: "lernzone", group: [{ k: "lernzone", label: "Start der Lernzone", act: "side", v: "lernzone" }].concat(learn.map(x => x.group ? x : Object.assign({}, x))) },
+      { k: "lernzone", label: "Lernzone", icon: "lernzone", group: [{ k: "lernzone", label: "Start der Lernzone", act: "side", v: "lernzone" }].concat(learn.map(x => x.group ? x : Object.assign({}, x)), [{ k: "inhalte", label: "Inhalte bearbeiten", act: "side", v: "inhalte" }]) },
       { k: "kader", label: "Kader", icon: "kader", act: "me" },
       { k: "training", label: "Training", icon: "training", act: "side", v: "training" },
       { k: "taktik", label: "Taktik", icon: "taktik", act: "side", v: "taktik" },
@@ -444,6 +482,8 @@
     get C() { return C; }, get Store() { return Store; },
     esc, rand, shirt, pad, dots, posName, posSelect, gkNrs, render, go, weekKey,
     on(name, fn) { (this.hooks[name] = this.hooks[name] || []).push(fn); },
+    contentItems() { return CC ? CC.items : []; },
+    reloadContent: () => loadClubContent(),
     coachMode() { return !!(Store && Store.mode === "api" && !S.user && Store.coach && Store.coach.active); },
     // Superadmin oder Vereinsadmin (Weg B)
     isAdmin() { return !!(Store && Store.mode === "api" && !S.user && Store.coach && (Store.coach.platformAdmin || (Store.coach.clubs || []).length)); },
@@ -466,6 +506,7 @@
       if (tk && /^[A-Za-z0-9_-]{30,60}$/.test(tk)) { S.view = qp.get("reset") ? "pwreset" : "mailverify"; S.arg = tk; history.replaceState(null, "", location.pathname); }
       render();
       fire("ready");
+      loadClubContent();
     } catch (e) {
       console.error(e);
       app.innerHTML = `<div class="card stack"><h2>Inhalte konnten nicht geladen werden</h2><p>Lade die Seite neu. Wenn du sie direkt als Datei geöffnet hast: Die App braucht einen Webserver (siehe README).</p></div>`;

@@ -213,6 +213,7 @@
     reset(); F.u = ""; F.name = "";
     LZ.S.user = LZ.Store.currentUser || null;
     LZ.go("home");
+    if (LZ.reloadContent) LZ.reloadContent();   // eigene Inhalte des Vereins (Prinzipien, Quiz)
   }
   function focus(id) { setTimeout(() => { const el = document.getElementById(id); if (el) el.focus(); }, 0); }
 
