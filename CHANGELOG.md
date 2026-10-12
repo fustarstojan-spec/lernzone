@@ -2,6 +2,9 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.32.1 – 2026-10-12
+- Training → Einheiten: Die Teilnehmerzahl („24 da“, „22 erwartet“, „fällt aus“) ist antippbar und öffnet das Training mit den teilnehmenden Spielern (Anwesenheit)
+
 ## 0.32.0 – 2026-10-11
 - **Halbzeitpausen je Spielart** (Trainer → Trainer → „Spielzeit und Halbzeitpausen je Spielart“): z. B. Ligaspiel 1 Pause = 2 Halbzeiten, Turnier 0 Pausen; steht auch beim Kader des Spiels
 - **Matchplan** (Spielzeiten → Spiel → „Matchplan“): pro Spieler im Kader Position und Soll-Minuten eintragen (Vorschlag: Position aus der Aufstellung bzw. Spielerposition, Minuten je Position gleich verteilt), Wechselraster 5/10/15 Min. wählen → „Matchplan berechnen“

@@ -638,3 +638,7 @@ body.dragging{cursor:grabbing}
 .mpbar{position:relative;height:20px;background:var(--rule);border-radius:6px;overflow:hidden}
 .mpbar b{position:absolute;top:0;bottom:0;background:var(--shirt);color:#fff;font-size:.7rem;display:grid;place-items:center;border-radius:4px;font-weight:700}
 .mpbrk{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--bg);z-index:1}
+
+/* 0.32.1 Teilnehmerzahl antippbar */
+.linkcount{justify-self:start;background:none;border:0;padding:2px 6px;margin-left:-6px;border-radius:8px;text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:3px;cursor:pointer}
+.linkcount:hover{background:var(--accent-soft);text-decoration-color:var(--accent)}

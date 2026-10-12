@@ -63,9 +63,9 @@
     // Eine Zeile pro Training, Spalten immer gleich: Tag · Uhrzeit · Teilnehmer · Plan (ab 0.30.1)
     const row = t => {
       const s = t.session ? L.sessions.find(x => x.id === t.session) : null;
-      const who = t.state === 2 ? `<span class="tcount off">fällt aus</span>`
-        : t.state === 1 ? `<span class="tcount"><b>${t.present}</b> da</span>`
-        : `<span class="tcount"><b>${t.expected ?? "–"}</b> erwartet</span>`;
+      // Antippen öffnet das Training mit Anwesenheit (Trainer-Bereich), ab 0.32.1
+      const lab = t.state === 2 ? "fällt aus" : t.state === 1 ? `<b>${t.present}</b> da` : `<b>${t.expected ?? "–"}</b> erwartet`;
+      const who = `<button class="tcount linkcount${t.state === 2 ? " off" : ""}" data-act="tOpen" data-v="${t.id}" title="Teilnehmer anzeigen">${lab}</button>`;
       return `<li class="trow3"><b class="tday">${esc(cal().dayName(t.date))}</b><span class="small ttime">${esc(cal().timeText(t))}</span>${who}
         ${s ? `<button class="btn ghost small tplan" data-act="trSess" data-v="${s.id}">${s.kind === "pdf" ? "📄 " : "📋 "}Plan</button>`
             : `<button class="btn ghost small tplan add" data-act="trNew" data-v="${t.id}">+ Plan hinzufügen</button>`}</li>`;
