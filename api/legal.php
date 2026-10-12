@@ -1,9 +1,10 @@
 <?php
 /*
  * Rechtliches (ab 0.23.0): Angaben für Impressum und Datenschutzerklärung – öffentlich lesbar (auch ohne Anmeldung)
- * GET → {ok, operator:{name, street, city, email, phone, host, logs}, clubs:[{id, name, legalName, address, email, dpo}], myClub, updated}
+ * GET → {ok, operator:{name, street, city, email, phone, host, logs}, clubs:[{id, name, legalName, address, board, contentResp, email, dpo}], myClub, updated}
  * POST {action:"operator", …}  → Betreiber-Angaben (nur Superadmin)
- * POST {action:"club", club, legalName, address, email, dpo} → Verantwortlicher des Vereins (Vereinsadmin oder Superadmin)
+ * POST {action:"club", club, legalName, address, board, contentResp, email, dpo} → Angaben des Vereins (Vereinsadmin oder Superadmin)
+ *   board = vertretungsberechtigter Vorstand, contentResp = verantwortlich für die Inhalte des Vereins (§ 18 Abs. 2 MStV), ab 0.36.0
  * Die Angaben stehen nur in der Datenbank, nicht im Repository.
  */
 require __DIR__ . '/config.php';
@@ -18,10 +19,10 @@ $set = function (string $k, ?string $v = null) {
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $op = [];
     foreach (OPERATOR_KEYS as $k => $_) $op[$k] = $set("legal_$k");
-    $clubs = pdb()->query('SELECT id, name, legal_name, address, privacy_email, dpo FROM clubs WHERE active = 1 ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
+    $clubs = pdb()->query('SELECT id, name, legal_name, address, board, content_resp, privacy_email, dpo FROM clubs WHERE active = 1 ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
     json_out(['ok' => true, 'operator' => $op, 'updated' => $set('legal_updated'), 'myClub' => team_info()['clubId'] ?? null,
         'clubs' => array_map(fn($c) => ['id' => (int)$c['id'], 'name' => $c['name'], 'legalName' => $c['legal_name'], 'address' => $c['address'],
-                                        'email' => $c['privacy_email'], 'dpo' => $c['dpo']], $clubs)]);
+                                        'board' => $c['board'], 'contentResp' => $c['content_resp'], 'email' => $c['privacy_email'], 'dpo' => $c['dpo']], $clubs)]);
 }
 
 require_method('POST');
@@ -39,8 +40,10 @@ if (($in['action'] ?? '') === 'operator') {
 if (($in['action'] ?? '') === 'club') {
     $id = (int)($in['club'] ?? 0);
     if ($acc['kind'] !== 'coach' || !in_array($id, array_column(admin_clubs($acc), 'id'), true)) json_out(['ok' => false, 'error' => 'Diesen Verein verwaltest du nicht.'], 403);
-    pdb()->prepare('UPDATE clubs SET legal_name = ?, address = ?, privacy_email = ?, dpo = ? WHERE id = ?')
-        ->execute([clean_text($in['legalName'] ?? '', 100), clean_text($in['address'] ?? '', 200), $email($in['email'] ?? ''), clean_text($in['dpo'] ?? '', 200), $id]);
+    pdb()->prepare('UPDATE clubs SET legal_name = ?, address = ?, board = ?, content_resp = ?, privacy_email = ?, dpo = ? WHERE id = ?')
+        ->execute([clean_text($in['legalName'] ?? '', 100), clean_text($in['address'] ?? '', 200), clean_text($in['board'] ?? '', 200), clean_text($in['contentResp'] ?? '', 200),
+                   $email($in['email'] ?? ''), clean_text($in['dpo'] ?? '', 200), $id]);
+    sec_log('admin_legal', 'info', (int)$acc['id'], $acc['username'], "Vereinsangaben (Impressum/Datenschutz) geändert, Verein $id");
     $set('legal_updated', date('d.m.Y'));
     json_out(['ok' => true]);
 }

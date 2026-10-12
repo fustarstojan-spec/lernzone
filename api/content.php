@@ -3,8 +3,8 @@
  * Eigene Lerninhalte des Vereins (ab 0.35.0) – Prinzipien, Phasentexte und Quizfragen, gepflegt in der App.
  * GET  (alle Angemeldeten)  → {ok, items:[{id, kind, target, data, draft, sort, updated, by}], canEdit, canDelete}
  *      Spieler bekommen keine Entwürfe.
- * POST {action:"save", id?, kind, target, data, draft}   (Trainer)
- * POST {action:"move", id, dir:-1|1}                      (Trainer) Reihenfolge innerhalb von Art + Ziel
+ * POST {action:"save", id?, kind, target, data, draft}   (Cheftrainer / Vereinsadmin – ab 0.36.0 in der Admin-Zone)
+ * POST {action:"move", id, dir:-1|1}                      (Cheftrainer / Vereinsadmin) Reihenfolge innerhalb von Art + Ziel
  * POST {action:"delete", id}                              (Cheftrainer / Vereinsadmin)
  * data je Art:
  *   principle: {title, text, cmd, sub, focus, pos:{TW:"…", RV:"…", …}, sketch:{items, lines}|null}
@@ -28,11 +28,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $st->execute([$club]);
     $items = array_map(fn($r) => ['id' => (int)$r['id'], 'kind' => $r['kind'], 'target' => $r['target'], 'data' => json_decode($r['data'], true) ?: [],
         'draft' => (bool)$r['draft'], 'sort' => (int)$r['sort'], 'updated' => $coach ? $r['updated_at'] : '', 'by' => $coach ? (string)($r['by_name'] ?? '') : ''], $st->fetchAll(PDO::FETCH_ASSOC));
-    json_out(['ok' => true, 'items' => $items, 'canEdit' => (bool)$coach, 'canDelete' => (bool)($coach['isAdmin'] ?? false)]);
+    json_out(['ok' => true, 'items' => $items, 'canEdit' => (bool)($coach['isAdmin'] ?? false), 'canDelete' => (bool)($coach['isAdmin'] ?? false)]);
 }
 
 require_method('POST');
-if (!$coach) $fail('Nur für Trainer.', 403);
+if (!$coach || empty($coach['isAdmin'])) $fail('Inhalte bearbeiten Cheftrainer und Vereinsadmins (Admin-Zone).', 403);
 $in = json_in(); $action = (string)($in['action'] ?? '');
 $now = date('Y-m-d H:i');
 $t = fn($v, int $n) => clean_text($v ?? '', $n);

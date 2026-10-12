@@ -2,6 +2,14 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.36.0 – 2026-10-12
+- **Admin-Zone** unter eigener Adresse `…/admin/` (Kennzeichnung „Admin-Zone“ oben, eigene Seitenleiste). Zugang für Superadmin, Vereinsadmins und Cheftrainer; alle anderen sehen „Kein Zugang“
+  - Übersicht mit offenen Punkten (fehlende Impressums-Angaben, Sperren) und Kacheln
+  - Vereine & Mannschaften · Trainer · Inhalte · Einstellungen (Google-Kalender, Saisonbeginn, Spielzeiten) · Rechtliches · E-Mail-Versand (Superadmin) · Sicherheit · Mein Konto
+- FU-STARS (normale Adresse) ist jetzt nur noch für Trainer und Kinder (später Eltern): Verwaltung, „Inhalte bearbeiten“, Trainer anlegen und Einstellungen sind dort entfernt; Berechtigte haben in der Seitenleiste den Link „Admin-Zone“. Admins ohne Mannschaft werden direkt in die Admin-Zone geleitet
+- **Rechtliches je Verein**: neue Felder „Vertretungsberechtigter Vorstand“ und „Verantwortlich für den Inhalt (Name, Anschrift)“; das Impressum zeigt pro Verein Anschrift, Vorstand und Verantwortlichen (§ 18 Abs. 2 MStV)
+- Inhalte bearbeiten nur noch Cheftrainer und Vereinsadmins; der Knopf in der Phase öffnet die Admin-Zone direkt an der richtigen Stelle (`admin/#inhalte:<Phase>`)
+
 ## 0.35.0 – 2026-10-12
 - **Prinzipien in den Phasen** (neuer Reiter „Prinzipien“): jedes Prinzip als Karte mit Schlagwort, kurzer Erklärung, Kommando, Bild (aus einer Taktiktafel) und Aufgabe je Position – das angemeldete Kind sieht seine Positionen zuerst (gelb), die anderen aufklappbar; im Bild hat seine Position den gelben Ring. Ohne eigene Prinzipien bleibt die bisherige Liste
 - **Inhalte bearbeiten** (Trainer, Seitenleiste → Lernzone → „Inhalte bearbeiten“ oder Knopf in jeder Phase): pro Phase Prinzipien anlegen, sortieren, als Entwurf speichern; Phasentexte (Ziel, Einleitung, Merksatz) ändern; eigene Quizfragen (2–4 Antworten, Erklärung) für Phasen und Module, Standardfragen mitverwenden oder ausblenden

@@ -52,7 +52,10 @@
       <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
       ${opBlock()}
       <h2>Inhalte der Vereine</h2>
-      <p>Die FU-STARS Lernzone ist eine Plattform für Fußballvereine. Für die Daten und Inhalte ihrer Mannschaften (Kader, Termine, Trainingsinhalte, Bewertungen) ist der jeweilige Verein verantwortlich – siehe <button class="linkbtn" data-act="legal" data-v="datenschutz">Datenschutzerklärung</button>.</p>
+      <p>Die FU-STARS Lernzone ist eine Plattform für Fußballvereine. Für die Daten und Inhalte ihrer Mannschaften (Kader, Termine, Trainingsinhalte, Prinzipien, Bewertungen) ist der jeweilige Verein verantwortlich – siehe <button class="linkbtn" data-act="legal" data-v="datenschutz">Datenschutzerklärung</button>.</p>
+      ${myClubs().map(c => `<div class="legal-club"><p><b>${esc(c.legalName || c.name)}</b>${c.address ? "<br>" + nl(c.address) : ""}</p>
+        ${c.board ? `<p>Vertreten durch: ${nl(c.board)}</p>` : ""}
+        <p>Verantwortlich für die Inhalte des Vereins (§ 18 Abs. 2 MStV): ${c.contentResp ? nl(c.contentResp) : missing("Name und Anschrift")}</p></div>`).join("")}
       <h2>Schriften</h2>
       <p class="small">Barlow Condensed und Source Sans 3, SIL Open Font License 1.1, lokal eingebunden.</p>
     </section>`;

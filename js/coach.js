@@ -47,10 +47,11 @@
     if (target === "form") return show("form", { type: "feld", nr: "", uname: "", posOff: "", posDef: "" });
     if (target === "kader") { show("kader"); await refreshPlayers(); LZ.render(); return; }
     if (target === "trainings") return openTrainings();
-    if (target === "coaches") { show("coaches"); await loadCoaches(); if (Co().isAdmin) { loadCal(); loadDurations(); } return; }
+    if (target === "coaches") { show("coaches"); await loadCoaches(); return; }
   }
   LZ.actions.addStart = () => start("form");
   LZ.actions.kaderStart = () => start("kader");
+  LZ.actions.coachesStart = () => start("coaches");
   // Eigenes Konto öffnen (Klick auf den Namen in der Seitenleiste, ab 0.34.1)
   LZ.actions.myProfile = async () => {
     if (!Co().active) return;
@@ -61,8 +62,10 @@
   };
 
   /* ---------- Kopf mit Reitern ---------- */
-  const tabs = () => Co().active ? `
-    <div class="seg">${[["kader", "Kader"], ["trainings", "Trainings"], ["coaches", Co().isAdmin ? "Trainer" : "Mein Konto"]].map(([k, l]) =>
+  // ab 0.36.0: Trainer verwalten und Einstellungen nur in der Admin-Zone (admin/), in FU-STARS nur „Mein Konto“
+  const mgr = () => LZ.zone === "admin" && !!Co().isAdmin;
+  const tabs = () => Co().active && LZ.zone !== "admin" ? `
+    <div class="seg">${[["kader", "Kader"], ["trainings", "Trainings"], ["coaches", "Mein Konto"]].map(([k, l]) =>
       `<button aria-pressed="${T.tab === k}" data-act="ctab" data-v="${k}">${l}</button>`).join("")}</div>` : "";
   LZ.actions.ctab = (b, v) => open(v);
   const backGrid = `<button class="back" data-act="home">‹ Übersicht</button>`;
@@ -201,31 +204,30 @@
     }
 
     if (s === "coaches") {
-      const me = Co();
-      const list = me.isAdmin ? T.coaches : T.coaches.filter(c => c.id === me.id);
-      return `${backGrid}<section>${LZ.area("Trainer-Bereich")}<h1>${me.isAdmin ? "Trainer" : "Mein Konto"}</h1>${me.isAdmin ? `<p class="lede">Cheftrainer legen Co-Trainer an und dürfen Spieler löschen. Neue Mannschaften legt der Vereinsadmin an.</p>` : ""}</section>${tabs()}
+      const me = Co(), M = mgr();
+      const list = M ? T.coaches : T.coaches.filter(c => c.id === me.id);
+      return `${backGrid}<section>${LZ.area(M ? "Admin-Zone" : "Trainer-Bereich")}<h1>${M ? "Trainer" : "Mein Konto"}</h1>${M ? `<p class="lede">Cheftrainer legen Co-Trainer an und dürfen Spieler löschen. Neue Mannschaften legt der Vereinsadmin an.</p>` : ""}</section>${tabs()}
       <section class="stack">${list.map(c => `<button class="trow" data-act="cEdit" data-v="${c.id}"><span class="tdate">${esc(c.name)}${c.id === me.id ? " (du)" : ""}</span><span class="small">${esc(c.username || "")}</span>${c.isAdmin ? `<span class="badge">Cheftrainer</span>` : ""}</button>`).join("")}</section>
-      ${me.isAdmin ? `<section class="card stack"><h2>Trainer hinzufügen</h2>
+      ${M ? `<section class="card stack"><h2>Trainer hinzufügen</h2>
         <div class="fld"><label for="cf-name">Vorname</label><input id="cf-name" maxlength="30" value="${esc(T.cf.name)}"></div>
         ${userField("cf-user", "Benutzername", T.cf.user, "Leer lassen = Vorname.")}
         <label class="check"><input type="checkbox" id="cf-admin" ${T.cf.isAdmin ? "checked" : ""}> Cheftrainer</label>
-        ${errP()}${okP()}<button class="btn wide" data-act="coachAdd" ${T.busy ? "disabled" : ""}>Trainer hinzufügen</button></section>
-      ${calCard()}${seasonCard()}${durCard()}` : ""}`;
+        ${errP()}${okP()}<button class="btn wide" data-act="coachAdd" ${T.busy ? "disabled" : ""}>Trainer hinzufügen</button></section>` : ""}`;
     }
 
     if (s === "coachEdit") {
-      const c = T.cEdit, me = Co(), self = c.id === me.id;
-      return `<button class="back" data-act="ctab" data-v="coaches">‹ ${me.isAdmin ? "Trainer" : "Mein Konto"}</button>${tabs()}
+      const c = T.cEdit, me = Co(), self = c.id === me.id, M = mgr();
+      return `<button class="back" data-act="ctab" data-v="coaches">‹ ${M ? "Trainer" : "Mein Konto"}</button>${tabs()}
       <section><p class="eyebrow">${self ? "Mein Konto" : "Trainer"}</p><h1>${esc(c.name)}</h1></section>
       <section class="card stack">
         <div class="fld"><label for="ce-name">Vorname</label><input id="ce-name" maxlength="30" value="${esc(T.cf.name)}"></div>
         ${userField("ce-user", "Benutzername", T.cf.user)}
-        ${me.isAdmin ? `<label class="check"><input type="checkbox" id="ce-admin" ${T.cf.isAdmin ? "checked" : ""}> Cheftrainer</label>` : ""}
+        ${M ? `<label class="check"><input type="checkbox" id="ce-admin" ${T.cf.isAdmin ? "checked" : ""}> Cheftrainer</label>` : ""}
         ${errP()}${okP()}<button class="btn wide" data-act="coachSave" ${T.busy ? "disabled" : ""}>Speichern</button></section>
       ${self ? `<button class="btn ghost wide" data-act="pwStart">Mein Passwort ändern</button>${LZ.mailCard ? LZ.mailCard() : ""}`
-        : me.isAdmin ? `<section class="card stack"><h2>Zugang</h2><button class="btn wide" data-act="coachCode">Neuen Einmal-Code erzeugen</button>
+        : M ? `<section class="card stack"><h2>Zugang</h2><button class="btn wide" data-act="coachCode">Neuen Einmal-Code erzeugen</button>
         <p class="small">Falls das Passwort vergessen wurde. Das alte Passwort gilt danach nicht mehr.</p></section>` : ""}
-      ${me.isAdmin && !self ? (T.confirm === "delCoach"
+      ${M && !self ? (T.confirm === "delCoach"
         ? `<section class="card stack danger"><p><b>${esc(c.name)} wirklich entfernen?</b> Das Konto kann sich danach nicht mehr anmelden.</p>
            <div class="row"><button class="btn danger-btn" data-act="coachDelete">Ja, entfernen</button><button class="btn ghost" data-act="cCancel">Abbrechen</button></div></section>`
         : `<button class="btn ghost wide danger-text" data-act="cAskDel" data-v="delCoach">Trainer entfernen</button>`) : ""}`;
@@ -550,8 +552,16 @@
   };
   async function loadCal() {
     const r = await St().get("calendar.php");
-    if (r && r.ok) { T.cal = r.status; T.calInput = null; if (T.step === "coaches") LZ.render(); }
+    if (r && r.ok) { T.cal = r.status; T.calInput = null; LZ.render(); }
   }
+
+  /* ---------- Einstellungen der Mannschaft (Admin-Zone, ab 0.36.0): Kalender, Saison, Spielzeiten ---------- */
+  LZ.views.einstellungen = () => {
+    if (!Co().active || !Co().isAdmin) return `<section>${LZ.area("Admin-Zone")}<h1>Einstellungen</h1></section><p class="small">Nur für Cheftrainer und Vereinsadmins der Mannschaft.</p>`;
+    return `<section>${LZ.area("Admin-Zone")}<h1>Einstellungen</h1><p class="lede">Gelten für die gewählte Mannschaft.</p></section>
+      ${errP()}${okP()}${calCard()}${seasonCard()}${durCard()}`;
+  };
+  LZ.on("enter", v => { if (v === "einstellungen" && Co().active && Co().isAdmin) { T.err = ""; T.msg = ""; loadCal(); loadDurations(); } });
   LZ.actions.calSave = async () => {
     T.busy = true; LZ.render();
     const r = await St().send("calendar.php", { action: "seturl", url: T.calInput ?? (T.cal && T.cal.url) ?? "" });
@@ -584,7 +594,7 @@
   };
   LZ.actions.coachSave = async () => {
     const c = T.cEdit, body = { action: "update", id: c.id, name: T.cf.name };
-    if (Co().isAdmin) body.isAdmin = T.cf.isAdmin;
+    if (mgr()) body.isAdmin = T.cf.isAdmin;
     T.busy = true; LZ.render();
     const r = await St().send("coaches.php", body);
     if (!r.ok) return fail(r);

@@ -682,3 +682,19 @@ body.dragging{cursor:grabbing}
 .posrow input,.qopt input:not([type=radio]){font:inherit;padding:8px 10px;border:1.5px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--fg);min-width:0}
 .qopt{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;margin-bottom:6px}
 .qopt input[type=radio]{width:20px;height:20px;accent-color:var(--ok)}
+
+/* Admin-Zone (ab 0.36.0, admin/index.html) */
+.zone-admin .brand span{color:var(--accent);background:var(--accent-soft);padding:3px 8px;border-radius:6px}
+.zone-admin .snav[href]{text-decoration:none}
+.snav[href]{text-decoration:none;color:inherit}
+.admtiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.admtile{text-align:left;display:grid;gap:4px;align-content:start;cursor:pointer;border:1px solid var(--rule)}
+.admtile:hover{border-color:var(--accent)}
+.admtile h2{margin:0}
+.admtodo{margin:0;padding-left:18px;display:grid;gap:4px}
+.legaldl{display:grid;grid-template-columns:minmax(140px,max-content) 1fr;gap:4px 14px;margin:0}
+.legaldl dt{color:var(--muted);font-size:.9rem}
+.legaldl dd{margin:0}
+.sechead{margin:8px 0 0}
+@media (max-width:560px){.legaldl{grid-template-columns:1fr}.legaldl dd{margin-bottom:6px}}
+.zone-admin .top{border-bottom:3px solid var(--accent)}

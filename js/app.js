@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.35.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.36.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -134,7 +134,7 @@
       ${me.length ? `<p class="small">Gelber Ring: deine Position${me.length > 1 ? "en" : ""} (${me.map(esc).join(", ")}).</p>` : ""}</div>`;
     } else body = quizHTML(ph);
     return `<button class="back" data-act="home">‹ Übersicht</button>
-  <section><div class="rowspread"><p class="eyebrow">Phase ${ph.nr} · ${ballLabel(ph.ball)}</p>${LZ.coachMode() && LZ.views.inhalte ? `<button class="btn ghost small" data-act="side" data-v="inhalte" data-a="${ph.id}">Inhalte bearbeiten</button>` : ""}</div><h1>${esc(ph.title)}</h1></section>
+  <section><div class="rowspread"><p class="eyebrow">Phase ${ph.nr} · ${ballLabel(ph.ball)}</p>${LZ.adminAccess() ? (ZONE === "admin" ? `<button class="btn ghost small" data-act="side" data-v="inhalte" data-a="${ph.id}">Inhalte bearbeiten</button>` : `<a class="btn ghost small" href="admin/#inhalte:${ph.id}">Inhalte bearbeiten ↗</a>`) : ""}</div><h1>${esc(ph.title)}</h1></section>
   <div class="seg" role="tablist">${tabs.map(([k, l]) => `<button role="tab" aria-pressed="${S.tab === k}" data-act="tab" data-v="${k}">${l}</button>`).join("")}</div>
   ${body}`;
   }
@@ -281,10 +281,14 @@
     document.getElementById("shirtBtn").hidden = !!gate;
     renderSide(gate);
     if (gate && LZ.views[gate] && !(LZ.legalPages || []).concat(LZ.publicViews || []).includes(S.view)) { app.innerHTML = LZ.views[gate](); return; }   // Impressum & Co. auch ohne Anmeldung
+    if (ZONE === "admin") {   // Admin-Zone: nur Superadmin, Vereinsadmin, Cheftrainer
+      if (!LZ.adminAccess()) { app.innerHTML = LZ.views.noAdmin ? LZ.views.noAdmin() : ""; return; }
+      if (PEND) { const x = PEND; PEND = null; return go(x.v, x.a); }
+      if (S.view === "home" || S.view === "me") { app.innerHTML = LZ.views.adminHome ? LZ.views.adminHome() : ""; return; }
+    } else if (LZ.adminOnly()) { location.replace("admin/"); return; }   // Admin ohne Mannschaft gehört in die Admin-Zone
     // Trainer ohne Spieler-Anmeldung: eigene Startseite (js/dashboard.js), Lerninhalte unter „Lernzone“
     const coachHome = S.view === "home" && LZ.coachMode() && LZ.views.coachHome;
-    const adminHome = ["home", "me"].includes(S.view) && LZ.adminOnly() && LZ.views.verwaltung;   // Vereins-/Superadmin ohne Mannschaft
-    app.innerHTML = adminHome ? LZ.views.verwaltung() : coachHome ? LZ.views.coachHome()
+    app.innerHTML = coachHome ? LZ.views.coachHome()
       : LZ.views[S.view] ? LZ.views[S.view]()
       : S.view === "phase" ? phaseView() : S.view === "modul" ? modulView() : S.view === "zonen" ? zonenView() : S.view === "me" ? meView() : home();   // "lernzone" = home()
   }
@@ -336,7 +340,7 @@
     // Trikot oben rechts (ab 0.34.3): Trainer → eigenes Profil, Admin ohne Mannschaft → Verwaltung, Spieler → Mein Bereich
     else if (a === "shirt") {
       if (LZ.coachMode() && LZ.actions.myProfile) LZ.actions.myProfile();
-      else if (LZ.adminOnly()) go("verwaltung");
+      else if (LZ.adminOnly()) go("konto");
       else go("me");
     }
     else if (a === "me") {
@@ -397,7 +401,14 @@
     menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
     user: '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c.8-3.8 3.8-6 7.5-6s6.7 2.2 7.5 6"/>',
     key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 8-8M16 7l2 2M14 9l2 2"/>',
-    logout: '<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l-4-4 4-4M6 12h10"/>'
+    logout: '<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l-4-4 4-4M6 12h10"/>',
+    clubs: '<path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M3 20h18"/>',
+    legal: '<path d="M12 4v16M5 20h14"/><path d="M6 7h12"/><path d="m6 7-3 6a3 3 0 0 0 6 0zM18 7l-3 6a3 3 0 0 0 6 0z"/>',
+    mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/>',
+    shield: '<path d="M12 3 5 6v6c0 4.2 3 7.6 7 9 4-1.4 7-4.8 7-9V6z"/><path d="m9 12 2 2 4-4"/>',
+    sliders: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+    pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/>',
+    open: '<path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'
   };
   const icon = k => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${IC[k] || ""}</svg>`;
   const SIDE = { open: true, mob: false, grp: { lernzone: false, phasen: true, module: true } };
@@ -409,6 +420,7 @@
     if (["training", "einheit", "einheitEdit", "uebung", "uebungEdit"].includes(v)) return "training";
     if (v.startsWith("wissen")) return "wissen";
     if (v === "inhalte" || v === "inhaltEdit") return "inhalte";
+    if (ZONE === "admin" && v === "coach") return "trainer";
     if (v === "taktik" || (coach && v === "tafel")) return "taktik";
     if (v === "phase" || v === "modul") return v + ":" + S.arg;
     if (v === "coach" || (coach && v === "me")) return "kader";
@@ -422,17 +434,28 @@
     const mods = (C.modules || []).map(m => ({ k: "modul:" + m.id, label: m.title, sub: m.label, act: "side", v: "modul", a: m.id }));
     const learn = [{ k: "zonen", label: "Spielfeld & Zonen", icon: "zonen", act: "side", v: "zonen" },
       { k: "phasen", label: "Spielphasen", icon: "phasen", group: phases }].concat(mods.length ? [{ k: "module", label: "Module", icon: "modul", group: mods }] : []);
-    if (LZ.adminOnly()) return [{ k: "verwaltung", label: "Verwaltung", icon: "verwaltung", act: "side", v: "verwaltung" }];
+    if (ZONE === "admin") {   // Admin-Zone (ab 0.36.0): Verwaltung, Inhalte, Rechtliches, Einstellungen
+      const team = LZ.coachMode() && Store.coach.isAdmin, club = LZ.isAdmin(), sup = !!Store.coach.platformAdmin;
+      return [{ k: "home", label: "Übersicht", icon: "home", act: "side", v: "home" }]
+        .concat(club ? [{ k: "verwaltung", label: "Vereine & Mannschaften", icon: "clubs", act: "side", v: "verwaltung" }] : [])
+        .concat(team ? [{ k: "trainer", label: "Trainer", icon: "kader", act: "coachesStart" },
+                        { k: "inhalte", label: "Inhalte", icon: "pen", act: "side", v: "inhalte" },
+                        { k: "einstellungen", label: "Einstellungen", icon: "sliders", act: "side", v: "einstellungen" }] : [])
+        .concat(club ? [{ k: "rechtliches", label: "Rechtliches", icon: "legal", act: "side", v: "rechtliches" }] : [])
+        .concat(sup ? [{ k: "mailversand", label: "E-Mail-Versand", icon: "mail", act: "side", v: "mailversand" }] : [])
+        .concat(club ? [{ k: "sicherheit", label: "Sicherheit", icon: "shield", act: "side", v: "sicherheit" }] : [])
+        .concat(LZ.coachMode() ? [{ k: "app", label: "Zu FU-STARS", icon: "open", href: "./" }] : []);
+    }
     if (LZ.coachMode()) return [
       // Reihenfolge vom Trainer festgelegt (0.34.4); Trainer-Wissen danach
       { k: "home", label: "Übersicht", icon: "home", act: "side", v: "home" },
-      { k: "lernzone", label: "Lernzone", icon: "lernzone", group: [{ k: "lernzone", label: "Start der Lernzone", act: "side", v: "lernzone" }].concat(learn.map(x => x.group ? x : Object.assign({}, x)), [{ k: "inhalte", label: "Inhalte bearbeiten", act: "side", v: "inhalte" }]) },
+      { k: "lernzone", label: "Lernzone", icon: "lernzone", group: [{ k: "lernzone", label: "Start der Lernzone", act: "side", v: "lernzone" }].concat(learn.map(x => x.group ? x : Object.assign({}, x))) },
       { k: "kader", label: "Kader", icon: "kader", act: "me" },
       { k: "training", label: "Training", icon: "training", act: "side", v: "training" },
       { k: "taktik", label: "Taktik", icon: "taktik", act: "side", v: "taktik" },
       { k: "spielzeiten", label: "Spielzeiten", icon: "spielzeiten", act: "side", v: "spielzeiten" },
       { k: "wissen", label: "Trainer-Wissen", icon: "wissen", act: "side", v: "wissen" }
-    ].concat(LZ.isAdmin() ? [{ k: "verwaltung", label: "Verwaltung", icon: "verwaltung", act: "side", v: "verwaltung" }] : []);
+    ].concat(LZ.adminAccess() ? [{ k: "admin", label: "Admin-Zone", icon: "verwaltung", href: "admin/" }] : []);
     return [{ k: "home", label: "Start", icon: "home", act: "side", v: "home" }].concat(learn, [{ k: "me", label: "Mein Bereich", icon: "me", act: "me" }]);
   }
   /* Angemeldet als … mit Rolle und Abmelden (Passwort ändern steht in „Mein Konto“ bzw. „Mein Bereich“) (ab 0.33.1, vorher Leiste über dem Inhalt) */
@@ -443,9 +466,9 @@
     else if (LZ.adminOnly()) { name = (acc && acc.username) || ""; role = c.platformAdmin ? "Superadmin" : "Vereinsadmin"; }
     else if (S.user) { name = acc ? acc.username : "Nr. " + S.user.nr; role = "Spieler"; }
     else return "";
-    const act = LZ.coachMode() ? "myProfile" : LZ.adminOnly() ? "side" : "me";
+    const act = LZ.coachMode() ? "myProfile" : LZ.adminOnly() ? "side" : "me";   // Admin ohne Mannschaft → „konto“ (Admin-Zone)
     const on = LZ.coachMode() ? S.view === "coach" : LZ.adminOnly() ? false : ["me", "profile"].includes(S.view);
-    return `<div class="saccount"><button class="snav sacc-who${on ? " on" : ""}" data-act="${act}" data-v="verwaltung" title="Mein Konto: ${esc(name)} · ${esc(role)}">${icon("user")}<span class="sl"><b>${esc(name)}</b><span class="badge">${esc(role)}</span></span></button>
+    return `<div class="saccount"><button class="snav sacc-who${on ? " on" : ""}" data-act="${act}" data-v="konto" title="Mein Konto: ${esc(name)} · ${esc(role)}">${icon("user")}<span class="sl"><b>${esc(name)}</b><span class="badge">${esc(role)}</span></span></button>
       <ul class="slist"><li><button class="snav" data-act="logout" title="Abmelden">${icon("logout")}<span class="sl">Abmelden</span></button></li></ul></div>`;
   }
   function sideHtml() {
@@ -459,6 +482,7 @@
         return `<li><button class="snav sgrp${on ? " on" : ""}" data-act="sideGrp" data-v="${it.k}" aria-expanded="${!!open}" title="${esc(it.label)}">${ico}${lab}<span class="schev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span></button>
           ${open ? `<ul class="ssub">${it.group.map(x => row(x, depth + 1)).join("")}</ul>` : ""}</li>`;
       }
+      if (it.href) return `<li><a class="snav" href="${it.href}" title="${esc(it.label)}">${ico}${lab}</a></li>`;
       return `<li><button class="snav${it.k === act ? " on" : ""}" data-act="${it.act}" data-v="${it.v || ""}" ${it.a ? `data-a="${esc(it.a)}"` : ""} title="${esc(it.label)}" ${it.k === act ? 'aria-current="page"' : ""}>${ico}${lab}</button></li>`;
     };
     return `<div><ul class="slist">${sideItems().map(x => row(x, 0)).join("")}</ul>${accountHtml()}</div>
@@ -466,13 +490,16 @@
   }
   function renderSide(gate) {
     const nav = document.getElementById("side"), btn = document.getElementById("menuBtn"); if (!nav) return;
-    const off = !!gate || !C;
+    const off = !!gate || !C || (ZONE === "admin" && !LZ.adminAccess());   // Admin-Zone ohne Zugang: keine Seitenleiste
     document.body.classList.toggle("noside", off);
     document.body.classList.toggle("side-open", !off && SIDE.open);
     document.body.classList.toggle("side-mob", !off && SIDE.mob);
     if (btn) { btn.hidden = off; btn.setAttribute("aria-expanded", String(SIDE.mob || SIDE.open)); }
     nav.innerHTML = off ? "" : sideHtml();
   }
+
+  let PEND = null;   // Admin-Zone: Ansicht aus der Adresse (#inhalte:bb), wird nach der Anmeldung geöffnet
+  const ZONE = window.LZ_ZONE === "admin" ? "admin" : "app";   // ab 0.36.0: FU-STARS (app) oder Admin-Zone (admin/index.html)
 
   /* ---------- Schnittstelle für Erweiterungen ---------- */
   const LZ = window.LZ = {
@@ -482,6 +509,9 @@
     get C() { return C; }, get Store() { return Store; },
     esc, rand, shirt, pad, dots, posName, posSelect, gkNrs, render, go, weekKey,
     on(name, fn) { (this.hooks[name] = this.hooks[name] || []).push(fn); },
+    zone: ZONE,
+    // Darf in die Admin-Zone: Superadmin, Vereinsadmin, Cheftrainer der gewählten Mannschaft
+    adminAccess() { return this.adminOnly() || (this.coachMode() && !!Store.coach.isAdmin); },
     contentItems() { return CC ? CC.items : []; },
     reloadContent: () => loadClubContent(),
     coachMode() { return !!(Store && Store.mode === "api" && !S.user && Store.coach && Store.coach.active); },
@@ -503,6 +533,8 @@
       S.user = s.user;
       // Links aus E-Mails (ab 0.34.0): ?reset=… (Passwort vergessen) und ?verify=… (E-Mail bestätigen) – Token sofort aus der Adresszeile entfernen
       const qp = new URLSearchParams(location.search), tk = qp.get("reset") || qp.get("verify");
+      const hm = location.hash.match(/^#([a-z]+)(?::([a-z0-9_-]+))?$/i);   // Admin-Zone: #inhalte:bb öffnet direkt die Ansicht
+      if (ZONE === "admin" && hm && LZ.views[hm[1]]) { PEND = { v: hm[1], a: hm[2] || null }; history.replaceState(null, "", location.pathname); }   // nach der Anmeldung öffnen
       if (tk && /^[A-Za-z0-9_-]{30,60}$/.test(tk)) { S.view = qp.get("reset") ? "pwreset" : "mailverify"; S.arg = tk; history.replaceState(null, "", location.pathname); }
       render();
       fire("ready");

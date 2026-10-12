@@ -22,8 +22,10 @@
     if (r && r.ok) { A.data = r; A.err = ""; } else A.err = (r && r.error) || "Verwaltung konnte nicht geladen werden.";
     LZ.render();
   }
-  LZ.on("enter", v => { if (v === "verwaltung" || (LZ.adminOnly() && ["home", "me"].includes(v))) { load(); if (LZ.legal) LZ.legal.load(true); } });
-  LZ.on("ready", () => { if (LZ.adminOnly()) load(); });
+  // ab 0.36.0 in der Admin-Zone (admin/): Übersicht, Vereine & Mannschaften, Rechtliches, E-Mail-Versand, Sicherheit, Mein Konto
+  const ADMV = ["home", "me", "verwaltung", "rechtliches", "sicherheit"];
+  LZ.on("enter", v => { if (LZ.zone === "admin" && LZ.isAdmin() && ADMV.includes(v)) { load(); if (LZ.legal) LZ.legal.load(true); } });
+  LZ.on("ready", () => { if (LZ.zone === "admin" && LZ.isAdmin()) { load(); if (LZ.legal) LZ.legal.load(true); } });
 
   async function send(body, after) {
     if (A.busy) return;
@@ -68,8 +70,7 @@
         <p class="small"><b>Vereinsadmin</b> (z. B. Jugendleiter)</p></div>` : ""}
       ${personForm("club", "Verein anlegen")}
       ${A.open === "club" ? "" : `<button class="btn ghost" data-act="admOpen" data-v="club">+ Neuer Verein</button>`}
-    </section>
-    ${operatorCard()}`;
+    </section>`;
   }
 
   /* ---------- Rechtliches (ab 0.23.0) ---------- */
@@ -94,13 +95,18 @@
   }
   function clubLegal(c) {
     const x = lg().clubs.find(y => y.id === c.id) || {}, k = "c" + c.id + "legal", done = x.address && x.email;
-    return `<h3>Datenschutz-Angaben ${done ? "" : `<span class="badge">fehlt noch</span>`}</h3>
-      <p class="small">Der Verein ist Verantwortlicher für die Daten seiner Mannschaften. Steht in der Datenschutzerklärung und auf der Einwilligung.</p>
+    return `<section class="card stack"><div class="rowspread"><h2>${esc(c.name)}</h2>${done && x.contentResp ? "" : `<span class="badge">fehlt noch</span>`}</div>
+      <p class="small">Der Verein ist Verantwortlicher für die Daten seiner Mannschaften und für die Inhalte, die seine Trainer eintragen. Die Angaben stehen im Impressum, in der Datenschutzerklärung und auf der Einwilligung.</p>
       ${A.open === k ? `<div class="stack subform">
-        ${fld(k + "-name", "Offizieller Name", x.legalName, false, "z. B. SV Musterstadt e. V.")}${fld(k + "-addr", "Anschrift und vertretungsberechtigter Vorstand", x.address, true, "Straße, PLZ Ort\nVertreten durch: …")}
+        ${fld(k + "-name", "Offizieller Name", x.legalName, false, "z. B. SV Musterstadt e. V.")}${fld(k + "-addr", "Anschrift des Vereins", x.address, true, "Straße\nPLZ Ort")}
+        ${fld(k + "-board", "Vertretungsberechtigter Vorstand", x.board, true, "z. B. Max Muster (1. Vorsitzender), Erika Muster (2. Vorsitzende)")}
+        ${fld(k + "-resp", "Verantwortlich für den Inhalt (Name, Anschrift)", x.contentResp, true, "z. B. Jugendleiter Max Muster, Straße, PLZ Ort")}
         ${fld(k + "-email", "E-Mail für Datenschutz-Fragen", x.email)}${fld(k + "-dpo", "Datenschutzbeauftragte/r (falls vorhanden)", x.dpo, true)}
         <div class="chiprow"><button class="btn" data-act="admClubLegal" data-v="${c.id}">Speichern</button><button class="btn ghost" data-act="admOpen" data-v="">Abbrechen</button></div></div>`
-        : `<div class="chiprow"><button class="btn ghost small" data-act="admOpen" data-v="${k}">Bearbeiten</button><button class="linkbtn" data-act="legal" data-v="einwilligung">Einwilligung drucken</button></div>`}`;
+        : `<dl class="legaldl">${[["Offizieller Name", x.legalName], ["Anschrift", x.address], ["Vertreten durch", x.board], ["Verantwortlich für den Inhalt", x.contentResp], ["E-Mail Datenschutz", x.email], ["Datenschutzbeauftragte/r", x.dpo]]
+            .map(([l, v]) => `<dt>${l}</dt><dd>${v ? esc(v).replace(/\n/g, "<br>") : `<span class="legal-missing">—</span>`}</dd>`).join("")}</dl>
+          <div class="chiprow"><button class="btn ghost small" data-act="admOpen" data-v="${k}">Bearbeiten</button><button class="linkbtn" data-act="legal" data-v="impressum">Impressum ansehen</button><button class="linkbtn" data-act="legal" data-v="einwilligung">Einwilligung drucken</button></div>`}
+    </section>`;
   }
   async function legalSend(body) {
     const r = await LZ.Store.send("legal.php", body);
@@ -113,7 +119,7 @@
   LZ.actions.admOpSave = () => legalSend({ action: "operator", name: val("op-name"), street: val("op-street"), city: val("op-city"),
     email: val("op-email"), phone: val("op-phone"), host: val("op-host"), logs: val("op-logs") });
   LZ.actions.admClubLegal = (b, v) => { const k = "c" + v + "legal";
-    legalSend({ action: "club", club: +v, legalName: val(k + "-name"), address: val(k + "-addr"), email: val(k + "-email"), dpo: val(k + "-dpo") }); };
+    legalSend({ action: "club", club: +v, legalName: val(k + "-name"), address: val(k + "-addr"), board: val(k + "-board"), contentResp: val(k + "-resp"), email: val(k + "-email"), dpo: val(k + "-dpo") }); };
 
   /* ---------- Verein ---------- */
   function teamBlock(c, t) {
@@ -153,23 +159,63 @@
         ${c.admins.length > 1 && a.accountId !== me() ? confirmBtn(k + "adm" + a.accountId, "entfernen", "admAdminRm", `data-v="${c.id}" data-c="${a.accountId}"`) : ""}</span></li>`).join("")}</ul>
       ${personForm(k + "admin", "Vereinsadmin hinzufügen")}
       ${A.open === k + "admin" ? "" : `<button class="linkbtn" data-act="admOpen" data-v="${k}admin">+ Vereinsadmin hinzufügen</button>`}
-      ${clubLegal(c)}
+      <p class="small">Impressum und Datenschutz-Angaben des Vereins: <button class="linkbtn" data-act="side" data-v="rechtliches">Rechtliches</button></p>
     </section>`;
   }
 
+  const H = (t, lede) => `<section>${LZ.area("Admin-Zone")}<h1>${t}</h1>${lede ? `<p class="lede">${lede}</p>` : ""}</section>`;
+  const wait = t => `${H(t)}${errBox() || `<p class="small">Lade …</p>`}`;
   LZ.views.verwaltung = () => {
-    const d = A.data, acc = LZ.Store.account || {};
-    const top = LZ.coachMode() ? LZ.coachNav("verwaltung") : "";   // Konto und Abmelden stehen seit 0.33.1 in der Seitenleiste
-    if (!d) return `${top}<section>${LZ.area("Verwaltung")}<h1>Verein</h1></section>${errBox() || `<p class="small">Lade …</p>`}`;
+    const d = A.data, t = d && d.platform ? "Vereine & Mannschaften" : "Verein & Mannschaften";
+    if (!d) return wait(t);
     const clubs = d.clubs.filter(c => c.own || c.id === A.club);
-    return `${top}<section>${LZ.area("Verwaltung")}<h1>${d.platform ? "Vereine" : "Verein"}</h1></section>
-      ${noteBox()}${errBox()}
-      ${d.platform ? platformCard(d) : ""}
-      ${clubs.map(clubCard).join("")}
-      ${secCard()}
-      ${d.platform ? mailSettingsCard() : ""}
-      ${LZ.coachMode() ? "" : `<section class="card stack"><h2>Mein Konto</h2><p class="small">Angemeldet als <b>${esc(acc.username || "")}</b></p><div class="row"><button class="btn ghost" data-act="pwStart">Passwort ändern</button></div></section>${LZ.mailCard ? LZ.mailCard() : ""}`}`;
+    return `${H(t)}${noteBox()}${errBox()}${d.platform ? platformCard(d) : ""}${clubs.map(clubCard).join("")}`;
   };
+  LZ.views.rechtliches = () => {
+    const d = A.data;
+    if (!d) return wait("Rechtliches");
+    const clubs = d.clubs.filter(c => c.own || c.id === A.club);
+    return `${H("Rechtliches", "Angaben für Impressum, Datenschutzerklärung und Einwilligung. Sie sind öffentlich sichtbar, sobald sie gespeichert sind.")}${errBox()}
+      ${d.platform ? operatorCard() : ""}
+      ${clubs.length ? `<h2 class="sechead">Vereine</h2>${clubs.map(clubLegal).join("")}` : ""}`;
+  };
+  LZ.views.sicherheit = () => `${H("Sicherheit")}${secCard() || `<p class="small">Lade …</p>`}`;
+  LZ.views.mailversand = () => `${H("E-Mail-Versand")}${(LZ.Store.coach || {}).platformAdmin ? mailSettingsCard() || `<p class="small">Lade …</p>` : `<p class="small">Nur für den Superadmin.</p>`}`;
+  LZ.views.konto = () => {
+    const acc = LZ.Store.account || {};
+    return `${H("Mein Konto")}<section class="card stack"><p class="small">Angemeldet als <b>${esc(acc.username || "")}</b></p>
+      <div class="row"><button class="btn ghost" data-act="pwStart">Passwort ändern</button></div></section>${LZ.mailCard ? LZ.mailCard() : ""}`;
+  };
+
+  /* Übersicht der Admin-Zone: Kacheln nach Rechten, offene Punkte */
+  LZ.views.adminHome = () => {
+    const Co = LZ.Store.coach || {}, d = A.data, club = LZ.isAdmin(), team = LZ.coachMode() && Co.isAdmin;
+    const L = lg(), myClubs = d ? d.clubs.filter(c => c.own) : [];
+    const todo = [];
+    if (d && d.platform) { const o = L.operator || {}; if (!(o.name && o.street && o.city && o.email)) todo.push(["Impressum: Angaben des Betreibers fehlen", "rechtliches"]); }
+    myClubs.forEach(c => { const x = (L.clubs || []).find(y => y.id === c.id) || {};
+      if (!(x.address && x.email)) todo.push([`${c.name}: Anschrift oder Datenschutz-E-Mail fehlt`, "rechtliches"]);
+      if (!x.contentResp) todo.push([`${c.name}: Verantwortlicher für den Inhalt fehlt`, "rechtliches"]); });
+    if (SEC.data && (SEC.data.stats.locks || SEC.data.stats.blocked)) todo.push(["Sicherheit: Sperren in den letzten 24 Stunden", "sicherheit"]);
+    const tile = (v, act, icon, t, s) => `<button class="card admtile" data-act="${act}" ${v ? `data-v="${v}"` : ""}><span class="eyebrow">${icon}</span><h2>${t}</h2><span class="small">${s}</span></button>`;
+    const tiles = [
+      club && tile("verwaltung", "side", "Verein", d && d.platform ? "Vereine & Mannschaften" : "Verein & Mannschaften", "Mannschaften anlegen, Trainer einladen, Cheftrainer bestimmen"),
+      team && tile("", "coachesStart", "Mannschaft", "Trainer", "Co-Trainer anlegen, Zugänge und Einmal-Codes"),
+      team && tile("inhalte", "side", "Mannschaft", "Inhalte", "Prinzipien, Quizfragen und Texte der Phasen"),
+      team && tile("einstellungen", "side", "Mannschaft", "Einstellungen", "Google-Kalender, Saisonbeginn, Spielzeiten"),
+      club && tile("rechtliches", "side", "Verein", "Rechtliches", "Impressum, Vorstand, Verantwortlicher für den Inhalt"),
+      Co.platformAdmin && tile("mailversand", "side", "Plattform", "E-Mail-Versand", "Mailserver für „Passwort vergessen“"),
+      club && tile("sicherheit", "side", "Plattform", "Sicherheit", "Anmeldungen, Fehlversuche, Sperren")
+    ].filter(Boolean).join("");
+    const where = LZ.coachMode() ? `Mannschaft: <b>${esc(Co.team ? Co.team.club + " · " + Co.team.name : "")}</b>` : "Keine Mannschaft geöffnet";
+    return `${H("Admin-Zone", `Verwaltung, Inhalte und Rechtliches. Trainer, Kinder und später Eltern nutzen FU-STARS unter der normalen Adresse.`)}
+      ${noteBox()}${errBox()}
+      ${todo.length ? `<section class="card stack"><h2>Offen</h2><ul class="admtodo">${todo.map(([t, v]) => `<li><button class="linkbtn" data-act="side" data-v="${v}">${esc(t)}</button></li>`).join("")}</ul></section>` : ""}
+      <div class="admtiles">${tiles}</div>
+      <p class="small">${where}${LZ.coachMode() ? ` · <a href="./">Zu FU-STARS</a>` : ""}</p>`;
+  };
+  LZ.views.noAdmin = () => `<section>${LZ.area("Admin-Zone")}<h1>Kein Zugang</h1><p class="lede">Die Admin-Zone ist für Cheftrainer, Vereinsadmins und den Betreiber.</p></section>
+    <div class="row"><a class="btn" href="./">Zu FU-STARS</a><button class="btn ghost" data-act="logout">Abmelden</button></div>`;
 
   /* ---------- E-Mail-Versand (ab 0.34.0, Superadmin) ---------- */
   const MS = { d: null, err: "", msg: "", busy: false };

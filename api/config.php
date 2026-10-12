@@ -137,7 +137,7 @@ function platform_migrate(PDO $p): void {
     if ($dcols && !in_array('image', $dcols, true)) $p->exec("ALTER TABLE drills ADD COLUMN image TEXT NOT NULL DEFAULT ''");
     // 0.23.0: Datenschutz-Angaben je Verein (Verantwortlicher)
     $cols = array_column($p->query('PRAGMA table_info(clubs)')->fetchAll(PDO::FETCH_ASSOC), 'name');
-    foreach (['legal_name', 'address', 'privacy_email', 'dpo'] as $c)
+    foreach (['legal_name', 'address', 'privacy_email', 'dpo', 'board', 'content_resp'] as $c)   // board/content_resp ab 0.36.0 (Impressum)
         if (!in_array($c, $cols, true)) $p->exec("ALTER TABLE clubs ADD COLUMN $c TEXT NOT NULL DEFAULT ''");
     if ($p->query("SELECT 1 FROM platform_settings WHERE name = 'club_admins_done'")->fetchColumn()) return;
     $p->exec("INSERT OR IGNORE INTO club_admins (account_id, club_id)
