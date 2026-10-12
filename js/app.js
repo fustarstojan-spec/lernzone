@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.34.3";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.34.4";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -386,13 +386,14 @@
       { k: "phasen", label: "Spielphasen", icon: "phasen", group: phases }].concat(mods.length ? [{ k: "module", label: "Module", icon: "modul", group: mods }] : []);
     if (LZ.adminOnly()) return [{ k: "verwaltung", label: "Verwaltung", icon: "verwaltung", act: "side", v: "verwaltung" }];
     if (LZ.coachMode()) return [
+      // Reihenfolge vom Trainer festgelegt (0.34.4); Trainer-Wissen danach
       { k: "home", label: "Übersicht", icon: "home", act: "side", v: "home" },
-      { k: "training", label: "Training", icon: "training", act: "side", v: "training" },
-      { k: "wissen", label: "Trainer-Wissen", icon: "wissen", act: "side", v: "wissen" },
-      { k: "kader", label: "Kader", icon: "kader", act: "me" },
       { k: "lernzone", label: "Lernzone", icon: "lernzone", group: [{ k: "lernzone", label: "Start der Lernzone", act: "side", v: "lernzone" }].concat(learn.map(x => x.group ? x : Object.assign({}, x))) },
+      { k: "kader", label: "Kader", icon: "kader", act: "me" },
+      { k: "training", label: "Training", icon: "training", act: "side", v: "training" },
       { k: "taktik", label: "Taktik", icon: "taktik", act: "side", v: "taktik" },
-      { k: "spielzeiten", label: "Spielzeiten", icon: "spielzeiten", act: "side", v: "spielzeiten" }
+      { k: "spielzeiten", label: "Spielzeiten", icon: "spielzeiten", act: "side", v: "spielzeiten" },
+      { k: "wissen", label: "Trainer-Wissen", icon: "wissen", act: "side", v: "wissen" }
     ].concat(LZ.isAdmin() ? [{ k: "verwaltung", label: "Verwaltung", icon: "verwaltung", act: "side", v: "verwaltung" }] : []);
     return [{ k: "home", label: "Start", icon: "home", act: "side", v: "home" }].concat(learn, [{ k: "me", label: "Mein Bereich", icon: "me", act: "me" }]);
   }

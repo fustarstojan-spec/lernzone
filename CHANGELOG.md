@@ -2,6 +2,9 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.34.4 – 2026-10-12
+- Seitenleiste (Trainer) neu sortiert: Übersicht · Lernzone · Kader · Training · Taktik · Spielzeiten · Trainer-Wissen · Verwaltung
+
 ## 0.34.3 – 2026-10-12
 - Trikot oben rechts: Trainer kommen direkt auf ihr eigenes Profil (Kader und Trainings über die Seitenleiste bzw. die Reiter im Trainer-Bereich); Spieler wie bisher auf „Mein Bereich“
 
