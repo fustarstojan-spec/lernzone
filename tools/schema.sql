@@ -43,7 +43,8 @@ CREATE TABLE IF NOT EXISTS trainings (
   kind      TEXT NOT NULL DEFAULT 'training',        -- 'training' | 'spiel' | 'turnier' | 'termin'
   location  TEXT NOT NULL DEFAULT '',
   cal_key   TEXT NOT NULL DEFAULT '',                -- '' = von Hand angelegt, sonst Termin-Schlüssel aus dem Google-Kalender
-  att_done  INTEGER NOT NULL DEFAULT 0               -- ab 0.13.0: 0 = Anwesenheit offen, 1 = erfasst, 2 = Training fällt aus
+  att_done  INTEGER NOT NULL DEFAULT 0,              -- ab 0.13.0: 0 = Anwesenheit offen, 1 = erfasst, 2 = Training fällt aus
+  parents   INTEGER NOT NULL DEFAULT 0               -- ab 0.38.0, nur Art „termin“: 1 = für Eltern sichtbar, -1 = verborgen, 0 = automatisch (Titel enthält „Eltern“)
 );
 
 CREATE TABLE IF NOT EXISTS attendance (
@@ -59,6 +60,34 @@ CREATE TABLE IF NOT EXISTS absences (
   reason       TEXT    NOT NULL,                     -- schule | krank | urlaub | sonst
   created_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (training_id, nr)
+);
+
+-- Gesprächsrunden (ab 0.38.0), z. B. Entwicklungsgespräche: der Trainer stellt Zeitfenster ein, gebucht wird pro Kind ein Fenster.
+-- mode: kind = Gespräch mit dem Kind (das Kind bucht, Eltern sehen es) · eltern = mit Eltern und Kind (Eltern buchen, das Kind sieht es)
+CREATE TABLE IF NOT EXISTS talk_rounds (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  title       TEXT    NOT NULL,
+  mode        TEXT    NOT NULL DEFAULT 'eltern',
+  location    TEXT    NOT NULL DEFAULT '',
+  note        TEXT    NOT NULL DEFAULT '',
+  created_by  INTEGER,
+  created_at  TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS talk_slots (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  round_id    INTEGER NOT NULL,
+  date        TEXT    NOT NULL,
+  time        TEXT    NOT NULL,
+  minutes     INTEGER NOT NULL DEFAULT 20,
+  nr          INTEGER,                                -- gebucht für dieses Kind (NULL = frei)
+  booked_by   TEXT    NOT NULL DEFAULT '',            -- kind | eltern | trainer
+  booked_at   TEXT    NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS talk_slots_round ON talk_slots (round_id, date, time);
+CREATE TABLE IF NOT EXISTS talk_invites (
+  round_id    INTEGER NOT NULL,
+  nr          INTEGER NOT NULL,
+  PRIMARY KEY (round_id, nr)
 );
 
 -- Einwilligung der Eltern: Verlauf (ab 0.37.0). players.consent bleibt der aktuelle Stand.

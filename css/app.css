@@ -700,3 +700,18 @@ body.dragging{cursor:grabbing}
 .zone-admin .top{border-bottom:3px solid var(--accent)}
 .kchip.in{background:var(--ok-soft);color:var(--ok)}
 .kchip.out{background:var(--rule);color:var(--muted);white-space:normal}
+/* Gespräche (ab 0.38.0) */
+.tkrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:6px}
+.tkrow input{width:auto}
+.tkchips{display:flex;flex-wrap:wrap;gap:6px}
+.tkchip{min-width:40px;padding:6px 8px;border-radius:8px;border:1px solid var(--rule);background:var(--surface);font-weight:700;font-variant-numeric:tabular-nums}
+.tkchip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tkday{display:grid;gap:6px;margin-top:6px}
+.tkslots{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.tkslots li{display:grid;grid-template-columns:110px minmax(120px,190px) 1fr auto;align-items:center;gap:8px;padding:4px 8px;border-radius:8px;background:var(--bg)}
+.tkslots li.on{background:var(--ok-soft)}
+.tkslots select{width:100%}
+.tkround{text-align:left;cursor:pointer;border:1px solid var(--rule)}
+.tkround:hover{border-color:var(--accent)}
+.btn.taken{opacity:.45;text-decoration:line-through}
+@media (max-width:560px){.tkslots li{grid-template-columns:1fr 1fr}}

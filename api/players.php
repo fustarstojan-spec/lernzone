@@ -79,6 +79,8 @@ if ($action === 'delete') {
     foreach (['progress', 'profiles', 'moods', 'attendance', 'absences', 'match_squad', 'iep', 'iep_versions', 'iep_ratings', 'grades', 'grade_notes', 'match_call_players', 'consent_log', 'players'] as $t) {
         db()->prepare("DELETE FROM $t WHERE nr = ?")->execute([$nr]);
     }
+    db()->prepare('DELETE FROM talk_invites WHERE nr = ?')->execute([$nr]);
+    db()->prepare("UPDATE talk_slots SET nr = NULL, booked_by = '', booked_at = '' WHERE nr = ?")->execute([$nr]);
     if ($a = account_for('player', $nr)) remove_membership((int)$a['id']);
     // Eltern-Verknüpfungen lösen; Elternkonten ohne weiteres Kind löschen (ab 0.37.0)
     $pl = pdb()->prepare('SELECT account_id FROM parent_links WHERE team_id = ? AND nr = ?'); $pl->execute([team_id(), $nr]);

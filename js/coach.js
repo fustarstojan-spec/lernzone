@@ -185,6 +185,9 @@
       <section><p class="eyebrow">${LZ.calendar ? esc(LZ.calendar.kindLabel(t.kind)) : "Training"}${t.fromCalendar ? " · aus dem Kalender" : ""}</p><h1>${esc(t.title)}</h1>
         <p class="lede">${esc(fmtDate(t.date))}${t.time ? " · " + esc(t.time) + (t.endTime ? "–" + esc(t.endTime) : "") : ""}${t.location ? " · " + (LZ.mapLink ? LZ.mapLink(t.location) : esc(t.location)) : ""}${t.note ? " · " + esc(t.note) : ""}</p></section>
       ${(d.coachesOut || []).length ? `<p class="alert">Trainer nicht dabei: ${d.coachesOut.map(esc).join(", ")}</p>` : ""}
+      ${t.kind === "termin" ? `<section class="card stack"><h2>Eltern</h2>
+        <label class="check"><input type="checkbox" id="t-parents" ${t.parents ? "checked" : ""}> Für Eltern sichtbar (erscheint im Elternzugang unter „Termine“)</label>
+        <p class="small">${t.parentsAuto ? "Automatisch: Termine mit „Eltern“ im Titel (z. B. Elternabend) sind sichtbar, andere nicht." : "Von Hand festgelegt."} Trainer-Sitzungen bleiben so unter euch.</p></section>` : ""}
       ${t.kind !== "training" ? "" : t.state === 2 ? `<section class="card stack"><div class="rowspread"><h2>Fällt aus</h2></div>
         <p class="small">Dieses Training zählt nicht für die Trainingsbeteiligung. Die Spieler sehen „fällt aus“.</p>
         <div class="row"><button class="btn" data-act="tReopen">Findet doch statt</button></div></section>` : `
@@ -688,5 +691,6 @@
     else if (id === "cf-user" || id === "ce-user") T.cf.user = el.value;
     else if ((id === "cf-admin" || id === "ce-admin") && e.type === "change") T.cf.isAdmin = el.checked;
     else if (id === "par-user") T.parUser = el.value;
+    else if (id === "t-parents" && e.type === "change") St().send("trainings.php", { action: "parents", id: T.tr.training.id, on: el.checked }).then(r => { if (!r.ok) return fail(r); T.tr.training = Object.assign(T.tr.training, r.training); LZ.render(); });
   });
 })();

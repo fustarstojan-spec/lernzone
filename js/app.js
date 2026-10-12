@@ -18,7 +18,7 @@
   const S = { view: "home", arg: null, tab: "grundlagen", user: null, loginNr: null, pin: "", err: "", busy: false };
   let Q = null, Z = null;
   const ZROUNDS = 10;
-  const APP_VERSION = "0.37.1";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
+  const APP_VERSION = "0.38.0";   // bei jeder Änderung erhöhen und in CHANGELOG.md eintragen
   const app = document.getElementById("app");
 
   /* ---------- Hilfen ---------- */
@@ -403,6 +403,7 @@
     user: '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c.8-3.8 3.8-6 7.5-6s6.7 2.2 7.5 6"/>',
     key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 8-8M16 7l2 2M14 9l2 2"/>',
     logout: '<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l-4-4 4-4M6 12h10"/>',
+    talk: '<path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M19 9h1a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1v2l-3-2h-4"/>',
     clubs: '<path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M3 20h18"/>',
     legal: '<path d="M12 4v16M5 20h14"/><path d="M6 7h12"/><path d="m6 7-3 6a3 3 0 0 0 6 0zM18 7l-3 6a3 3 0 0 0 6 0z"/>',
     mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/>',
@@ -455,6 +456,7 @@
       { k: "home", label: "Übersicht", icon: "home", act: "side", v: "home" },
       { k: "lernzone", label: "Lernzone", icon: "lernzone", group: [{ k: "lernzone", label: "Start der Lernzone", act: "side", v: "lernzone" }].concat(learn.map(x => x.group ? x : Object.assign({}, x))) },
       { k: "kader", label: "Kader", icon: "kader", act: "me" },
+      { k: "gespraeche", label: "Gespräche", icon: "talk", act: "side", v: "gespraeche" },
       { k: "training", label: "Training", icon: "training", act: "side", v: "training" },
       { k: "taktik", label: "Taktik", icon: "taktik", act: "side", v: "taktik" },
       { k: "spielzeiten", label: "Spielzeiten", icon: "spielzeiten", act: "side", v: "spielzeiten" },

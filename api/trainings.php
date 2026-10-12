@@ -10,6 +10,7 @@
  * POST {action:"attend", id, nr, present}     (bei offenem Training wird zuerst „alle ohne Absage = da“ festgeschrieben)
  * POST {action:"attendall", id, present}      present = alle ohne Absage da / false = niemand
  * POST {action:"cancel", id} / {action:"reopen", id}   Training fällt aus / findet doch statt
+ * POST {action:"parents", id, on}            Termin (Art „termin“) für Eltern sichtbar / verborgen (ab 0.38.0)
  */
 require __DIR__ . '/config.php';
 require __DIR__ . '/lib/calendar.php';
@@ -28,7 +29,8 @@ $moodsOf = function (int $id): array {
 };
 $tOut = fn(array $t) => ['id' => (int)$t['id'], 'date' => $t['date'], 'time' => $t['time'], 'endTime' => $t['end_time'] ?? '',
     'title' => ($t['title'] ?? '') !== '' ? $t['title'] : 'Training', 'kind' => $t['kind'] ?? 'training', 'location' => $t['location'] ?? '',
-    'note' => $t['note'], 'fromCalendar' => ($t['cal_key'] ?? '') !== '', 'state' => (int)($t['att_done'] ?? 0), 'expected' => att_expected($t)];
+    'note' => $t['note'], 'fromCalendar' => ($t['cal_key'] ?? '') !== '', 'state' => (int)($t['att_done'] ?? 0), 'expected' => att_expected($t),
+    'parents' => event_for_parents($t), 'parentsAuto' => (int)($t['parents'] ?? 0) === 0];
 $avg = function (array $vals): ?float { $vals = array_filter($vals, fn($v) => $v !== null); return $vals ? round(array_sum($vals) / count($vals), 1) : null; };
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -75,6 +77,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 require_method('POST');
 $in     = json_in();
 $action = (string)($in['action'] ?? '');
+
+if ($action === 'parents') {                                   // Termin für Eltern sichtbar (ab 0.38.0)
+    $id = (int)($in['id'] ?? 0);
+    $st = db()->prepare("SELECT * FROM trainings WHERE id = ? AND kind = 'termin'"); $st->execute([$id]);
+    if (!$st->fetch()) json_out(['ok' => false, 'error' => 'Das geht nur bei Terminen (nicht bei Training oder Spiel).'], 400);
+    db()->prepare('UPDATE trainings SET parents = ? WHERE id = ?')->execute([!empty($in['on']) ? 1 : -1, $id]);
+    $st->execute([$id]);
+    json_out(['ok' => true, 'training' => $tOut($st->fetch(PDO::FETCH_ASSOC))]);
+}
 
 if ($action === 'create') {
     $date = (string)($in['date'] ?? '');

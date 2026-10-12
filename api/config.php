@@ -164,7 +164,7 @@ function migrate(PDO $pdo): void {
     // 0.9.0: Termine aus dem Kalender
     $tcols = array_column($pdo->query('PRAGMA table_info(trainings)')->fetchAll(PDO::FETCH_ASSOC), 'name');
     foreach (['end_time' => "TEXT NOT NULL DEFAULT ''", 'title' => "TEXT NOT NULL DEFAULT ''", 'kind' => "TEXT NOT NULL DEFAULT 'training'",
-              'location' => "TEXT NOT NULL DEFAULT ''", 'cal_key' => "TEXT NOT NULL DEFAULT ''"] as $c => $def) {
+              'location' => "TEXT NOT NULL DEFAULT ''", 'cal_key' => "TEXT NOT NULL DEFAULT ''", 'parents' => 'INTEGER NOT NULL DEFAULT 0'] as $c => $def) {   // parents ab 0.38.0
         if (!in_array($c, $tcols, true)) $pdo->exec("ALTER TABLE trainings ADD COLUMN $c $def");
     }
     $pdo->exec('CREATE INDEX IF NOT EXISTS trainings_cal ON trainings (cal_key)');
@@ -331,6 +331,13 @@ function parent_unlink(int $accountId, int $team, int $nr): void {
     pdb()->prepare('DELETE FROM parent_links WHERE account_id = ? AND team_id = ? AND nr = ?')->execute([$accountId, $team, $nr]);
     $st = pdb()->prepare('SELECT COUNT(*) FROM parent_links WHERE account_id = ?'); $st->execute([$accountId]);
     if ((int)$st->fetchColumn() === 0) pdb()->prepare("DELETE FROM accounts WHERE id = ? AND kind = 'parent'")->execute([$accountId]);
+}
+
+/* Termine (Art „termin“) für Eltern: vom Trainer freigegeben, oder automatisch, wenn der Titel „Eltern“ enthält (ab 0.38.0) */
+function event_for_parents(array $t): bool {
+    if (($t['kind'] ?? '') !== 'termin') return false;
+    $p = (int)($t['parents'] ?? 0);
+    return $p === 1 || ($p === 0 && mb_stripos((string)($t['title'] ?? ''), 'eltern') !== false);
 }
 
 /* Einwilligung: Verlauf schreiben; letzter Eintrag = woher der aktuelle Stand kommt */

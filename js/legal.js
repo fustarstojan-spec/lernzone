@@ -87,6 +87,7 @@
       <ul><li>Trikotnummer, Torwart oder Feldspieler, Positionen (vom Trainer festgelegt)</li>
         <li>Lernfortschritt in der App (Quiz-Ergebnisse)</li>
         <li>Trainingsbeteiligung und Absagen (Grund aus einer festen Auswahl, kein Freitext)</li>
+        <li>Gesprächstermine (z. B. Entwicklungsgespräche): gewähltes Zeitfenster und ob Kind, Eltern oder Trainer es eingetragen haben – keine Gesprächsinhalte</li>
         <li>Aufstellungen, Taktiktafeln und Spielminuten</li>
         <li>Kader für Spiele: im Kader oder nicht, bei „nicht dabei“ ein Grund aus einer festen Liste (das Kind sieht nur seinen eigenen Status und Grund) und eine Notiz nur für Trainer</li>
         <li>Individueller Entwicklungsplan: Ziele und Zeitplan (sieht auch das Kind); Einschätzungen und Notizen der Trainer (nur Trainer)</li>

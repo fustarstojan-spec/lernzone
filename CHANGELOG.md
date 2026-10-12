@@ -2,6 +2,16 @@
 
 Format: `MAJOR.MINOR.PATCH` – PATCH = Korrektur, MINOR = neue Inhalte oder Funktionen, MAJOR = großer Umbau (z. B. Weg B live).
 
+## 0.38.0 – 2026-10-12
+- **Gespräche** (Trainer, Seitenleiste „Gespräche“): Gesprächsrunden mit Zeitfenstern, z. B. Entwicklungsgespräche. Titel, Ort, Hinweis, Länge (10–60 Min.), ein oder mehrere Tage mit Von–Bis (Fenster werden lückenlos erzeugt), eingeladene Kinder
+  - „Mit Eltern und Kind“: die Eltern wählen das Zeitfenster im Elternzugang, das Kind sieht den Termin
+  - „Mit Kind“: das Kind wählt selbst (Startseite und Mein Bereich), die Eltern sehen den Termin
+  - Wählen, ändern und absagen bis 24 Stunden vorher; fremde Buchungen erscheinen nur als „belegt“
+  - Trainer sieht die Belegung, vergibt Fenster selbst (z. B. ohne Elternzugang), ergänzt oder löscht Fenster, ändert Einladungen, sieht „Noch ohne Termin“
+- **Termine für Eltern**: Kalender-Termine (Art „Termin“) erscheinen im Elternzugang unter „Termine“, wenn der Trainer sie freigibt (Häkchen beim Termin) – Termine mit „Eltern“ im Titel (Elternabend) automatisch; Trainer-Sitzungen bleiben verborgen
+- Eltern: „Nicht dabei“ bei Spielen nicht mehr durchgestrichen
+- Datenschutzerklärung: Gesprächstermine ergänzt
+
 ## 0.37.1 – 2026-10-12
 - Eltern: neue Karte „Spiele“ mit allen Spielen und Turnieren der nächsten 6 Wochen (Datum, Uhrzeit, Ort). Status je Spiel: „✓ Im Kader“, „Nicht dabei · Grund“ oder „Kader folgt“, solange der Trainer ihn noch nicht bekannt gegeben hat
 

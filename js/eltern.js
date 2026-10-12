@@ -43,6 +43,13 @@
       <div class="row"><button class="btn ghost" data-act="side" data-v="elternConsent">Einwilligung ansehen</button></div></section>`;
   }
 
+  /* Termine für Eltern (ab 0.38.0): Elternabend usw. – vom Trainer freigegeben oder „Eltern“ im Titel */
+  function eventsCard(d) {
+    const list = d.events || []; if (!list.length) return "";
+    return `<section class="card stack"><h2>Termine</h2><ul class="trlist">${list.map(t => `<li class="trrow"><div><b>${esc(fmtDate(t.date))}${t.time ? " · " + esc(t.time) : ""}${t.endTime ? "–" + esc(t.endTime) : ""}</b>
+      <span class="small">${esc(t.title)}${t.location ? " · " + where(t.location) : ""}</span></div></li>`).join("")}</ul></section>`;
+  }
+
   /* Spiele und Turniere (ab 0.37.1): alle Termine der nächsten 6 Wochen, Kader-Status sobald bekannt gegeben */
   function gamesCard(d) {
     const list = d.matches || [];
@@ -51,7 +58,7 @@
       : g.status === "kader" ? `<span class="kchip in">✓ Im Kader</span>`
       : g.status === "out" ? `<span class="kchip out">Nicht dabei${g.reason ? " · " + esc(g.reason) : ""}</span>`
       : `<span class="small">Kader folgt</span>`;
-    return `<section class="card stack"><h2>Spiele</h2><ul class="trlist">${list.map(g => `<li class="trrow${g.cancelled || g.status === "out" ? " off" : ""}">
+    return `<section class="card stack"><h2>Spiele</h2><ul class="trlist">${list.map(g => `<li class="trrow${g.cancelled ? " off" : ""}">
       <div><b>${esc(fmtDate(g.date))}${g.time ? " · " + esc(g.time) : ""}${g.endTime ? "–" + esc(g.endTime) : ""}</b><span class="small">${g.kind === "turnier" ? "Turnier · " : ""}${esc(g.title)}${g.location ? " · " + where(g.location) : ""}</span></div>
       <div class="trright">${chip(g)}</div></li>`).join("")}</ul>
       <p class="small">Den Kader gibt der Trainer vor dem Spiel bekannt. Fragen dazu bitte direkt an den Trainer.</p></section>`;
@@ -104,7 +111,7 @@
     if (!d) return `${head("Eltern")}${wait()}`;
     return `${head(esc(kidName(d)), "Termine, Absagen, Kader und Lernfortschritt Ihres Kindes.")}
       ${kids(d)}${P.err ? `<p class="err" role="alert" style="text-align:left">${esc(P.err)}</p>` : ""}
-      ${consentShort(d)}${gamesCard(d)}${trainingsCard(d)}${progressCard(d)}
+      ${consentShort(d)}${LZ.talksCard ? LZ.talksCard() : ""}${eventsCard(d)}${gamesCard(d)}${trainingsCard(d)}${progressCard(d)}
       <p class="small">Im Elternzugang sehen Sie nur Ihr eigenes Kind. Befinden, Profil, Entwicklungsplan und Bewertungen bleiben zwischen Kind und Trainer.
         <button class="linkbtn" data-act="legal" data-v="datenschutz">Datenschutz</button></p>`;
   };
